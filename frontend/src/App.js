@@ -2065,6 +2065,13 @@ function App() {
         </div>
       </div>
 
+      {/* Personalization Modal */}
+      <PersonalizationModal
+        isOpen={showPersonalizationModal}
+        onClose={() => setShowPersonalizationModal(false)}
+        onComplete={handlePersonalizationComplete}
+      />
+
       {/* Destination Exploration View */}
       <AnimatePresence>
         {showDestinationExploration && exploringDestination && (
