@@ -1978,7 +1978,12 @@ function App() {
     return accommodations;
   };
 
-  const handleCardAction = (action, item) => {
+  const handleMapMarkerClick = (destination) => {
+    console.log('🗺️ Map marker clicked:', destination.name);
+    setSelectedMapDestination(destination);
+    setRightPanelContent('destination');
+    setHighlightedDestinations([destination.id]);
+  };
     switch (action) {
       case 'explore':
         setExploringDestination(item);
