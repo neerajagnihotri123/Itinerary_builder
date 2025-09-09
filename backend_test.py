@@ -461,6 +461,19 @@ def main():
     test_results.append(tester.test_chat_endpoint())
     test_results.append(tester.test_chat_history_endpoint())
     
+    # Enhanced testing for review requirements
+    contextual_success = tester.test_contextual_responses()
+    test_results.append((contextual_success, {}))
+    
+    ui_actions_success = tester.test_ui_actions_generation()
+    test_results.append((ui_actions_success, {}))
+    
+    session_success = tester.test_session_handling()
+    test_results.append((session_success, {}))
+    
+    data_consistency_success = tester.test_data_consistency()
+    test_results.append((data_consistency_success, {}))
+    
     # AI Integration test
     ai_success = tester.test_ai_integration()
     test_results.append((ai_success, {}))
@@ -473,13 +486,25 @@ def main():
     success_rate = (tester.tests_passed / tester.tests_run) * 100 if tester.tests_run > 0 else 0
     print(f"Success rate: {success_rate:.1f}%")
     
-    if success_rate >= 90:
+    # Enhanced results analysis
+    critical_tests = [contextual_success, ui_actions_success, session_success, data_consistency_success, ai_success]
+    critical_passed = sum(critical_tests)
+    
+    print(f"\n🎯 CRITICAL FEATURES ANALYSIS:")
+    print(f"✅ Contextual Responses: {'PASS' if contextual_success else 'FAIL'}")
+    print(f"✅ UI Actions Generation: {'PASS' if ui_actions_success else 'FAIL'}")
+    print(f"✅ Session Handling: {'PASS' if session_success else 'FAIL'}")
+    print(f"✅ Data Consistency: {'PASS' if data_consistency_success else 'FAIL'}")
+    print(f"✅ AI Integration: {'PASS' if ai_success else 'FAIL'}")
+    print(f"\nCritical Features: {critical_passed}/5 passing")
+    
+    if success_rate >= 90 and critical_passed >= 4:
         print("🎉 Excellent! Backend is working great!")
         return 0
-    elif success_rate >= 70:
+    elif success_rate >= 70 and critical_passed >= 3:
         print("✅ Good! Backend is mostly functional with minor issues")
         return 0
-    elif success_rate >= 50:
+    elif success_rate >= 50 and critical_passed >= 2:
         print("⚠️  Warning! Backend has significant issues")
         return 1
     else:
