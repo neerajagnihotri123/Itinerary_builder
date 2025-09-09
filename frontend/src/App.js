@@ -2494,36 +2494,15 @@ function App() {
         </div>
       </div>
 
-      {/* Personalization Modal */}
+      {/* Personalization Modal - Only show when explicitly triggered */}
       <PersonalizationModal
         isOpen={showPersonalizationModal}
         onClose={() => setShowPersonalizationModal(false)}
         onComplete={handlePersonalizationComplete}
       />
 
-      {/* Destination Exploration View */}
-      <AnimatePresence>
-        {showDestinationExploration && exploringDestination && (
-          <DestinationExplorationView
-            destination={exploringDestination}
-            onClose={() => {
-              setShowDestinationExploration(false);
-              setExploringDestination(null);
-            }}
-            onMapMarkerClick={(dest) => {
-              setSelectedDestination(dest);
-              setIsDestinationModalOpen(true);
-            }}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Destination Modal */}
-      <DestinationModal
-        destination={selectedDestination}
-        isOpen={isDestinationModalOpen}
-        onClose={() => setIsDestinationModalOpen(false)}
-      />
+      {/* Remove unnecessary destination exploration and destination modal */}
+      {/* These are replaced by right panel content */}
 
       {/* Sidebar */}
       <Sidebar
@@ -2532,7 +2511,6 @@ function App() {
         chatHistory={chatHistory}
         onNewChat={handleNewChat}
         onSelectChat={(chat) => {
-          // Load selected chat
           console.log('Selected chat:', chat);
           setIsSidebarOpen(false);
         }}
