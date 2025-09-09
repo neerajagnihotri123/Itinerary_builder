@@ -850,22 +850,35 @@ const WhereModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
           </div>
           
           <div className="space-y-3">
-            {['Paris, France', 'Tokyo, Japan', 'Bali, Indonesia', 'New York, USA', 'Santorini, Greece'].map((dest, index) => (
+            {[
+              { name: 'Manali, Himachal Pradesh', value: 'Manali, Himachal Pradesh' },
+              { name: 'Rishikesh, Uttarakhand', value: 'Rishikesh, Uttarakhand' },
+              { name: 'Andaman Islands', value: 'Andaman Islands' },
+              { name: 'Pondicherry, Tamil Nadu', value: 'Pondicherry, Tamil Nadu' },
+              { name: 'Kerala Backwaters', value: 'Kerala Backwaters' },
+              { name: 'Rajasthan Desert', value: 'Rajasthan Desert' },
+              { name: 'Custom Destination', value: 'Custom Destination' }
+            ].map((destination) => (
               <button
-                key={dest}
-                onClick={() => onSelect(dest)}
-                className="w-full text-left p-3 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200"
+                key={destination.value}
+                onClick={() => {
+                  onSelect(destination.value);
+                  onClose();
+                }}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
+                  currentDestination === destination.value
+                    ? 'border-green-600 bg-green-50 text-green-700'
+                    : 'border-gray-200 hover:border-green-300 bg-white hover:bg-green-50'
+                }`}
               >
-                <div className="font-medium text-gray-800">{dest}</div>
+                <div className="flex items-center gap-3">
+                  <MapPin className={`w-5 h-5 ${
+                    currentDestination === destination.value ? 'text-green-600' : 'text-gray-400'
+                  }`} />
+                  <span className="font-medium">{destination.name}</span>
+                </div>
               </button>
             ))}
-          </div>
-          
-          <div className="mt-6 p-3 bg-gray-50 rounded-xl">
-            <label className="flex items-center gap-2">
-              <input type="checkbox" className="rounded" />
-              <span className="text-sm text-gray-700">Road trip?</span>
-            </label>
           </div>
         </motion.div>
       </motion.div>
