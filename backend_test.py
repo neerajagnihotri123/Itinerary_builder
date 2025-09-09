@@ -947,10 +947,6 @@ def main():
     critical_tests = [contextual_success, ui_actions_success, session_success, data_consistency_success, ai_success]
     critical_passed = sum(critical_tests)
     
-    # Review-specific critical tests
-    review_tests = [accommodation_success, question_chip_success, structure_success, mock_data_success]
-    review_passed = sum(review_tests)
-    
     print(f"\n🎯 CRITICAL FEATURES ANALYSIS:")
     print(f"✅ Contextual Responses: {'PASS' if contextual_success else 'FAIL'}")
     print(f"✅ UI Actions Generation: {'PASS' if ui_actions_success else 'FAIL'}")
