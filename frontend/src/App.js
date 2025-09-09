@@ -2723,8 +2723,9 @@ function App() {
                           className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg border border-orange-100"
                           whileHover={{ scale: 1.05 }}
                           onClick={() => {
-                            // Handle activity click - could open activity details modal
-                            console.log('Activity clicked:', activity.name);
+                            // Open activity details in right panel
+                            setRightPanelContent('activity');
+                            setSelectedActivity(activity);
                           }}
                         >
                           <img
