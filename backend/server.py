@@ -462,6 +462,111 @@ def generate_contextual_chips(message: str, profile: Dict[str, Any]):
     
     return chips[:3]  # Return max 3 chips
 
+async def generate_personalized_itinerary(destination, request, user_profile):
+    """Generate personalized itinerary based on destination and user context"""
+    trip_details = getattr(request, 'trip_details', {}) or {}
+    duration = trip_details.get('duration', '7 days')
+    budget = trip_details.get('budget', 'mid-range')
+    travelers = trip_details.get('travelers', '2 people')
+    
+    base_response = f"""🗓️ **Perfect! Here's your personalized {destination['name']} adventure itinerary:**
+
+## {destination['name']}, {destination['state']} - {duration} Travel Plan 🌟
+
+### Day 1 – 🛬 Arrival & {destination['name']} Welcome
+**Morning:** Arrival and check-in
+- **Weather:** {destination['weather']['temp']}, {destination['weather']['condition']}
+- **Activity:** {destination['name']} orientation and local setup
+
+**Afternoon:** Explore {destination['highlights'][0] if destination['highlights'] else 'main attractions'}
+- **Experience:** {destination['description'][:100]}...
+- **Duration:** 3-4 hours
+
+**Evening:** Welcome dinner with local specialties
+- **Recommendation:** Try regional cuisine unique to {destination['state']}
+
+### Day 2-3 – 🎯 {destination['category'][0] if destination['category'] else 'Adventure'} Experiences
+**Featured Activities:**"""
+
+    # Add specific activities for this destination
+    if destination.get('activities'):
+        for activity in destination['activities'][:3]:
+            base_response += f"\n- **{activity['name']}** - {activity['price']} ({activity['duration']})"
+    
+    base_response += f"""
+
+### Remaining Days – Customized for Your Group of {travelers}
+**Budget Level:** {budget.title()} experience
+**Activities tailored to:** {', '.join(destination['category'][:3]) if destination['category'] else 'Adventure and culture'}
+
+**🏨 Accommodation in {destination['name']}:**
+- **Luxury:** ₹8,000-15,000/night - Premium properties
+- **Mid-Range:** ₹3,000-6,000/night - Comfortable hotels  
+- **Budget:** ₹1,000-2,500/night - Clean, safe options
+
+**💰 Estimated Budget for {travelers}:**
+- **Premium:** ₹{25000 * (2 if '2' in str(travelers) else 1):,}-{40000 * (2 if '2' in str(travelers) else 1):,}
+- **Standard:** ₹{15000 * (2 if '2' in str(travelers) else 1):,}-{25000 * (2 if '2' in str(travelers) else 1):,}
+- **Budget:** ₹{8000 * (2 if '2' in str(travelers) else 1):,}-{15000 * (2 if '2' in str(travelers) else 1):,}
+
+*Estimates include accommodation, meals, activities, and local transport for {duration}*"""
+    
+    return base_response
+
+async def generate_personalized_hotels(destination, request, user_profile):
+    """Generate personalized hotel recommendations based on destination and user context"""
+    trip_details = getattr(request, 'trip_details', {}) or {}
+    budget = trip_details.get('budget', 'mid-range')
+    travelers = trip_details.get('travelers', '2 people')
+    
+    return f"""🏨 **Perfect accommodation recommendations for {destination['name']}, {destination['state']}:**
+
+## Premium Hotels in {destination['name']} 🌟🌟🌟🌟🌟
+
+### Luxury Category (₹10,000-20,000/night)
+**The Oberoi {destination['name']}** ⭐⭐⭐⭐⭐
+- **Location:** Prime area near {destination['highlights'][0] if destination['highlights'] else 'main attractions'}
+- **Best for:** {budget.title()} travelers, perfect for {travelers}
+- **Amenities:** Spa, dining, concierge, airport transfer
+- **Weather comfort:** Ideal for {destination['weather']['condition'].lower()} conditions
+
+**Heritage Palace Hotel** ⭐⭐⭐⭐⭐  
+- **Features:** Traditional {destination['state']} architecture
+- **Special:** Cultural immersion in {destination['name']}
+- **Activities nearby:** {', '.join(destination['highlights'][:2]) if destination['highlights'] else 'Local attractions'}
+
+## Mid-Range Options (₹4,000-8,000/night) 
+
+### Perfect for {travelers}
+**Lemon Tree Premier {destination['name']}** ⭐⭐⭐⭐
+- **Location:** Central {destination['name']}, walking distance to attractions
+- **Best for:** Families and groups exploring {destination['category'][0] if destination['category'] else 'adventure'}
+- **Value:** Great base for {destination['name']} activities
+
+## Budget-Friendly (₹1,500-3,500/night)
+
+### Clean & Comfortable in {destination['name']}
+**Local Heritage Guesthouses** ⭐⭐⭐
+- **Experience:** Authentic {destination['state']} hospitality
+- **Perfect for:** Budget-conscious travelers wanting local culture
+- **Bonus:** Insider tips for {destination['name']} exploration
+
+## 🎯 **Recommendations Based on Your {destination['name']} Trip:**
+
+**For {destination['category'][0] if destination['category'] else 'Adventure'} Enthusiasts:** Stay near activity centers
+**Weather Consideration:** {destination['weather']['condition']} weather, choose AC/heating accordingly
+**Group of {travelers}:** Family rooms and connecting rooms available
+
+**📍 {destination['name']} Location Tips:**
+- **Near {destination['highlights'][0] if destination['highlights'] else 'Main Area'}:** Best for sightseeing
+- **{destination['state']} Heritage Quarter:** Authentic cultural experience
+- **Modern {destination['name']}:** Shopping and dining options
+
+**💡 {destination['name']} Booking Tips:**
+- Book 2-3 weeks ahead for {destination['weather']['condition'].lower()} season
+- Many hotels offer pickup from nearest airport/station
+- Ask about {destination['category'][0] if destination['category'] else 'activity'} packages"""
+
 # API Routes
 @api_router.get("/")
 async def root():
