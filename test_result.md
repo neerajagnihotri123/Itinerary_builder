@@ -111,11 +111,38 @@ backend:
     file: "server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: true
         agent: "main"
         comment: "Backend API responding correctly, tested with curl"
+      - working: true
+        agent: "main"
+        comment: "Backend has proper accommodation card generation and question chip UI actions. Need to verify accommodation filtering works correctly."
+
+  - task: "Accommodation card generation and filtering"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Backend generates hotel cards but user reports ALL cards showing instead of just accommodation cards when requested"
+
+  - task: "Question chip UI actions generation"
+    implemented: true
+    working: false
+    file: "server.py" 
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Backend generates question_chip UI actions but need to verify they are contextual and properly structured"
 
 frontend:
   - task: "Chat message sending functionality"
