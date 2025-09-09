@@ -1273,16 +1273,30 @@ function App() {
       const newRecommendations = [];
       const newChips = [];
 
-      response.data.ui_actions.forEach(action => {
-        if (action.type === 'card_add') {
-          newRecommendations.push(action.payload);
-        } else if (action.type === 'prompt') {
-          newChips.push(...action.payload.chips);
-        }
-      });
+      if (response.data.ui_actions && response.data.ui_actions.length > 0) {
+        console.log('Processing UI actions:', response.data.ui_actions);
+        
+        response.data.ui_actions.forEach(action => {
+          if (action.type === 'card_add') {
+            newRecommendations.push(action.payload);
+            console.log('Added recommendation card:', action.payload.title);
+          } else if (action.type === 'prompt') {
+            newChips.push(...action.payload.chips);
+            console.log('Added chips:', action.payload.chips);
+          }
+        });
+      } else {
+        console.log('No UI actions received');
+      }
 
-      setRecommendations(prev => [...prev, ...newRecommendations]);
-      setCurrentChips(newChips);
+      if (newRecommendations.length > 0) {
+        setRecommendations(prev => [...prev, ...newRecommendations]);
+        console.log('Total recommendations:', newRecommendations.length);
+      }
+      
+      if (newChips.length > 0) {
+        setCurrentChips(newChips);
+      }
       setUserProfile(response.data.updated_profile);
 
     } catch (error) {
