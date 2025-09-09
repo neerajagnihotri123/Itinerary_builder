@@ -2586,36 +2586,48 @@ function App() {
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { 
-                          name: 'Kashmir Great Lakes Trek', 
-                          location: 'Kashmir, India',
-                          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop',
-                          price: '₹12,999',
+                          name: 'River Rafting + Paragliding Combo', 
+                          location: 'Manali, Himachal Pradesh',
+                          image: 'https://images.unsplash.com/photo-1464822759844-d150baec0494?w=400&h=300&fit=crop',
+                          price: '₹2,199',
+                          originalPrice: '₹3,500',
+                          duration: 'Full Day',
+                          rating: 4.8,
+                          reviews: 1250,
+                          type: 'Adventure Combo'
+                        },
+                        { 
+                          name: '8-Day Enchanting Kerala Expedition', 
+                          location: 'Kerala (Kochi to Trivandrum)',
+                          image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=400&h=300&fit=crop',
+                          price: '₹25,999',
+                          originalPrice: '₹32,000',
                           duration: '8 Days',
-                          type: 'Trekking'
+                          rating: 4.7,
+                          reviews: 890,
+                          type: 'Cultural Tour'
                         },
                         { 
-                          name: 'Manali Adventure Package', 
-                          location: 'Manali, India',
-                          image: 'https://images.unsplash.com/photo-1464822759844-d150baec0494?w=300&h=200&fit=crop',
-                          price: '₹8,999',
-                          duration: '5 Days',
-                          type: 'Adventure'
+                          name: '16km White Water Rafting + Camp', 
+                          location: 'Rishikesh, Uttarakhand',
+                          image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop',
+                          price: '₹3,000',
+                          originalPrice: '₹4,000',
+                          duration: '2 Days',
+                          rating: 4.9,
+                          reviews: 2100,
+                          type: 'Adventure Package'
                         },
                         { 
-                          name: 'Goa Beach Hopping', 
-                          location: 'Goa, India',
-                          image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=300&h=200&fit=crop',
-                          price: '₹6,499',
-                          duration: '4 Days',
-                          type: 'Beach'
-                        },
-                        { 
-                          name: 'Rajasthan Heritage Tour', 
-                          location: 'Rajasthan, India',
-                          image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=300&h=200&fit=crop',
+                          name: 'Rajasthan Heritage & Desert Safari', 
+                          location: 'Rajasthan (Jaipur to Jaisalmer)',
+                          image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&h=300&fit=crop',
                           price: '₹15,999',
+                          originalPrice: '₹20,000',
                           duration: '7 Days',
-                          type: 'Heritage'
+                          rating: 4.6,
+                          reviews: 750,
+                          type: 'Heritage Tour'
                         }
                       ].map((tour, index) => (
                         <motion.div
@@ -2623,7 +2635,7 @@ function App() {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
-                          className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg"
+                          className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg border border-green-100"
                           whileHover={{ scale: 1.05 }}
                           onClick={() => {
                             // Handle tour click - could open tour details modal
@@ -2635,23 +2647,41 @@ function App() {
                             alt={tour.name}
                             className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                           
-                          {/* Price Badge */}
-                          <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-lg text-xs font-semibold">
-                            {tour.price}
+                          {/* Price Badge with Discount */}
+                          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                            <div className="bg-green-600 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                              {tour.price}
+                            </div>
+                            {tour.originalPrice && (
+                              <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs line-through">
+                                {tour.originalPrice}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Rating Badge */}
+                          <div className="absolute top-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-current" />
+                            {tour.rating}
                           </div>
                           
                           {/* Tour Info */}
                           <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                            <h4 className="font-semibold text-sm mb-1">{tour.name}</h4>
-                            <div className="flex items-center justify-between text-xs">
+                            <h4 className="font-semibold text-sm mb-1 line-clamp-2">{tour.name}</h4>
+                            <div className="flex items-center justify-between text-xs mb-1">
                               <span className="flex items-center gap-1">
                                 <MapPin className="w-3 h-3" />
                                 {tour.location}
                               </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
                               <span className="bg-white/20 px-2 py-1 rounded">
                                 {tour.duration}
+                              </span>
+                              <span className="text-yellow-300">
+                                ({tour.reviews} reviews)
                               </span>
                             </div>
                           </div>
@@ -2669,36 +2699,48 @@ function App() {
                     <div className="grid grid-cols-2 gap-4">
                       {[
                         { 
-                          name: 'River Rafting', 
-                          location: 'Rishikesh',
-                          image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300&h=200&fit=crop',
-                          price: '₹1,499',
-                          duration: '3 Hours',
+                          name: 'Paragliding in Manali', 
+                          location: 'Solang Valley, Manali',
+                          image: 'https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=400&h=300&fit=crop',
+                          price: '₹3,000',
+                          originalPrice: '₹3,500',
+                          duration: '15 minutes',
+                          rating: 4.8,
+                          reviews: 1845,
                           type: 'Adventure'
                         },
                         { 
-                          name: 'Paragliding', 
-                          location: 'Bir Billing',
-                          image: 'https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=300&h=200&fit=crop',
-                          price: '₹2,999',
+                          name: 'Scuba Diving with Free Videography', 
+                          location: 'Pondicherry',
+                          image: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=400&h=300&fit=crop',
+                          price: '₹6,499',
+                          originalPrice: '₹7,500',
                           duration: '2 Hours',
-                          type: 'Adventure'
-                        },
-                        { 
-                          name: 'Scuba Diving', 
-                          location: 'Andaman',
-                          image: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=300&h=200&fit=crop',
-                          price: '₹4,999',
-                          duration: '4 Hours',
+                          rating: 4.9,
+                          reviews: 920,
                           type: 'Water Sports'
                         },
                         { 
-                          name: 'Wildlife Safari', 
-                          location: 'Jim Corbett',
-                          image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=300&h=200&fit=crop',
-                          price: '₹3,499',
-                          duration: '6 Hours',
-                          type: 'Wildlife'
+                          name: 'Scuba Diving in Andaman', 
+                          location: 'Havelock Island',
+                          image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop',
+                          price: '₹3,500',
+                          originalPrice: '₹4,200',
+                          duration: '30 minutes',
+                          rating: 4.9,
+                          reviews: 1150,
+                          type: 'Marine Adventure'
+                        },
+                        { 
+                          name: 'Bungee Jumping in Rishikesh', 
+                          location: 'Jumpin Heights, Rishikesh',
+                          image: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop',
+                          price: '₹3,500',
+                          originalPrice: '₹4,000',
+                          duration: '1 Hour',
+                          rating: 4.7,
+                          reviews: 2200,
+                          type: 'Extreme Adventure'
                         }
                       ].map((activity, index) => (
                         <motion.div
@@ -2706,7 +2748,7 @@ function App() {
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
-                          className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg"
+                          className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg border border-orange-100"
                           whileHover={{ scale: 1.05 }}
                           onClick={() => {
                             // Handle activity click - could open activity details modal
@@ -2718,23 +2760,41 @@ function App() {
                             alt={activity.name}
                             className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
                           
-                          {/* Price Badge */}
-                          <div className="absolute top-2 right-2 bg-orange-600 text-white px-2 py-1 rounded-lg text-xs font-semibold">
-                            {activity.price}
+                          {/* Price Badge with Discount */}
+                          <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                            <div className="bg-orange-600 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                              {activity.price}
+                            </div>
+                            {activity.originalPrice && (
+                              <div className="bg-red-500 text-white px-1 py-0.5 rounded text-xs line-through">
+                                {activity.originalPrice}
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Rating Badge */}
+                          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-semibold flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-current" />
+                            {activity.rating}
                           </div>
                           
                           {/* Activity Info */}
                           <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                            <h4 className="font-semibold text-sm mb-1">{activity.name}</h4>
-                            <div className="flex items-center justify-between text-xs">
+                            <h4 className="font-semibold text-sm mb-1 line-clamp-2">{activity.name}</h4>
+                            <div className="flex items-center justify-between text-xs mb-1">
                               <span className="flex items-center gap-1">
                                 <MapPin className="w-3 h-3" />
                                 {activity.location}
                               </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
                               <span className="bg-white/20 px-2 py-1 rounded">
                                 {activity.duration}
+                              </span>
+                              <span className="text-yellow-300">
+                                ({activity.reviews} reviews)
                               </span>
                             </div>
                           </div>
