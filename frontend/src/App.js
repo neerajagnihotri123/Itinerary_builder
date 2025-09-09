@@ -1217,6 +1217,9 @@ function App() {
   const [tripDetails, setTripDetails] = useState({});
   const [showTripBar, setShowTripBar] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [showDestinationExploration, setShowDestinationExploration] = useState(false);
+  const [exploringDestination, setExploringDestination] = useState(null);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
