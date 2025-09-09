@@ -1245,6 +1245,12 @@ function App() {
     setInputMessage('');
     setIsLoading(true);
 
+    // Check if user is expressing interest in planning a trip
+    const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
+    if (tripKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword))) {
+      setShowTripBar(true);
+    }
+
     try {
       const response = await axios.post(`${API}/chat`, {
         message: inputMessage,
