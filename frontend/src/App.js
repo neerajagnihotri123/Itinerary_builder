@@ -1722,8 +1722,16 @@ function App() {
 
       if (newRecommendations.length > 0) {
         setRecommendations(prev => {
-          console.log('🎴 Setting recommendations:', newRecommendations.length);
-          return [...prev, ...newRecommendations];
+          console.log('🎴 Adding new recommendations:', newRecommendations.length);
+          // Prevent duplicates by checking IDs
+          const newRecs = newRecommendations.filter(newRec => 
+            !prev.some(existingRec => existingRec.id === newRec.id)
+          );
+          if (newRecs.length === 0) {
+            console.log('All recommendations already exist, skipping duplicates');
+            return prev;
+          }
+          return [...prev, ...newRecs];
         });
       }
       
