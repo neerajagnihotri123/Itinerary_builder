@@ -331,6 +331,83 @@ MOCK_HOTELS = [
     }
 ]
 
+# Memory storage for conversation context
+conversation_memory = {}
+
+def update_conversation_memory(session_id: str, message: str, response: str, trip_details: dict):
+    """Update conversation memory with key information"""
+    if session_id not in conversation_memory:
+        conversation_memory[session_id] = {
+            "conversation_history": [],
+            "mentioned_destinations": set(),
+            "user_preferences": {},
+            "trip_context": {}
+        }
+    
+    memory = conversation_memory[session_id]
+    
+    # Add to conversation history (keep last 10 exchanges)
+    memory["conversation_history"].append({
+        "user": message,
+        "assistant": response[:200] + "..." if len(response) > 200 else response,
+        "timestamp": datetime.now().isoformat()
+    })
+    if len(memory["conversation_history"]) > 10:
+        memory["conversation_history"] = memory["conversation_history"][-10:]
+    
+    # Track mentioned destinations
+    for dest in MOCK_DESTINATIONS:
+        if dest["name"].lower() in message.lower():
+            memory["mentioned_destinations"].add(dest["name"])
+    
+    # Update trip context
+    if trip_details:
+        memory["trip_context"].update(trip_details)
+    
+    # Extract user preferences from messages
+    message_lower = message.lower()
+    if any(word in message_lower for word in ["budget", "cheap", "expensive", "luxury"]):
+        if "budget" in message_lower or "cheap" in message_lower:
+            memory["user_preferences"]["budget_preference"] = "budget"
+        elif "luxury" in message_lower or "expensive" in message_lower:
+            memory["user_preferences"]["budget_preference"] = "luxury"
+    
+    if any(word in message_lower for word in ["adventure", "thrill", "exciting"]):
+        memory["user_preferences"]["activity_preference"] = "adventure"
+    elif any(word in message_lower for word in ["relaxing", "peaceful", "calm"]):
+        memory["user_preferences"]["activity_preference"] = "relaxation"
+
+def get_conversation_context(session_id: str) -> str:
+    """Get formatted conversation context for AI"""
+    if session_id not in conversation_memory:
+        return ""
+    
+    memory = conversation_memory[session_id]
+    context_parts = []
+    
+    if memory["mentioned_destinations"]:
+        context_parts.append(f"Previously discussed destinations: {', '.join(memory['mentioned_destinations'])}")
+    
+    if memory["user_preferences"]:
+        prefs = []
+        for key, value in memory["user_preferences"].items():
+            prefs.append(f"{key}: {value}")
+        context_parts.append(f"User preferences: {'; '.join(prefs)}")
+    
+    if memory["trip_context"]:
+        trip_info = []
+        for key, value in memory["trip_context"].items():
+            if value and value != "Not selected" and value != "Not specified":
+                trip_info.append(f"{key}: {value}")
+        if trip_info:
+            context_parts.append(f"Current trip planning: {'; '.join(trip_info)}")
+    
+    if memory["conversation_history"]:
+        last_exchange = memory["conversation_history"][-1]
+        context_parts.append(f"Last discussed: {last_exchange['assistant']}")
+    
+    return "\n".join(context_parts) if context_parts else ""
+
 # Models
 class ChatMessage(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
