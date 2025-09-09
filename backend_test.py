@@ -406,6 +406,277 @@ class TravelloAPITester:
         
         return consistency_score
 
+    def test_accommodation_card_functionality(self):
+        """Test accommodation card functionality as specified in review request"""
+        print(f"\n🏨 Testing Accommodation Card Functionality...")
+        
+        # Test the specific scenario from review request
+        session_id = f"{self.session_id}_accommodation_test"
+        
+        # First message: "i want to go to adaman"
+        print(f"\n   Step 1: Testing initial destination query...")
+        chat_data_1 = {
+            "message": "i want to go to adaman",
+            "session_id": session_id,
+            "user_profile": {}
+        }
+        
+        success_1, response_1 = self.run_test("Andaman Destination Query", "POST", "chat", 200, data=chat_data_1)
+        
+        if not success_1:
+            print("   ❌ Initial destination query failed")
+            return False
+        
+        # Second message: "more on accommodations"
+        print(f"\n   Step 2: Testing accommodation request...")
+        chat_data_2 = {
+            "message": "more on accommodations",
+            "session_id": session_id,
+            "user_profile": {}
+        }
+        
+        success_2, response_2 = self.run_test("Accommodation Request", "POST", "chat", 200, data=chat_data_2)
+        
+        if not success_2:
+            print("   ❌ Accommodation request failed")
+            return False
+        
+        # Analyze the response for accommodation cards
+        ui_actions = response_2.get('ui_actions', [])
+        hotel_cards = []
+        destination_cards = []
+        
+        for action in ui_actions:
+            if action.get('type') == 'card_add':
+                payload = action.get('payload', {})
+                category = payload.get('category', '')
+                if category == 'hotel':
+                    hotel_cards.append(action)
+                elif category == 'destination':
+                    destination_cards.append(action)
+        
+        print(f"\n   📊 Card Analysis:")
+        print(f"      Hotel cards: {len(hotel_cards)}")
+        print(f"      Destination cards: {len(destination_cards)}")
+        print(f"      Total UI actions: {len(ui_actions)}")
+        
+        # Verify ONLY hotel cards are generated for accommodation requests
+        accommodation_test_passed = False
+        if len(hotel_cards) > 0 and len(destination_cards) == 0:
+            print(f"   ✅ PASS: Only accommodation cards generated")
+            accommodation_test_passed = True
+            
+            # Verify hotel card structure
+            for i, hotel_card in enumerate(hotel_cards[:2]):  # Check first 2
+                payload = hotel_card.get('payload', {})
+                required_fields = ['id', 'category', 'title', 'rating', 'price_estimate', 'amenities']
+                missing_fields = [field for field in required_fields if field not in payload]
+                
+                if not missing_fields:
+                    print(f"      ✅ Hotel card {i+1} structure correct: {payload.get('title', 'N/A')}")
+                else:
+                    print(f"      ⚠️  Hotel card {i+1} missing fields: {missing_fields}")
+        else:
+            print(f"   ❌ FAIL: Expected only hotel cards, got {len(hotel_cards)} hotel + {len(destination_cards)} destination cards")
+            
+            # Show what cards were generated for debugging
+            for action in ui_actions[:3]:  # Show first 3 actions
+                if action.get('type') == 'card_add':
+                    payload = action.get('payload', {})
+                    print(f"      Debug: {payload.get('category', 'unknown')} card - {payload.get('title', 'N/A')}")
+        
+        return accommodation_test_passed
+
+    def test_question_chip_generation(self):
+        """Test question chip generation for various message types"""
+        print(f"\n💭 Testing Question Chip Generation...")
+        
+        test_scenarios = [
+            {
+                "message": "i want to go to manali",
+                "expected_questions": ["Hotels in Manali", "Best activities in Manali", "Food and restaurants in Manali"],
+                "description": "Destination query chips"
+            },
+            {
+                "message": "show me hotels in kerala",
+                "expected_questions": ["Best restaurants in Kerala", "Activities to do in Kerala", "Best time to visit Kerala"],
+                "description": "Accommodation query chips"
+            },
+            {
+                "message": "plan a trip to rishikesh",
+                "expected_questions": ["Hotels in Rishikesh", "Best activities in Rishikesh", "Transportation to Rishikesh"],
+                "description": "Trip planning chips"
+            }
+        ]
+        
+        chip_tests_passed = 0
+        for i, scenario in enumerate(test_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{self.session_id}_chips_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Question Chips {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                ui_actions = response.get('ui_actions', [])
+                question_chips = [action for action in ui_actions if action.get('type') == 'question_chip']
+                
+                print(f"      Question chips generated: {len(question_chips)}")
+                
+                if question_chips:
+                    # Verify question chip structure
+                    valid_chips = 0
+                    for chip in question_chips[:3]:  # Check first 3
+                        payload = chip.get('payload', {})
+                        required_fields = ['id', 'question', 'category']
+                        
+                        if all(field in payload for field in required_fields):
+                            valid_chips += 1
+                            print(f"         ✅ Valid chip: {payload.get('question', 'N/A')}")
+                        else:
+                            missing = [field for field in required_fields if field not in payload]
+                            print(f"         ⚠️  Invalid chip missing: {missing}")
+                    
+                    if valid_chips > 0:
+                        chip_tests_passed += 1
+                        print(f"      ✅ Question chips properly structured")
+                    else:
+                        print(f"      ❌ Question chips have structural issues")
+                else:
+                    print(f"      ❌ No question chips generated")
+        
+        print(f"\n💭 Question Chip Results: {chip_tests_passed}/{len(test_scenarios)} scenarios passed")
+        return chip_tests_passed == len(test_scenarios)
+
+    def test_ui_actions_structure_verification(self):
+        """Test UI actions structure verification as specified in review request"""
+        print(f"\n🔍 Testing UI Actions Structure Verification...")
+        
+        # Test hotel card structure
+        print(f"\n   Testing hotel card structure...")
+        hotel_chat_data = {
+            "message": "show me accommodations in andaman",
+            "session_id": f"{self.session_id}_structure_hotel",
+            "user_profile": {}
+        }
+        
+        success, response = self.run_test("Hotel Card Structure", "POST", "chat", 200, data=hotel_chat_data)
+        
+        hotel_structure_valid = False
+        if success:
+            ui_actions = response.get('ui_actions', [])
+            hotel_cards = [action for action in ui_actions 
+                          if action.get('type') == 'card_add' and 
+                          action.get('payload', {}).get('category') == 'hotel']
+            
+            if hotel_cards:
+                hotel_card = hotel_cards[0]
+                if (hotel_card.get('type') == 'card_add' and 
+                    hotel_card.get('payload', {}).get('category') == 'hotel'):
+                    print(f"      ✅ Hotel card structure valid: type='card_add', category='hotel'")
+                    hotel_structure_valid = True
+                else:
+                    print(f"      ❌ Hotel card structure invalid")
+                    print(f"         Type: {hotel_card.get('type')}")
+                    print(f"         Category: {hotel_card.get('payload', {}).get('category')}")
+        
+        # Test question chip structure
+        print(f"\n   Testing question chip structure...")
+        question_chat_data = {
+            "message": "tell me about kerala",
+            "session_id": f"{self.session_id}_structure_question",
+            "user_profile": {}
+        }
+        
+        success, response = self.run_test("Question Chip Structure", "POST", "chat", 200, data=question_chat_data)
+        
+        question_structure_valid = False
+        if success:
+            ui_actions = response.get('ui_actions', [])
+            question_chips = [action for action in ui_actions if action.get('type') == 'question_chip']
+            
+            if question_chips:
+                question_chip = question_chips[0]
+                payload = question_chip.get('payload', {})
+                
+                if (question_chip.get('type') == 'question_chip' and 
+                    'id' in payload and 'question' in payload and 'category' in payload):
+                    print(f"      ✅ Question chip structure valid")
+                    print(f"         Type: {question_chip.get('type')}")
+                    print(f"         Payload fields: {list(payload.keys())}")
+                    question_structure_valid = True
+                else:
+                    print(f"      ❌ Question chip structure invalid")
+                    print(f"         Type: {question_chip.get('type')}")
+                    print(f"         Payload: {payload}")
+        
+        structure_tests_passed = hotel_structure_valid and question_structure_valid
+        print(f"\n🔍 Structure Verification: {'PASS' if structure_tests_passed else 'FAIL'}")
+        return structure_tests_passed
+
+    def test_mock_data_integration(self):
+        """Test MOCK_HOTELS data integration for Indian destinations"""
+        print(f"\n🇮🇳 Testing Mock Data Integration...")
+        
+        # Test Indian destinations from MOCK_HOTELS
+        indian_destinations = ["andaman", "manali", "rishikesh", "kerala"]
+        
+        integration_tests_passed = 0
+        for destination in indian_destinations:
+            print(f"\n   Testing {destination.title()} hotels...")
+            
+            chat_data = {
+                "message": f"show me hotels in {destination}",
+                "session_id": f"{self.session_id}_mock_{destination}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"{destination.title()} Hotels", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                ui_actions = response.get('ui_actions', [])
+                hotel_cards = [action for action in ui_actions 
+                              if action.get('type') == 'card_add' and 
+                              action.get('payload', {}).get('category') == 'hotel']
+                
+                if hotel_cards:
+                    # Verify hotel details match destination
+                    valid_hotels = 0
+                    for hotel_card in hotel_cards:
+                        payload = hotel_card.get('payload', {})
+                        hotel_name = payload.get('title', '').lower()
+                        location = payload.get('location', '').lower()
+                        
+                        # Check if hotel is related to the destination
+                        if (destination in hotel_name or destination in location or
+                            any(dest_keyword in hotel_name or dest_keyword in location 
+                                for dest_keyword in [destination])):
+                            valid_hotels += 1
+                            print(f"      ✅ Valid hotel: {payload.get('title', 'N/A')}")
+                            
+                            # Verify required hotel fields
+                            required_fields = ['rating', 'price_estimate', 'amenities']
+                            if all(field in payload for field in required_fields):
+                                print(f"         Hotel details complete")
+                            else:
+                                missing = [field for field in required_fields if field not in payload]
+                                print(f"         ⚠️  Missing details: {missing}")
+                    
+                    if valid_hotels > 0:
+                        integration_tests_passed += 1
+                        print(f"      ✅ {destination.title()} hotels properly integrated")
+                    else:
+                        print(f"      ❌ No valid hotels found for {destination}")
+                else:
+                    print(f"      ❌ No hotel cards generated for {destination}")
+        
+        print(f"\n🇮🇳 Mock Data Integration: {integration_tests_passed}/{len(indian_destinations)} destinations passed")
+        return integration_tests_passed == len(indian_destinations)
+
     def test_ai_integration(self):
         """Test AI integration with multiple travel queries"""
         print(f"\n🤖 Testing AI Integration...")
