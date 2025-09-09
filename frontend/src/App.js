@@ -2142,7 +2142,7 @@ function App() {
               </button>
               <Avatar />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-orange-600 bg-clip-text text-transparent">
                   Travello.ai
                 </h1>
                 <p className="text-sm text-gray-600">Your AI Travel Companion</p>
