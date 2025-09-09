@@ -3149,6 +3149,7 @@ function App() {
         destination={selectedDestination}
         isOpen={isDestinationModalOpen}
         onClose={() => setIsDestinationModalOpen(false)}
+        onPlanTrip={handlePlanTripFromModal}
       />
 
       {/* Sidebar */}
