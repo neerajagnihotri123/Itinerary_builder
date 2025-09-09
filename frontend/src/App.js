@@ -1841,8 +1841,21 @@ function App() {
   };
 
   const handleApplyFilters = () => {
-    console.log('Applying filters with trip details:', tripDetails);
-    setShowPersonalizationModal(true);
+    console.log('🎯 Applying filters with trip details:', tripDetails);
+    
+    // Add helpful message before showing personalization
+    const applyMessage = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `Perfect! I have all your trip details for ${tripDetails.destination}. Now let me learn more about your travel preferences to create the perfect personalized itinerary for you.`
+    };
+    
+    setMessages(prev => [...prev, applyMessage]);
+    
+    // Small delay to show message before opening modal
+    setTimeout(() => {
+      setShowPersonalizationModal(true);
+    }, 1000);
   };
 
   const handlePersonalizationComplete = (responses) => {
