@@ -2041,17 +2041,24 @@ function App() {
     
     switch (action) {
       case 'explore':
-        // Don't open modal, just show message and guide user to trip planning
-        const exploreMessage = {
-          id: Date.now().toString(),
-          role: 'assistant',
-          content: `Great choice! ${item.title} is perfect for your trip. I can see you're interested in exploring this destination. Let me help you plan your perfect trip!`
-        };
-        setMessages(prev => [...prev, exploreMessage]);
+        // Find the full destination data and open modal
+        const fullDestination = destinations.find(d => 
+          d.name.toLowerCase().includes(item.title.split(',')[0].toLowerCase()) ||
+          item.title.toLowerCase().includes(d.name.toLowerCase())
+        );
         
-        // Show trip planning bar and pre-fill destination
-        setShowTripBar(true);
-        setTripDetails(prev => ({ ...prev, destination: item.title }));
+        if (fullDestination) {
+          console.log('🗺️ Found destination:', fullDestination.name);
+          setSelectedDestination(fullDestination);
+          setIsDestinationModalOpen(true);
+          
+          // Also update right panel
+          setSelectedMapDestination(fullDestination);
+          setRightPanelContent('destination');
+          setHighlightedDestinations([fullDestination.id]);
+        } else {
+          console.log('❌ Destination not found for:', item.title);
+        }
         break;
         
       case 'map':
