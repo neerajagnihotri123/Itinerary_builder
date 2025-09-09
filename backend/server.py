@@ -343,6 +343,7 @@ class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
     user_profile: Optional[Dict[str, Any]] = None
+    trip_details: Optional[Dict[str, Any]] = None
 
 class ChatResponse(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
