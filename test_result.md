@@ -137,6 +137,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Accommodation card filtering working correctly! Tested specific scenario 'i want to go to adaman' then 'more on accommodations' - ONLY hotel cards generated (3 hotel cards, 0 destination cards). Hotel cards have proper structure with type='card_add', category='hotel', and all required fields (rating, price_estimate, amenities)."
+      - working: true
+        agent: "testing"
+        comment: "🎯 CRITICAL REVIEW SCENARIOS PASSED (4/4): ✅ Fixed Accommodation Request Testing: Exact scenario 'i want to go to andaman' then 'more on accommodations' generates ONLY hotel cards (3 hotels: Barefoot at Havelock ₹6000-8000/night 4.8★, Taj Exotica ₹15000-25000/night 4.9★, The Himalayan ₹8000-15000/night 4.7★). ✅ UI Actions Isolation: ui_actions array contains ONLY hotel card actions (type='card_add', category='hotel'). ✅ Destination Requests Still Work: 'tell me about kerala' generates destination cards correctly. ✅ Logging Verification: Backend logs show '🏨 Generated 3 hotel cards for accommodation request' and '🗺️ Generated X destination cards for destination request' print statements working correctly. Backend accommodation filtering fix is 100% successful!"
 
   - task: "Question chip UI actions generation"
     implemented: true
