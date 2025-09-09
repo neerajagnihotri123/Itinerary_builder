@@ -1605,76 +1605,82 @@ function App() {
   const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
   const [destinations] = useState([
     {
-      id: "kashmir_india",
-      name: "Kashmir",
-      country: "India",
-      coordinates: {"lat": 34.0837, "lng": 74.7973},
-      hero_image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
-      category: ["Adventure", "Nature", "Trekking"],
-      weather: {"temp": "15°C", "condition": "Clear"},
-      description: "Paradise on Earth with stunning lakes, snow-capped mountains, and pristine valleys perfect for trekking and adventure.",
-      highlights: ["Dal Lake", "Great Lakes Trek", "Gulmarg Skiing", "Pahalgam Valley"],
-      why_match: "Perfect for adventure seekers and nature lovers"
-    },
-    {
-      id: "manali_india",
+      id: "manali_himachal",
       name: "Manali",
-      country: "India",
+      country: "India", 
+      state: "Himachal Pradesh",
       coordinates: {"lat": 32.2396, "lng": 77.1887},
       hero_image: "https://images.unsplash.com/photo-1464822759844-d150baec0494?w=800&h=400&fit=crop",
-      category: ["Adventure", "Mountains", "Trekking"],
+      category: ["Adventure", "Mountains", "Paragliding", "River Rafting"],
       weather: {"temp": "18°C", "condition": "Pleasant"},  
-      description: "Hill station paradise offering river rafting, paragliding, trekking, and stunning mountain views.",
-      highlights: ["Solang Valley", "Rohtang Pass", "River Rafting", "Paragliding"],
-      why_match: "Ideal for thrill seekers and mountain enthusiasts"
+      description: "Adventure hub of Himachal Pradesh offering paragliding, river rafting, trekking, and stunning Himalayan views.",
+      highlights: ["Solang Valley Paragliding", "Beas River Rafting", "Rohtang Pass", "Snow Activities"],
+      why_match: "Perfect for adventure sports enthusiasts"
     },
     {
-      id: "rishikesh_india", 
+      id: "rishikesh_uttarakhand",
       name: "Rishikesh",
       country: "India",
+      state: "Uttarakhand", 
       coordinates: {"lat": 30.0869, "lng": 78.2676},
       hero_image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop",
-      category: ["Adventure", "Spiritual", "Water Sports"],
+      category: ["Adventure", "Spiritual", "River Rafting", "Bungee Jumping"],
       weather: {"temp": "25°C", "condition": "Sunny"},
-      description: "Adventure capital of India with world-class river rafting, bungee jumping, and spiritual experiences.",
-      highlights: ["River Rafting", "Bungee Jumping", "Lakshman Jhula", "Yoga Ashrams"],
-      why_match: "Perfect blend of adventure and spirituality"
+      description: "Yoga capital and adventure hub offering world-class river rafting, bungee jumping, and spiritual experiences.",
+      highlights: ["White Water Rafting", "Bungee Jumping", "Lakshman Jhula", "Yoga Ashrams"],
+      why_match: "Ultimate destination for adventure and spirituality"
     },
     {
-      id: "goa_india",
-      name: "Goa",
-      country: "India", 
-      coordinates: {"lat": 15.2993, "lng": 74.1240},
-      hero_image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&h=400&fit=crop",
-      category: ["Beach", "Water Sports", "Party"],
-      weather: {"temp": "32°C", "condition": "Sunny"},
-      description: "India's beach paradise with golden sands, water sports, vibrant nightlife, and Portuguese heritage.",
-      highlights: ["Baga Beach", "Water Sports", "Old Goa Churches", "Beach Parties"],
-      why_match: "Perfect for beach lovers and party enthusiasts"
-    },
-    {
-      id: "andaman_india",
-      name: "Andaman Islands",
+      id: "andaman_islands",
+      name: "Andaman Islands", 
       country: "India",
+      state: "Andaman & Nicobar",
       coordinates: {"lat": 11.7401, "lng": 92.6586},
       hero_image: "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=800&h=400&fit=crop",
-      category: ["Beach", "Scuba Diving", "Marine Life"],
+      category: ["Beach", "Scuba Diving", "Marine Life", "Water Sports"],
       weather: {"temp": "30°C", "condition": "Tropical"},
-      description: "Pristine islands with crystal clear waters, coral reefs, and world-class scuba diving experiences.",
-      highlights: ["Scuba Diving", "Snorkeling", "Radhanagar Beach", "Cellular Jail"],
-      why_match: "Paradise for marine life enthusiasts and beach lovers"
+      description: "Pristine tropical islands with crystal clear waters, coral reefs, and world-class scuba diving.",
+      highlights: ["Scuba Diving", "Snorkeling", "Radhanagar Beach", "Neil Island"],
+      why_match: "Paradise for marine life and beach lovers"
     },
     {
-      id: "rajasthan_india",
+      id: "pondicherry_tamil_nadu",
+      name: "Pondicherry",
+      country: "India",
+      state: "Tamil Nadu",
+      coordinates: {"lat": 11.9416, "lng": 79.8083},
+      hero_image: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&h=400&fit=crop",
+      category: ["Beach", "Scuba Diving", "French Culture", "Water Sports"],
+      weather: {"temp": "29°C", "condition": "Sunny"},
+      description: "French colonial charm meets adventure with scuba diving, surfing, and cultural experiences.",
+      highlights: ["Scuba Diving", "French Quarter", "Auroville", "Paradise Beach"],
+      why_match: "Unique blend of culture and water sports"
+    },
+    {
+      id: "kerala_backwaters",
+      name: "Kerala",
+      country: "India",
+      state: "Kerala",
+      coordinates: {"lat": 10.8505, "lng": 76.2711},
+      hero_image: "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&h=400&fit=crop",
+      category: ["Backwaters", "Houseboat", "Nature", "Cultural"],
+      weather: {"temp": "28°C", "condition": "Humid"},
+      description: "God's own country with serene backwaters, houseboat cruises, spice plantations, and Ayurvedic treatments.",
+      highlights: ["Alleppey Houseboat", "Munnar Tea Gardens", "Thekkady Wildlife", "Kochi Heritage"],
+      why_match: "Perfect for nature lovers and cultural enthusiasts"
+    },
+    {
+      id: "rajasthan_desert",
       name: "Rajasthan",
       country: "India",
+      state: "Rajasthan", 
       coordinates: {"lat": 27.0238, "lng": 74.2179},
       hero_image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=400&fit=crop",
-      category: ["Heritage", "Culture", "Desert Safari"],
-      weather: {"temp": "28°C", "condition": "Sunny"},
-      description: "Land of kings with majestic palaces, desert safaris, vibrant culture, and royal heritage.",
-      highlights: ["Desert Safari", "Amber Fort", "Lake Pichola", "Hawa Mahal"],
-      why_match: "Perfect for heritage lovers and cultural enthusiasts"
+      category: ["Desert Safari", "Heritage", "Culture", "Palaces"],
+      weather: {"temp": "32°C", "condition": "Sunny"},
+      description: "Land of maharajas with majestic palaces, desert safaris, camel rides, and royal heritage.",
+      highlights: ["Jaisalmer Desert Safari", "Udaipur Palaces", "Jaipur Pink City", "Camel Safari"],
+      why_match: "Ultimate destination for heritage and desert adventure"
     }
   ]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
