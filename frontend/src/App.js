@@ -1132,6 +1132,19 @@ function App() {
         isOpen={isDestinationModalOpen}
         onClose={() => setIsDestinationModalOpen(false)}
       />
+
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        chatHistory={chatHistory}
+        onNewChat={handleNewChat}
+        onSelectChat={(chat) => {
+          // Load selected chat
+          console.log('Selected chat:', chat);
+          setIsSidebarOpen(false);
+        }}
+      />
     </div>
   );
 }
