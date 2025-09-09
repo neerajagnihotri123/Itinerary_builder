@@ -2540,8 +2540,8 @@ function App() {
                   onClick={() => setRightPanelContent('default')}
                   className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
                 >
-                  <X className="w-4 h-4" />
-                  Back to Tours
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="font-medium">Back to Tours</span>
                 </button>
               </div>
               
