@@ -2461,18 +2461,6 @@ function App() {
               {/* Popular Destinations */}
               <div className="flex-1 p-6 overflow-y-auto">
                 <div className="space-y-6">
-                  {/* Itinerary Placeholder */}
-                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-blue-600" />
-                      Your Itinerary
-                    </h3>
-                    <div className="text-center py-8 text-gray-500">
-                      <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>Complete trip planning to see your personalized itinerary</p>
-                    </div>
-                  </div>
-
                   {/* Popular Destinations */}
                   <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -2509,18 +2497,6 @@ function App() {
                           </div>
                         </motion.div>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Accommodation Placeholder */}
-                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <Hotel className="w-5 h-5 text-green-600" />
-                      Accommodation
-                    </h3>
-                    <div className="text-center py-8 text-gray-500">
-                      <Hotel className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>Select a destination to see accommodation options</p>
                     </div>
                   </div>
                 </div>
