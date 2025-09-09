@@ -1762,33 +1762,45 @@ function App() {
       // Process UI actions
       const newRecommendations = [];
       const newChips = [];
+      const newQuestionChips = [];
 
       if (response.data.ui_actions && response.data.ui_actions.length > 0) {
         console.log('🎨 Processing UI actions:', response.data.ui_actions.length);
         
         response.data.ui_actions.forEach(action => {
           if (action.type === 'card_add') {
-            // Find the full destination data
-            const fullDestination = destinations.find(d => 
-              d.name.toLowerCase() === action.payload.title.split(',')[0].toLowerCase()
-            );
-            
-            if (fullDestination) {
-              // Use full destination data instead of payload
-              const enhancedCard = {
-                ...action.payload,
-                ...fullDestination,
-                title: `${fullDestination.name}, ${fullDestination.country}`
-              };
-              newRecommendations.push(enhancedCard);
-              console.log('📋 Enhanced card added:', enhancedCard.title);
-            } else {
+            // Check if this is a hotel card or destination card
+            if (action.payload.category === 'hotel') {
+              // Handle hotel card - don't need to match with destination data
               newRecommendations.push(action.payload);
-              console.log('📋 Basic card added:', action.payload.title);
+              console.log('🏨 Hotel card added:', action.payload.title);
+            } else {
+              // Handle destination card - try to enhance with full destination data
+              const fullDestination = destinations.find(d => 
+                d.name.toLowerCase() === action.payload.title.split(',')[0].toLowerCase()
+              );
+              
+              if (fullDestination) {
+                // Use full destination data instead of payload
+                const enhancedCard = {
+                  ...action.payload,
+                  ...fullDestination,
+                  title: `${fullDestination.name}, ${fullDestination.country}`
+                };
+                newRecommendations.push(enhancedCard);
+                console.log('📋 Enhanced destination card added:', enhancedCard.title);
+              } else {
+                newRecommendations.push(action.payload);
+                console.log('📋 Basic destination card added:', action.payload.title);
+              }
             }
           } else if (action.type === 'prompt') {
             newChips.push(...action.payload.chips);
             console.log('🔸 Added chips:', action.payload.chips);
+          } else if (action.type === 'question_chip') {
+            // Handle new question chip UI actions
+            newQuestionChips.push(action.payload);
+            console.log('❓ Question chip added:', action.payload.question);
           }
         });
       } else {
