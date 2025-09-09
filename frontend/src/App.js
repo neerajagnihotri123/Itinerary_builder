@@ -2015,6 +2015,10 @@ function App() {
     setSelectedMapDestination(destination);
     setRightPanelContent('destination');
     setHighlightedDestinations([destination.id]);
+    
+    // Also open detailed modal
+    setSelectedDestination(destination);
+    setIsDestinationModalOpen(true);
   };
 
   const handleCardAction = (action, item) => {
