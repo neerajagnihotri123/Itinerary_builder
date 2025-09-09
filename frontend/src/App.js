@@ -1274,11 +1274,11 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
     {destinations && destinations.length > 0 && destinations.map((dest, index) => {
       const positions = [
         { left: '25%', top: '35%' }, // Paris
+        { left: '60%', top: '45%' }, // Goa
         { left: '75%', top: '30%' }, // Tokyo
-        { left: '55%', top: '65%' }, // Bali
         { left: '20%', top: '40%' }, // New York
         { left: '45%', top: '35%' }, // Santorini
-        { left: '60%', top: '45%' }  // Goa
+        { left: '55%', top: '65%' }  // Bali
       ];
       
       const position = positions[index] || { left: `${20 + index * 15}%`, top: `${30 + (index % 2) * 20}%` };
@@ -1290,11 +1290,12 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: index * 0.1, duration: 0.3 }}
-          className={`absolute cursor-pointer ${isHighlighted ? 'z-20' : 'z-10'}`}
+          className={`absolute cursor-pointer ${isHighlighted ? 'z-30' : 'z-20'}`}
           style={position}
           onClick={() => onMarkerClick(dest)}
           whileHover={{ scale: 1.3 }}
         >
+          {/* Marker Pin */}
           <div className={`w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center ${
             isHighlighted 
               ? 'bg-blue-600 animate-pulse shadow-blue-400/50' 
@@ -1302,14 +1303,23 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
           }`}>
             <div className="w-4 h-4 bg-white rounded-full" />
           </div>
+          
+          {/* Location Name Label - Always Visible */}
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-md text-xs whitespace-nowrap font-medium shadow-sm ${
+              isHighlighted
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 border border-gray-200'
+            }`}
+          >
+            {dest.name}
+          </motion.div>
+          
+          {/* Pulse animation for highlighted destinations */}
           {isHighlighted && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap font-medium"
-            >
-              {dest.name}
-            </motion.div>
+            <div className="absolute inset-0 w-10 h-10 rounded-full bg-blue-400 animate-ping opacity-20" />
           )}
         </motion.div>
       );
@@ -1336,7 +1346,7 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
     )}
     
     {/* Map Controls */}
-    <div className="absolute top-4 right-4 flex flex-col gap-2">
+    <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
       <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold">
         +
       </button>
