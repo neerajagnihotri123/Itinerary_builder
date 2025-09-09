@@ -690,45 +690,76 @@ CURRENT TRIP PLANNING CONTEXT:
                 }
             })
         
-        # Generate contextual followup questions based on conversation
+        # Generate enhanced contextual followup questions
         followup_questions = []
         message_lower = request.message.lower()
+        trip_details = getattr(request, 'trip_details', {}) or {}
         
-        # Context-aware follow-up questions
-        if any(word in message_lower for word in ["destination", "place", "visit", "go to"]):
-            if not user_profile.get("travel_dates"):
-                followup_questions.append("When are you planning to travel?")
-            if not user_profile.get("travel_style"):
-                followup_questions.append("Are you looking for adventure or relaxation?")
-                
-        elif any(word in message_lower for word in ["plan", "trip", "vacation"]):
-            if not user_profile.get("duration"):
-                followup_questions.append("How many days are you planning to stay?")
-            if not user_profile.get("budget"):
-                followup_questions.append("What's your budget range?")
-                
-        elif any(word in message_lower for word in ["hotel", "stay", "accommodation"]):
-            followup_questions.append("What type of accommodation do you prefer?")
-            followup_questions.append("Any specific amenities you're looking for?")
+        # Context-aware follow-up questions based on trip planning state and conversation
+        if destination_mentioned:
+            dest_name = destination_mentioned['name']
             
-        elif any(word in message_lower for word in ["food", "restaurant", "eat"]):
-            followup_questions.append("Do you have any dietary preferences?")
-            followup_questions.append("Are you interested in local cuisine or international food?")
-            
-        elif any(word in message_lower for word in ["activity", "do", "see", "experience"]):
-            followup_questions.append("Are you interested in cultural experiences?")
-            followup_questions.append("Do you prefer indoor or outdoor activities?")
-            
-        # Default fallback questions if no specific context
+            if any(word in message_lower for word in ["itinerary", "plan"]):
+                followup_questions.extend([
+                    f"What specific activities interest you most in {dest_name}?",
+                    f"Would you like restaurant recommendations for {dest_name}?",
+                    f"Should I include adventure activities in your {dest_name} plan?"
+                ])
+            elif any(word in message_lower for word in ["hotel", "accommodation"]):
+                followup_questions.extend([
+                    f"What area of {dest_name} would you prefer to stay in?",
+                    f"Do you need family-friendly accommodations in {dest_name}?",
+                    f"Would you like hotels near {dest_name}'s main attractions?"
+                ])
+            else:
+                followup_questions.extend([
+                    f"Would you like a detailed {dest_name} itinerary?",
+                    f"What's your budget range for {dest_name}?",
+                    f"How many days are you planning in {dest_name}?"
+                ])
+        
+        # Trip details based questions
+        elif not trip_details.get('destination'):
+            followup_questions.extend([
+                "Which destination interests you most for adventure activities?",
+                "Are you looking for mountain adventures or beach experiences?",
+                "Would you prefer cultural experiences or outdoor activities?"
+            ])
+        elif not trip_details.get('budget'):
+            followup_questions.extend([
+                "What's your preferred budget range for this trip?",
+                "Are you looking for luxury, mid-range, or budget travel?",
+                "Should I focus on premium experiences or value options?"
+            ])
+        elif not trip_details.get('travelers'):
+            followup_questions.extend([
+                "How many people will be traveling?",
+                "Is this a solo trip, couple's getaway, or family vacation?",
+                "Any special requirements for your travel group?"
+            ])
+        
+        # Activity-based follow-ups
+        if any(word in message_lower for word in ["adventure", "activity", "experience"]):
+            followup_questions.extend([
+                "What level of adventure activities do you prefer?",
+                "Are you interested in water sports or mountain activities?",
+                "Would you like to include cultural experiences too?"
+            ])
+        
+        # Fallback questions if none added yet
         if not followup_questions:
-            if not user_profile.get("travel_dates"):
-                followup_questions.append("When are you planning to travel?")
-            if not user_profile.get("budget"):
-                followup_questions.append("Do you have a budget range in mind?")
-            if not user_profile.get("travel_companions"):
-                followup_questions.append("Are you traveling solo or with others?")
-            if not user_profile.get("interests"):
-                followup_questions.append("What interests you most when traveling?")
+            if any(word in message_lower for word in ["food", "restaurant", "cuisine"]):
+                followup_questions.extend([
+                    "Do you have any dietary preferences or restrictions?",
+                    "Are you interested in local street food experiences?",
+                    "Would you like fine dining or authentic local restaurants?"
+                ])
+            else:
+                followup_questions.extend([
+                    "What type of travel experience are you looking for?",
+                    "Would you like adventure activities or cultural experiences?",
+                    "What's most important to you in this trip?"
+                ])
         
         # Store chat message in database
         chat_message = ChatMessage(
