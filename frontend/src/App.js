@@ -1584,7 +1584,7 @@ function App() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Dreaming of a getaway? Tell me your travel wishlist and I\'ll guide you.\nAsk anything about your upcoming travels!'
+      content: 'Where to today?'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
