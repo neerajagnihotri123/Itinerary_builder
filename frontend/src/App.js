@@ -290,7 +290,17 @@ const WorldMap = ({ destinations, onDestinationClick }) => (
 );
 
 const DestinationModal = ({ destination, isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState('overview');
+  
   if (!destination) return null;
+  
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: MapPin },
+    { id: 'stays', label: 'Stays', icon: Hotel },
+    { id: 'restaurants', label: 'Restaurants', icon: Heart },
+    { id: 'activities', label: 'Things to Do', icon: Star },
+    { id: 'reviews', label: 'Reviews', icon: MessageCircle }
+  ];
   
   return (
     <AnimatePresence>
@@ -307,7 +317,7 @@ const DestinationModal = ({ destination, isOpen, onClose }) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <div className="relative h-64 overflow-hidden rounded-t-3xl">
@@ -335,34 +345,174 @@ const DestinationModal = ({ destination, isOpen, onClose }) => {
               </div>
             </div>
             
-            <div className="p-8">
-              <div className="flex flex-wrap gap-2 mb-6">
-                {destination.category.map((cat, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-                  >
-                    {cat}
-                  </span>
-                ))}
+            {/* Tab Navigation */}
+            <div className="border-b border-gray-200">
+              <div className="flex overflow-x-auto">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap border-b-2 transition-colors duration-200 ${
+                        activeTab === tab.id
+                          ? 'border-blue-600 text-blue-600'
+                          : 'border-transparent text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
-              
-              <p className="text-gray-700 text-lg leading-relaxed mb-8">
-                {destination.description}
-              </p>
-              
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Top Attractions</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {destination.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <MapPin className="w-5 h-5 text-blue-600" />
-                      <span className="font-medium text-gray-800">{highlight}</span>
+            </div>
+
+            {/* Tab Content */}
+            <div className="p-8 max-h-96 overflow-y-auto">
+              {activeTab === 'overview' && (
+                <div>
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {destination.category.map((cat, index) => (
+                      <span
+                        key={index}
+                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                      >
+                        {cat}
+                      </span>
+                    ))}
+                  </div>
+                  
+                  <p className="text-gray-700 text-lg leading-relaxed mb-8">
+                    {destination.description}
+                  </p>
+                  
+                  <div className="mb-8">
+                    <h3 className="text-xl font-bold text-gray-800 mb-4">Top Attractions</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {destination.highlights.map((highlight, index) => (
+                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                          <MapPin className="w-5 h-5 text-blue-600" />
+                          <span className="font-medium text-gray-800">{highlight}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
-              
+              )}
+
+              {activeTab === 'stays' && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-6">Accommodation Options</h3>
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Luxury Resort & Spa', price: '$200-300/night', rating: 4.8, type: 'Resort' },
+                      { name: 'Boutique City Hotel', price: '$120-180/night', rating: 4.6, type: 'Hotel' },
+                      { name: 'Cozy Guesthouse', price: '$60-90/night', rating: 4.4, type: 'Guesthouse' }
+                    ].map((stay, index) => (
+                      <div key={index} className="border rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold text-gray-800">{stay.name}</h4>
+                            <p className="text-gray-600 text-sm">{stay.type}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                              <span className="text-sm font-medium">{stay.rating}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-green-600">{stay.price}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'restaurants' && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-6">Local Cuisine</h3>
+                  <div className="space-y-4">
+                    {[
+                      { name: 'Traditional Local Cuisine', type: 'Fine Dining', rating: 4.7, price: '$$$$' },
+                      { name: 'Street Food Markets', type: 'Local Street Food', rating: 4.5, price: '$' },
+                      { name: 'Rooftop Restaurant', type: 'International', rating: 4.6, price: '$$$' }
+                    ].map((restaurant, index) => (
+                      <div key={index} className="border rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold text-gray-800">{restaurant.name}</h4>
+                            <p className="text-gray-600 text-sm">{restaurant.type}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                              <span className="text-sm font-medium">{restaurant.rating}</span>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-600">{restaurant.price}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'activities' && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-6">Things to Do</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { name: 'Historical Walking Tour', duration: '3 hours', price: '$25' },
+                      { name: 'Local Market Experience', duration: '2 hours', price: '$20' },
+                      { name: 'Scenic Viewpoint Visit', duration: '1 hour', price: 'Free' },
+                      { name: 'Cultural Workshop', duration: '4 hours', price: '$40' }
+                    ].map((activity, index) => (
+                      <div key={index} className="border rounded-xl p-4 hover:shadow-md transition-shadow duration-200">
+                        <h4 className="font-semibold text-gray-800 mb-2">{activity.name}</h4>
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>{activity.duration}</span>
+                          <span className="font-medium">{activity.price}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'reviews' && (
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-6">Traveler Reviews</h3>
+                  <div className="space-y-6">
+                    {[
+                      { name: 'Sarah M.', rating: 5, comment: 'Absolutely stunning destination! The culture and scenery exceeded all expectations.' },
+                      { name: 'James L.', rating: 4, comment: 'Great place to visit. Food was amazing and locals were very friendly.' },
+                      { name: 'Maria C.', rating: 5, comment: 'Perfect for a romantic getaway. Highly recommend the sunset tours!' }
+                    ].map((review, index) => (
+                      <div key={index} className="border rounded-xl p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {review.name.charAt(0)}
+                          </div>
+                          <div>
+                            <h5 className="font-semibold text-gray-800">{review.name}</h5>
+                            <div className="flex items-center gap-1">
+                              {[...Array(review.rating)].map((_, i) => (
+                                <Star key={i} className="w-4 h-4 text-yellow-500 fill-current" />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-gray-700">{review.comment}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
               <div className="flex gap-4">
                 <motion.button
                   className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-4 px-8 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
