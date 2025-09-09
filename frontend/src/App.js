@@ -382,13 +382,8 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
               <motion.button
                 onClick={() => {
                   onClose(); // Close the modal first
-                  // Trigger plan trip action
-                  const planTripMessage = `Plan a trip to ${destination.name}`;
-                  
-                  // This needs access to the parent component's functions
-                  // We'll pass this as a prop
-                  if (window.handlePlanTripFromModal) {
-                    window.handlePlanTripFromModal(destination.name);
+                  if (onPlanTrip) {
+                    onPlanTrip(destination.name);
                   }
                 }}
                 className="bg-gradient-to-r from-green-600 to-orange-600 text-white px-4 py-2 rounded-xl hover:from-green-700 hover:to-orange-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
