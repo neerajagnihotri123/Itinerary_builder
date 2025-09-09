@@ -448,22 +448,43 @@ def get_recommendations_for_query(query: str, query_type: str = "destination"):
     query_lower = query.lower()
     
     if query_type == "destination":
-        # Simple keyword matching for destinations
         recommendations = []
+        
+        # First try exact matches for destinations and categories
         for dest in MOCK_DESTINATIONS:
-            if (any(keyword in dest["name"].lower() or keyword in dest["country"].lower() 
-                   for keyword in query_lower.split()) or
-                any(keyword in category.lower() for category in dest["category"] 
+            # Check if destination name or state is mentioned
+            if (dest["name"].lower() in query_lower or 
+                dest["state"].lower() in query_lower or
+                any(keyword in dest["name"].lower() or keyword in dest["state"].lower() 
                    for keyword in query_lower.split())):
                 recommendations.append(dest)
-        return recommendations[:3]  # Return top 3
+            # Check if any category matches
+            elif any(keyword in category.lower() for category in dest["category"] 
+                    for keyword in query_lower.split()):
+                recommendations.append(dest)
+        
+        # If we have specific matches, return them
+        if recommendations:
+            return recommendations[:3]
+        
+        # For general queries like "plan a trip", return popular adventure destinations
+        if any(word in query_lower for word in ["plan", "trip", "travel", "adventure", "explore", "visit"]):
+            # Return top adventure destinations
+            adventure_destinations = [
+                dest for dest in MOCK_DESTINATIONS 
+                if any(category in ["Adventure", "Mountains", "River Rafting", "Paragliding", "Scuba Diving"] 
+                      for category in dest["category"])
+            ]
+            return adventure_destinations[:3] if adventure_destinations else MOCK_DESTINATIONS[:3]
+        
+        return []
     
     elif query_type == "hotel":
         # Return hotels for mentioned destinations
         recommendations = []
         for hotel in MOCK_HOTELS:
             dest = next((d for d in MOCK_DESTINATIONS if d["id"] == hotel["destination_id"]), None)
-            if dest and any(keyword in dest["name"].lower() or keyword in dest["country"].lower() 
+            if dest and any(keyword in dest["name"].lower() or keyword in dest["state"].lower() 
                           for keyword in query_lower.split()):
                 recommendations.append(hotel)
         return recommendations[:2]  # Return top 2
