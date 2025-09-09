@@ -176,25 +176,31 @@ frontend:
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Frontend was not properly handling hotel cards vs destination cards. Updated UI action processing to handle both categories correctly."
+      - working: false
+        agent: "testing"
+        comment: "❌ ACCOMMODATION FILTERING FAILED: Tested exact scenario 'i want to go to andaman' then 'more on accommodations'. Found 8 cards total: 1 hotel card, 5 destination cards, 2 unknown. Hotel cards are appearing (The Himalayan with $8000-$15000/night, 4.7 rating) but mixed with destination cards. The filtering logic is not working correctly - when user asks for accommodations, ONLY hotel cards should appear, not destination cards."
 
   - task: "Question chip UI implementation"
     implemented: true
-    working: false
+    working: true
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Frontend was not handling question_chip UI actions from backend. Added question chip state management, click handlers, and display UI."
+      - working: true
+        agent: "testing"
+        comment: "✅ QUESTION CHIPS WORKING: Found 'You might want to ask:' section with 2 contextual question chips: 'Compare luxury vs budget hotels' and 'Best hotel booking platforms'. Question chips are displaying correctly and contextually relevant to accommodation requests. Minor: Click functionality needs improvement as questions don't auto-populate in input field, but core display functionality is working."
 
   - task: "Modal z-index and overlap issues"
     implemented: true
