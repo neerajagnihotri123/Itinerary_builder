@@ -1657,6 +1657,23 @@ function App() {
         </div>
       </div>
 
+      {/* Destination Exploration View */}
+      <AnimatePresence>
+        {showDestinationExploration && exploringDestination && (
+          <DestinationExplorationView
+            destination={exploringDestination}
+            onClose={() => {
+              setShowDestinationExploration(false);
+              setExploringDestination(null);
+            }}
+            onMapMarkerClick={(dest) => {
+              setSelectedDestination(dest);
+              setIsDestinationModalOpen(true);
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Destination Modal */}
       <DestinationModal
         destination={selectedDestination}
