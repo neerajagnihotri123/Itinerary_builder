@@ -1984,6 +1984,8 @@ function App() {
     setRightPanelContent('destination');
     setHighlightedDestinations([destination.id]);
   };
+
+  const handleCardAction = (action, item) => {
     switch (action) {
       case 'explore':
         setExploringDestination(item);
