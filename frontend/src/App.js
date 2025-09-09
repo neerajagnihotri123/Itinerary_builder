@@ -1258,55 +1258,89 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
   <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl overflow-hidden">
     <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20" />
     
-    {/* World Map SVG or simplified representation */}
+    {/* World Map Background */}
     <div className="absolute inset-0">
-      {/* Simplified world map representation */}
       <svg className="w-full h-full" viewBox="0 0 1000 500">
-        {/* Continents simplified shapes */}
-        <path d="M100 150 Q200 100 300 150 L350 200 Q300 250 200 200 Z" fill="#e2e8f0" opacity="0.5" />
-        <path d="M400 180 Q500 150 600 180 L650 220 Q600 260 500 230 Z" fill="#e2e8f0" opacity="0.5" />
-        <path d="M700 160 Q800 130 900 160 L920 200 Q870 240 780 210 Z" fill="#e2e8f0" opacity="0.5" />
+        {/* Simplified world continents */}
+        <path d="M100 150 Q200 100 300 150 L350 200 Q300 250 200 200 Z" fill="#e2e8f0" opacity="0.6" />
+        <path d="M400 180 Q500 150 600 180 L650 220 Q600 260 500 230 Z" fill="#e2e8f0" opacity="0.6" />
+        <path d="M700 160 Q800 130 900 160 L920 200 Q870 240 780 210 Z" fill="#e2e8f0" opacity="0.6" />
+        <path d="M150 300 Q250 280 350 300 L400 340 Q350 380 250 350 Z" fill="#e2e8f0" opacity="0.5" />
+        <path d="M500 320 Q600 300 700 320 L750 360 Q700 400 600 370 Z" fill="#e2e8f0" opacity="0.5" />
       </svg>
     </div>
     
     {/* Destination Markers */}
-    {destinations.map((dest, index) => (
-      <motion.div
-        key={dest.id}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: index * 0.1, duration: 0.3 }}
-        className={`absolute cursor-pointer ${
-          highlightedDestinations.includes(dest.id) ? 'z-20' : 'z-10'
-        }`}
-        style={{
-          left: `${20 + index * 15}%`,
-          top: `${30 + (index % 2) * 20}%`
-        }}
-        onClick={() => onMarkerClick(dest)}
-        whileHover={{ scale: 1.3 }}
-      >
-        <div className={`w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center ${
-          highlightedDestinations.includes(dest.id) 
-            ? 'bg-blue-600 animate-pulse' 
-            : 'bg-red-500'
-        }`}>
-          <div className="w-4 h-4 bg-white rounded-full" />
-        </div>
-        {highlightedDestinations.includes(dest.id) && (
-          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
-            {dest.name}
+    {destinations && destinations.length > 0 && destinations.map((dest, index) => {
+      const positions = [
+        { left: '25%', top: '35%' }, // Paris
+        { left: '75%', top: '30%' }, // Tokyo
+        { left: '55%', top: '65%' }, // Bali
+        { left: '20%', top: '40%' }, // New York
+        { left: '45%', top: '35%' }, // Santorini
+        { left: '60%', top: '45%' }  // Goa
+      ];
+      
+      const position = positions[index] || { left: `${20 + index * 15}%`, top: `${30 + (index % 2) * 20}%` };
+      const isHighlighted = highlightedDestinations.includes(dest.id);
+      
+      return (
+        <motion.div
+          key={dest.id}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: index * 0.1, duration: 0.3 }}
+          className={`absolute cursor-pointer ${isHighlighted ? 'z-20' : 'z-10'}`}
+          style={position}
+          onClick={() => onMarkerClick(dest)}
+          whileHover={{ scale: 1.3 }}
+        >
+          <div className={`w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center ${
+            isHighlighted 
+              ? 'bg-blue-600 animate-pulse shadow-blue-400/50' 
+              : 'bg-red-500 hover:bg-red-600'
+          }`}>
+            <div className="w-4 h-4 bg-white rounded-full" />
           </div>
-        )}
-      </motion.div>
-    ))}
+          {isHighlighted && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap font-medium"
+            >
+              {dest.name}
+            </motion.div>
+          )}
+        </motion.div>
+      );
+    })}
+    
+    {/* Default message when no destinations */}
+    {(!destinations || destinations.length === 0) && (
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="text-center">
+          <motion.div
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
+          >
+            <MapPin className="w-8 h-8 text-white" />
+          </motion.div>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">Discover Destinations</h3>
+          <p className="text-gray-600">
+            Start chatting to see personalized recommendations on the map
+          </p>
+        </div>
+      </div>
+    )}
     
     {/* Map Controls */}
     <div className="absolute top-4 right-4 flex flex-col gap-2">
-      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200">
+      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold">
         +
       </button>
-      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200">
+      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold">
         -
       </button>
     </div>
