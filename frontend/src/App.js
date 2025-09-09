@@ -2174,7 +2174,7 @@ function App() {
                       <div className="max-w-md mx-auto">
                         {/* Hero Image */}
                         <div className="relative w-32 h-32 mx-auto mb-6">
-                          <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 p-1">
+                          <div className="w-full h-full rounded-full bg-gradient-to-br from-green-400 via-orange-400 to-red-400 p-1">
                             <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                               <img
                                 src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&h=200&fit=crop"
