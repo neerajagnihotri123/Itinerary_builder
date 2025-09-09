@@ -1176,109 +1176,179 @@ const UploadPopup = ({ isOpen, onClose, onFileUpload, onLinkSubmit }) => (
   </AnimatePresence>
 );
 
-// Interactive Map Component
-const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations = [] }) => (
-  <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20" />
-    
-    {/* World Map Background */}
-    <div className="absolute inset-0">
-      <svg className="w-full h-full" viewBox="0 0 1000 500">
-        {/* Simplified world continents */}
-        <path d="M100 150 Q200 100 300 150 L350 200 Q300 250 200 200 Z" fill="#e2e8f0" opacity="0.6" />
-        <path d="M400 180 Q500 150 600 180 L650 220 Q600 260 500 230 Z" fill="#e2e8f0" opacity="0.6" />
-        <path d="M700 160 Q800 130 900 160 L920 200 Q870 240 780 210 Z" fill="#e2e8f0" opacity="0.6" />
-        <path d="M150 300 Q250 280 350 300 L400 340 Q350 380 250 350 Z" fill="#e2e8f0" opacity="0.5" />
-        <path d="M500 320 Q600 300 700 320 L750 360 Q700 400 600 370 Z" fill="#e2e8f0" opacity="0.5" />
-      </svg>
-    </div>
-    
-    {/* Destination Markers */}
-    {destinations && destinations.length > 0 && destinations.map((dest, index) => {
-      const positions = [
-        { left: '25%', top: '35%' }, // Paris
-        { left: '60%', top: '45%' }, // Goa
-        { left: '75%', top: '30%' }, // Tokyo
-        { left: '20%', top: '40%' }, // New York
-        { left: '45%', top: '35%' }, // Santorini
-        { left: '55%', top: '65%' }  // Bali
-      ];
-      
-      const position = positions[index] || { left: `${20 + index * 15}%`, top: `${30 + (index % 2) * 20}%` };
-      const isHighlighted = highlightedDestinations.includes(dest.id);
-      
-      return (
-        <motion.div
-          key={dest.id}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: index * 0.1, duration: 0.3 }}
-          className={`absolute cursor-pointer ${isHighlighted ? 'z-30' : 'z-20'}`}
-          style={position}
-          onClick={() => onMarkerClick(dest)}
-          whileHover={{ scale: 1.3 }}
-        >
-          {/* Marker Pin */}
-          <div className={`w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center ${
-            isHighlighted 
-              ? 'bg-blue-600 animate-pulse shadow-blue-400/50' 
-              : 'bg-red-500 hover:bg-red-600'
-          }`}>
-            <div className="w-4 h-4 bg-white rounded-full" />
-          </div>
+// Interactive Map Component with scrollable real map
+const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations = [] }) => {
+  const [zoom, setZoom] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    setPanPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.2, 2));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.2, 0.5));
+  };
+
+  return (
+    <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl overflow-hidden cursor-grab"
+         onMouseDown={handleMouseDown}
+         onMouseMove={handleMouseMove}
+         onMouseUp={handleMouseUp}
+         onMouseLeave={handleMouseUp}
+    >
+      <div 
+        className="absolute inset-0 transition-transform duration-200"
+        style={{
+          transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoom})`,
+          transformOrigin: 'center'
+        }}
+      >
+        {/* More realistic world map */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20" />
+        
+        {/* World Map Background - More detailed */}
+        <svg className="w-full h-full" viewBox="0 0 1000 500">
+          {/* North America */}
+          <path d="M50 100 Q80 80 120 100 L180 120 Q200 140 180 160 L160 180 Q140 200 100 180 L80 160 Q60 140 50 120 Z" fill="#34d399" opacity="0.7" />
+          {/* South America */}
+          <path d="M120 220 Q140 200 160 220 L180 260 Q170 300 150 320 L130 340 Q110 320 120 280 Z" fill="#34d399" opacity="0.7" />
+          {/* Europe */}
+          <path d="M380 80 Q420 70 460 80 L480 100 Q470 120 450 130 L430 140 Q410 130 390 120 L380 100 Z" fill="#34d399" opacity="0.7" />
+          {/* Africa */}
+          <path d="M380 160 Q420 150 460 160 L480 200 Q470 260 450 300 L430 320 Q410 300 390 260 L380 200 Z" fill="#34d399" opacity="0.7" />
+          {/* Asia */}
+          <path d="M520 60 Q600 50 680 60 L720 80 Q700 120 680 140 L660 160 Q640 140 620 120 L600 100 Q580 80 560 80 L540 80 Q520 80 520 80 Z" fill="#34d399" opacity="0.7" />
+          {/* Australia */}
+          <path d="M680 320 Q720 310 760 320 L780 340 Q770 360 750 370 L730 380 Q710 370 690 360 L680 340 Z" fill="#34d399" opacity="0.7" />
           
-          {/* Location Name Label - Always Visible */}
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-md text-xs whitespace-nowrap font-medium shadow-sm ${
-              isHighlighted
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-200'
-            }`}
-          >
-            {dest.name}
-          </motion.div>
+          {/* Ocean details */}
+          <circle cx="200" cy="200" r="5" fill="#3b82f6" opacity="0.3" />
+          <circle cx="600" cy="250" r="8" fill="#3b82f6" opacity="0.3" />
+          <circle cx="800" cy="180" r="6" fill="#3b82f6" opacity="0.3" />
+        </svg>
+        
+        {/* Destination Markers with accurate positions */}
+        {destinations && destinations.length > 0 && destinations.map((dest, index) => {
+          // More accurate geographic positions
+          const positions = {
+            'paris_france': { left: '47%', top: '25%' },
+            'tokyo_japan': { left: '85%', top: '35%' },
+            'bali_indonesia': { left: '78%', top: '55%' },
+            'new_york_usa': { left: '25%', top: '30%' },
+            'santorini_greece': { left: '52%', top: '38%' },
+            'goa_india': { left: '70%', top: '45%' }
+          };
           
-          {/* Pulse animation for highlighted destinations */}
-          {isHighlighted && (
-            <div className="absolute inset-0 w-10 h-10 rounded-full bg-blue-400 animate-ping opacity-20" />
-          )}
-        </motion.div>
-      );
-    })}
-    
-    {/* Default message when no destinations */}
-    {(!destinations || destinations.length === 0) && (
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
-          >
-            <MapPin className="w-8 h-8 text-white" />
-          </motion.div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Discover Destinations</h3>
-          <p className="text-gray-600">
-            Start chatting to see personalized recommendations on the map
-          </p>
-        </div>
+          const position = positions[dest.id] || { left: `${20 + index * 15}%`, top: `${30 + (index % 2) * 20}%` };
+          const isHighlighted = highlightedDestinations.includes(dest.id);
+          
+          return (
+            <motion.div
+              key={dest.id}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.1, duration: 0.3 }}
+              className={`absolute cursor-pointer ${isHighlighted ? 'z-30' : 'z-20'}`}
+              style={position}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkerClick(dest);
+              }}
+              whileHover={{ scale: 1.3 }}
+            >
+              {/* Marker Pin */}
+              <div className={`w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center ${
+                isHighlighted 
+                  ? 'bg-blue-600 animate-pulse shadow-blue-400/50' 
+                  : 'bg-red-500 hover:bg-red-600'
+              }`}>
+                <div className="w-4 h-4 bg-white rounded-full" />
+              </div>
+              
+              {/* Location Name Label */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`absolute -bottom-8 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-md text-xs whitespace-nowrap font-medium shadow-sm ${
+                  isHighlighted
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-200'
+                }`}
+              >
+                {dest.name}
+              </motion.div>
+              
+              {/* Pulse animation for highlighted destinations */}
+              {isHighlighted && (
+                <div className="absolute inset-0 w-10 h-10 rounded-full bg-blue-400 animate-ping opacity-20" />
+              )}
+            </motion.div>
+          );
+        })}
       </div>
-    )}
-    
-    {/* Map Controls */}
-    <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
-      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold">
-        +
-      </button>
-      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold">
-        -
-      </button>
+      
+      {/* Default message when no destinations */}
+      {(!destinations || destinations.length === 0) && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center">
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
+            >
+              <MapPin className="w-8 h-8 text-white" />
+            </motion.div>
+            <h3 className="text-xl font-bold text-gray-800 mb-2">Discover Destinations</h3>
+            <p className="text-gray-600">
+              Start chatting to see personalized recommendations on the map
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {/* Map Controls */}
+      <div className="absolute top-4 right-4 flex flex-col gap-2 z-40">
+        <button 
+          onClick={handleZoomIn}
+          className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold"
+        >
+          +
+        </button>
+        <button 
+          onClick={handleZoomOut}
+          className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200 text-gray-700 font-semibold"
+        >
+          -
+        </button>
+      </div>
+      
+      {/* Pan instructions */}
+      <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 text-xs text-gray-600">
+        Drag to pan • Use +/- to zoom
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Destination Exploration View
 const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) => (
