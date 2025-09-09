@@ -1823,6 +1823,7 @@ function App() {
             tripDetails={tripDetails}
             onUpdateTrip={setTripDetails}
             isVisible={showTripBar}
+            onApplyFilters={handleApplyFilters}
           />
 
           {/* Chat Messages */}
