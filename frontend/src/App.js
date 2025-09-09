@@ -1640,13 +1640,19 @@ function App() {
 
       console.log('✅ API Response received:', response.data);
 
+      const assistantMessageId = `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       const assistantMessage = {
-        id: Date.now().toString() + '_assistant',
+        id: assistantMessageId,
         role: 'assistant',
         content: response.data.chat_text
       };
 
       setMessages(prev => {
+        // Check if message already exists to prevent duplicates
+        if (prev.some(msg => msg.id === assistantMessageId)) {
+          console.log('Assistant message already exists, skipping duplicate');
+          return prev;
+        }
         console.log('Adding assistant message to state');
         return [...prev, assistantMessage];
       });
