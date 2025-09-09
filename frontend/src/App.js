@@ -24,7 +24,10 @@ import {
   MessageCircle,
   FileText,
   Image,
-  Edit3
+  Edit3,
+  Eye,
+  Utensils,
+  Cloud
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
