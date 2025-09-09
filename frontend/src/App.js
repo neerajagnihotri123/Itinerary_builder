@@ -1206,12 +1206,12 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
         {destinations && destinations.length > 0 && destinations.map((dest, index) => {
           // More accurate geographic positions for Indian destinations
           const positions = {
-            'kashmir_india': { left: '71%', top: '25%' },      // Kashmir in northern India
-            'manali_india': { left: '70%', top: '28%' },       // Manali in Himachal Pradesh
-            'rishikesh_india': { left: '72%', top: '30%' },    // Rishikesh in Uttarakhand
-            'goa_india': { left: '68%', top: '50%' },          // Goa on west coast
-            'andaman_india': { left: '82%', top: '58%' },      // Andaman Islands in Bay of Bengal
-            'rajasthan_india': { left: '69%', top: '35%' }     // Rajasthan in northwest India
+            'manali_himachal': { left: '70%', top: '28%' },       // Manali in Himachal Pradesh  
+            'rishikesh_uttarakhand': { left: '72%', top: '30%' }, // Rishikesh in Uttarakhand
+            'andaman_islands': { left: '82%', top: '58%' },       // Andaman Islands in Bay of Bengal
+            'pondicherry_tamil_nadu': { left: '74%', top: '52%' }, // Pondicherry in Tamil Nadu
+            'kerala_backwaters': { left: '68%', top: '55%' },     // Kerala backwaters
+            'rajasthan_desert': { left: '69%', top: '35%' }       // Rajasthan in northwest India
           };
           
           const position = positions[dest.id] || { left: `${20 + index * 15}%`, top: `${30 + (index % 2) * 20}%` };
