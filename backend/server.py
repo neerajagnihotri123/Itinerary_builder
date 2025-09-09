@@ -858,6 +858,14 @@ CURRENT TRIP PLANNING CONTEXT:
         )
         await db.chat_messages.insert_one(assistant_message.dict())
         
+        # Update conversation memory
+        update_conversation_memory(
+            session_id=request.session_id or "default",
+            message=request.message,
+            response=llm_response,
+            trip_details=trip_details if hasattr(request, 'trip_details') and request.trip_details else {}
+        )
+        
         return ChatResponse(
             chat_text=llm_response,
             ui_actions=ui_actions,
