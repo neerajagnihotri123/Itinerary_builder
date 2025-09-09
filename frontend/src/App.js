@@ -1248,14 +1248,14 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
         
         {/* Destination Markers with accurate positions */}
         {destinations && destinations.length > 0 && destinations.map((dest, index) => {
-          // More accurate geographic positions
+          // More accurate geographic positions for Indian destinations
           const positions = {
-            'paris_france': { left: '47%', top: '25%' },
-            'tokyo_japan': { left: '85%', top: '35%' },
-            'bali_indonesia': { left: '78%', top: '55%' },
-            'new_york_usa': { left: '25%', top: '30%' },
-            'santorini_greece': { left: '52%', top: '38%' },
-            'goa_india': { left: '70%', top: '45%' }
+            'kashmir_india': { left: '71%', top: '25%' },      // Kashmir in northern India
+            'manali_india': { left: '70%', top: '28%' },       // Manali in Himachal Pradesh
+            'rishikesh_india': { left: '72%', top: '30%' },    // Rishikesh in Uttarakhand
+            'goa_india': { left: '68%', top: '50%' },          // Goa on west coast
+            'andaman_india': { left: '82%', top: '58%' },      // Andaman Islands in Bay of Bengal
+            'rajasthan_india': { left: '69%', top: '35%' }     // Rajasthan in northwest India
           };
           
           const position = positions[dest.id] || { left: `${20 + index * 15}%`, top: `${30 + (index % 2) * 20}%` };
