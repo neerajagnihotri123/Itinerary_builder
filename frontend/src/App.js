@@ -317,7 +317,7 @@ const DestinationModal = ({ destination, isOpen, onClose }) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden z-70"
             onClick={e => e.stopPropagation()}
           >
             <div className="relative h-64 overflow-hidden rounded-t-3xl">
