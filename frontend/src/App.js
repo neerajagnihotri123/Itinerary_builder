@@ -238,7 +238,7 @@ const MessageBubble = ({ message, isUser }) => (
         <div
           className={`p-4 rounded-2xl ${
             isUser
-              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+              ? 'bg-gradient-to-r from-green-600 to-orange-600 text-white'
               : 'bg-white/80 backdrop-blur-sm text-gray-800 border border-white/30'
           }`}
         >
