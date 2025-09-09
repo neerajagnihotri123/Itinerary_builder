@@ -923,7 +923,7 @@ const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => (
               <label className="block text-sm font-medium text-gray-700 mb-2">Check-out</label>
               <input 
                 type="date" 
-                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
             
