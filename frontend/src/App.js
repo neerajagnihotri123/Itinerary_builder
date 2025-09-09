@@ -1392,25 +1392,25 @@ const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) 
             <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Facts</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-blue-50 p-4 rounded-xl">
-                <div className="text-blue-600 font-semibold">Best Time</div>
-                <div className="text-gray-700">Mar - May</div>
+                <div className="text-blue-600 font-semibold text-sm">Best Time</div>
+                <div className="text-gray-700 font-medium">Mar - May</div>
               </div>
               <div className="bg-green-50 p-4 rounded-xl">
-                <div className="text-green-600 font-semibold">Currency</div>
-                <div className="text-gray-700">USD</div>
+                <div className="text-green-600 font-semibold text-sm">Currency</div>
+                <div className="text-gray-700 font-medium">USD</div>
               </div>
               <div className="bg-purple-50 p-4 rounded-xl">
-                <div className="text-purple-600 font-semibold">Language</div>
-                <div className="text-gray-700">English</div>
+                <div className="text-purple-600 font-semibold text-sm">Language</div>
+                <div className="text-gray-700 font-medium">English</div>
               </div>
               <div className="bg-orange-50 p-4 rounded-xl">
-                <div className="text-orange-600 font-semibold">Time Zone</div>
-                <div className="text-gray-700">GMT-5</div>
+                <div className="text-orange-600 font-semibold text-sm">Time Zone</div>
+                <div className="text-gray-700 font-medium">GMT-5</div>
               </div>
             </div>
           </div>
           
-          {/* Tailored Questions */}
+          {/* Let's Plan Your Trip */}
           <div className="mb-6">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Let's Plan Your Trip</h3>
             <div className="space-y-3">
@@ -1422,26 +1422,26 @@ const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) 
               ].map((question, index) => (
                 <button
                   key={index}
-                  className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors duration-200 border border-gray-200"
+                  className="w-full text-left p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors duration-200 border border-gray-200 text-gray-700 font-medium"
                 >
                   {question}
                 </button>
               ))}
             </div>
           </div>
-          
-          {/* Quick Ask Bar */}
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-6">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Ask about this destination..."
-                className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <button className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200">
-                <Send className="w-5 h-5" />
-              </button>
-            </div>
+        </div>
+        
+        {/* Quick Ask Bar - Sticky at bottom */}
+        <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder={`Ask about this destination...`}
+              className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200">
+              <Send className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
