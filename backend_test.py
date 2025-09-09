@@ -745,6 +745,21 @@ def main():
     data_consistency_success = tester.test_data_consistency()
     test_results.append((data_consistency_success, {}))
     
+    # CRITICAL TESTS FOR REVIEW REQUEST
+    print("\n" + "🎯" * 20 + " CRITICAL REVIEW TESTS " + "🎯" * 20)
+    
+    accommodation_success = tester.test_accommodation_card_functionality()
+    test_results.append((accommodation_success, {}))
+    
+    question_chip_success = tester.test_question_chip_generation()
+    test_results.append((question_chip_success, {}))
+    
+    structure_success = tester.test_ui_actions_structure_verification()
+    test_results.append((structure_success, {}))
+    
+    mock_data_success = tester.test_mock_data_integration()
+    test_results.append((mock_data_success, {}))
+    
     # AI Integration test
     ai_success = tester.test_ai_integration()
     test_results.append((ai_success, {}))
