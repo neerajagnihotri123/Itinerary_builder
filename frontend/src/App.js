@@ -1587,13 +1587,19 @@ function App() {
 
     console.log('🚀 Sending message:', inputMessage);
 
+    const messageId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const userMessage = {
-      id: Date.now().toString(),
+      id: messageId,
       role: 'user',
       content: inputMessage
     };
 
     setMessages(prev => {
+      // Check if message already exists to prevent duplicates
+      if (prev.some(msg => msg.id === messageId)) {
+        console.log('Message already exists, skipping duplicate');
+        return prev;
+      }
       console.log('Adding user message to state');
       return [...prev, userMessage];
     });
