@@ -101,6 +101,18 @@ MOCK_DESTINATIONS = [
         "description": "Iconic Greek island famous for its white-washed buildings, blue domes, and stunning sunsets.",
         "highlights": ["Oia Sunset", "Red Beach", "Akrotiri Archaeological Site", "Wine Tasting"],
         "why_match": "Perfect for romantic getaways and beach relaxation"
+    },
+    {
+        "id": "goa_india",
+        "name": "Goa",
+        "country": "India",
+        "coordinates": {"lat": 15.2993, "lng": 74.1240},
+        "hero_image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&h=400&fit=crop",
+        "category": ["Beach", "Culture & History", "Relaxation"],
+        "weather": {"temp": "32°C", "condition": "Sunny"},
+        "description": "India's beach paradise with golden sands, Portuguese heritage, and vibrant nightlife.",
+        "highlights": ["Baga Beach", "Old Goa Churches", "Spice Plantations", "Dudhsagar Falls"],
+        "why_match": "Perfect for beach lovers seeking culture and relaxation"
     }
 ]
 
