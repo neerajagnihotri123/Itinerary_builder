@@ -2607,8 +2607,9 @@ function App() {
                           className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg border border-green-100"
                           whileHover={{ scale: 1.05 }}
                           onClick={() => {
-                            // Handle tour click - could open tour details modal
-                            console.log('Tour clicked:', tour.name);
+                            // Open tour details in right panel
+                            setRightPanelContent('tour');
+                            setSelectedTour(tour);
                           }}
                         >
                           <img
