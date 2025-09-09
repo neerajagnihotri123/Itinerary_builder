@@ -2139,67 +2139,65 @@ function App() {
       case 'plan_trip':
         // Extract destination name from the item title
         const destinationName = item.title.split(',')[0].trim();
-        
-        // Create a plan trip message
-        const planTripMessage = `Plan a trip to ${destinationName}`;
-        
-        // Add user message to chat immediately
-        const userMessage = {
-          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          role: 'user',
-          content: planTripMessage
-        };
-        setMessages(prev => [...prev, userMessage]);
-        
-        // Show trip planning bar immediately
-        setShowTripBar(true);
-        
-        // Send the message directly through API
-        const sendPlanTripMessage = async () => {
-          try {
-            setIsLoading(true);
-            const response = await axios.post(`${API}/chat`, {
-              message: planTripMessage,
-              session_id: sessionId,
-              user_profile: userProfile,
-              trip_details: { ...tripDetails, destination: destinationName }
-            });
-
-            const assistantMessage = {
-              id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-              role: 'assistant',
-              content: response.data.chat_text
-            };
-
-            setMessages(prev => [...prev, assistantMessage]);
-            
-            // Process any UI actions
-            if (response.data.ui_actions && response.data.ui_actions.length > 0) {
-              // Handle UI actions if needed
-              console.log('UI actions from plan trip:', response.data.ui_actions);
-            }
-            
-          } catch (error) {
-            console.error('Plan trip message error:', error);
-            const errorMessage = {
-              id: `error_${Date.now()}`,
-              role: 'assistant',
-              content: 'Sorry, I had trouble processing your trip planning request. Please try again.'
-            };
-            setMessages(prev => [...prev, errorMessage]);
-          } finally {
-            setIsLoading(false);
-          }
-        };
-        
-        // Execute the API call
-        sendPlanTripMessage();
-        
-        console.log('🗓️ Planning trip for:', destinationName);
+        handlePlanTripFromModal(destinationName);
         break;
         
       default:
         console.log('Unknown action:', action, item);
+    }
+  };
+
+  const handlePlanTripFromModal = async (destinationName) => {
+    console.log('🗓️ Planning trip for:', destinationName);
+    
+    // Create a plan trip message
+    const planTripMessage = `Plan a trip to ${destinationName}`;
+    
+    // Add user message to chat immediately
+    const userMessage = {
+      id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      role: 'user',
+      content: planTripMessage
+    };
+    setMessages(prev => [...prev, userMessage]);
+    
+    // Show trip planning bar immediately
+    setShowTripBar(true);
+    
+    // Send the message directly through API
+    try {
+      setIsLoading(true);
+      const response = await axios.post(`${API}/chat`, {
+        message: planTripMessage,
+        session_id: sessionId,
+        user_profile: userProfile,
+        trip_details: { ...tripDetails, destination: destinationName }
+      });
+
+      const assistantMessage = {
+        id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        role: 'assistant',
+        content: response.data.chat_text
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+      
+      // Process any UI actions
+      if (response.data.ui_actions && response.data.ui_actions.length > 0) {
+        console.log('UI actions from plan trip:', response.data.ui_actions);
+        // You could handle UI actions here if needed
+      }
+      
+    } catch (error) {
+      console.error('Plan trip message error:', error);
+      const errorMessage = {
+        id: `error_${Date.now()}`,
+        role: 'assistant',
+        content: 'Sorry, I had trouble processing your trip planning request. Please try again.'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
