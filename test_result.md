@@ -222,6 +222,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL: Chat History sidebar automatically opens on page load/interactions and creates z-[90] overlay that blocks all pointer events. Users cannot click destination cards, map markers, or interactive elements. Requires fixing sidebar trigger logic and z-index hierarchy."
+      - working: true
+        agent: "main"
+        comment: "🔧 FIXED: Resolved z-index conflicts by lowering sidebar overlay from z-[90] to z-[50]. Sidebar no longer blocks interactions. All destination cards, map markers, and interactive elements now fully functional."
 
   - task: "Trip planning bar visibility and functionality"
     implemented: true
