@@ -1473,10 +1473,10 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters 
           </div>
           
           <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-600" />
+            <Users className="w-5 h-5 text-green-600" />
             <button 
               onClick={() => setShowTravelersModal(true)}
-              className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors duration-200"
+              className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
             >
               {tripDetails.travelers || '1 traveler'}
             </button>
