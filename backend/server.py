@@ -689,7 +689,8 @@ CURRENT TRIP PLANNING CONTEXT:
         # Create user message
         user_message = UserMessage(text=request.message)
         
-        # Check message type and provide tailored responses
+        # Get conversation context and make responses more natural and progressive
+        conversation_context = get_conversation_context(request.session_id or "default")
         message_lower = request.message.lower()
         
         # Check if destination is mentioned in the message
@@ -699,46 +700,102 @@ CURRENT TRIP PLANNING CONTEXT:
                 destination_mentioned = dest
                 break
         
-        # Generate personalized response based on query type
-        if any(word in message_lower for word in ["itinerary", "plan", "schedule", "day by day", "detailed plan"]):
-            # Create personalized itinerary
-            destination = destination_mentioned or (MOCK_DESTINATIONS[0] if hasattr(request, 'trip_details') and request.trip_details.get('destination') else None)
-            
-            if destination:
-                llm_response = await generate_personalized_itinerary(destination, request, user_profile)
-            else:
-                # Use AI to generate itinerary
-                enhanced_message = f"Create a detailed itinerary. Context: {request.message}"
-                if trip_context:
-                    enhanced_message += f"\n\nTrip Context: {trip_context}"
-                
-                user_message_enhanced = UserMessage(text=enhanced_message)
-                llm_response_obj = await chat.send_message(user_message_enhanced)
-                llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
+        # Check if this is a simple/general request that should get direct help
+        if any(phrase in message_lower for phrase in ["plan a trip", "help me plan", "trip planning", "travel plan", "plan my trip"]):
+            # Instead of asking questions again, provide immediate help with suggestions
+            if destination_mentioned:
+                dest = destination_mentioned
+                llm_response = f"""Perfect! Let me help you plan an amazing trip to **{dest['name']}**! 🎯
 
-        elif any(word in message_lower for word in ["hotel", "accommodation", "stay", "where to stay"]):
-            # Create personalized hotel recommendations
-            destination = destination_mentioned or (MOCK_DESTINATIONS[0] if hasattr(request, 'trip_details') and request.trip_details.get('destination') else None)
-            
-            if destination:
-                llm_response = await generate_personalized_hotels(destination, request, user_profile)
+Based on what I know about {dest['name']}, here's what I can suggest:
+
+🗓️ **Quick Trip Planning Options:**
+• **Weekend Getaway (2-3 days)** - ₹8,000-15,000 per person
+• **Week-long Adventure (5-7 days)** - ₹20,000-35,000 per person  
+• **Extended Exploration (10+ days)** - ₹40,000+ per person
+
+🏔️ **Top Experiences in {dest['name']}:**
+{' • '.join([f"**{highlight}**" for highlight in dest['highlights'][:3]])}
+
+💡 **I can immediately help you with:**
+- Detailed day-by-day itineraries
+- Hotel recommendations in your budget
+- Adventure activity bookings
+- Local food and cultural experiences
+
+**What interests you most?** Just tell me something like "show me a 5-day itinerary" or "what are the best hotels" and I'll get specific! 🚀"""
+
             else:
-                # Use AI to generate hotel recommendations
-                enhanced_message = f"Recommend accommodations. Context: {request.message}"
-                if trip_context:
-                    enhanced_message += f"\n\nTrip Context: {trip_context}"
-                
-                user_message_enhanced = UserMessage(text=enhanced_message)
-                llm_response_obj = await chat.send_message(user_message_enhanced)
-                llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
+                # No specific destination mentioned, suggest popular ones
+                llm_response = f"""Absolutely! Let's plan something amazing! 🌟
+
+Since you're open to suggestions, here are **India's hottest adventure destinations** right now:
+
+🏔️ **Mountain Adventures:**
+• **Manali** - Perfect for paragliding, river rafting, snow activities (₹15K-25K for 5 days)
+• **Rishikesh** - Ultimate for white water rafting, bungee jumping, yoga retreats (₹12K-20K)
+
+🏖️ **Beach & Marine:**
+• **Andaman Islands** - World-class scuba diving, pristine beaches (₹25K-40K for 7 days)
+• **Pondicherry** - French culture + water sports combo (₹10K-18K for 4 days)
+
+🏜️ **Cultural Adventures:**
+• **Rajasthan** - Desert safaris, palace stays, camel rides (₹20K-35K for 7 days)
+• **Kerala** - Backwater cruises, spice plantations, houseboat stays (₹18K-30K for 6 days)
+
+**Just pick one that excites you** and I'll create a detailed plan instantly! Or tell me your vibe - adventure sports, cultural exploration, beach relaxation, or mix of everything? 🎯"""
+
+        elif any(phrase in message_lower for phrase in ["itinerary", "detailed plan", "day by day", "schedule"]):
+            # User wants detailed planning - provide it immediately
+            if destination_mentioned:
+                llm_response = await generate_personalized_itinerary(destination_mentioned, request, user_profile)
+            else:
+                llm_response = f"""I'd love to create a detailed itinerary for you! 📅
+
+**Quick question to get this perfect:** Where are you thinking of going? 
+
+Here are some **instant itinerary options** I can create right now:
+
+🎯 **Popular Choices:**
+• **"5-day Manali adventure"** - Paragliding, rafting, snow activities
+• **"7-day Kerala backwaters"** - Houseboats, spice tours, cultural immersion  
+• **"4-day Rishikesh spiritual adventure"** - Rafting, yoga, Ganga aarti
+• **"6-day Andaman marine experience"** - Scuba diving, island hopping, beaches
+
+**Just say something like "7-day Kerala itinerary"** and I'll have it ready in seconds! 🚀"""
+
+        elif any(phrase in message_lower for phrase in ["hotel", "accommodation", "where to stay", "lodging"]):
+            # User wants accommodation help
+            if destination_mentioned:
+                llm_response = await generate_personalized_hotels(destination_mentioned, request, user_profile)
+            else:
+                llm_response = f"""I'll help you find perfect accommodations! 🏨
+
+**What's your style?**
+
+💎 **Luxury Seeker?**
+• Heritage palaces in Rajasthan (₹12K-25K/night)
+• Beach resorts in Andaman (₹8K-18K/night)
+• Mountain luxury in Manali (₹6K-15K/night)
+
+🎯 **Adventure Focused?**  
+• Riverside camps in Rishikesh (₹3K-8K/night)
+• Trekking base camps in Himachal (₹2K-6K/night)
+• Beach shacks in Goa (₹2K-5K/night)
+
+💰 **Budget Conscious?**
+• Clean hostels and guesthouses (₹800-2.5K/night)
+• Homestays with local families (₹1K-3K/night)
+
+**Just tell me the destination and your budget** - like "hotels in Manali under ₹5K" and I'll show you the best options! 🎯"""
 
         else:
-            # Regular AI response with enhanced context
-            enhanced_message = f"""User message: {request.message}
-            
-            Context from conversation: {trip_context if trip_context else 'No trip details selected yet'}
-            
-            Please provide a helpful, personalized response that guides the user in their travel planning journey."""
+            # Regular conversation - make it more natural and helpful
+            enhanced_message = f"""User: {request.message}
+
+Context: {conversation_context if conversation_context else 'New conversation'}
+
+Be helpful, natural, and conversational. Provide specific suggestions and actionable advice. Don't ask repetitive questions. Build on the conversation naturally."""
             
             user_message_enhanced = UserMessage(text=enhanced_message)
             llm_response_obj = await chat.send_message(user_message_enhanced)
