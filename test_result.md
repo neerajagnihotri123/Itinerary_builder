@@ -247,13 +247,16 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Backend testing to verify improved responses"
-  stuck_tasks: []
+    - "Fix sidebar auto-opening and overlay blocking"
+    - "Modal z-index and overlap issues"
+    - "Trip planning bar visibility and functionality"
+  stuck_tasks:
+    - "Modal z-index and overlap issues"
   test_all: false
   test_priority: "high_first"
 
