@@ -552,7 +552,7 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
           initial={{ x: -300 }}
           animate={{ x: 0 }}
           exit={{ x: -300 }}
-          className="w-80 h-full bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-[95]"
+          className="w-80 h-full bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-[55]"
           onClick={e => e.stopPropagation()}
         >
           <div className="p-6 border-b border-white/30">
