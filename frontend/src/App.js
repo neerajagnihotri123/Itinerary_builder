@@ -2101,7 +2101,7 @@ function App() {
                         
                         <div className="space-y-4">
                           <h2 className="text-3xl font-bold text-gray-800">
-                            Where to today?
+                            Dreaming of a getaway?
                           </h2>
                           <p className="text-lg text-gray-600 leading-relaxed">
                             <strong>Dreaming of a getaway?</strong>
