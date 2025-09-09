@@ -723,8 +723,85 @@ CURRENT TRIP PLANNING CONTEXT:
                 destination_mentioned = dest
                 break
         
+        # Check if this is a booking/planning request - gather essential info first
+        if any(phrase in message_lower for phrase in ["book it", "book", "plan it", "let's plan", "create itinerary"]):
+            # Extract any destination mentioned
+            destination_name = None
+            if destination_mentioned:
+                destination_name = destination_mentioned['name']
+            else:
+                # Try to extract destination from message
+                for dest in MOCK_DESTINATIONS:
+                    if dest["name"].lower() in message_lower:
+                        destination_name = dest["name"]
+                        destination_mentioned = dest
+                        break
+            
+            # Check what information we already have from trip details
+            trip_details = getattr(request, 'trip_details', {}) or {}
+            missing_info = []
+            
+            if not trip_details.get('destination') and not destination_name:
+                missing_info.append("destination")
+            if not trip_details.get('dates'):
+                missing_info.append("travel dates")
+            if not trip_details.get('travelers'):
+                missing_info.append("number of travelers")
+            if not trip_details.get('budget'):
+                missing_info.append("budget range")
+            if not trip_details.get('duration'):
+                missing_info.append("trip duration")
+            
+            # If we're missing essential information, ask for it
+            if missing_info:
+                if destination_name:
+                    llm_response = f"""Perfect! {destination_name} is an amazing choice! 🎯
+
+To create the perfect itinerary for you, I need a few quick details:
+
+📅 **When are you planning to travel?** (dates or month)
+👥 **How many people?** (solo, couple, family, group size)
+💰 **What's your budget range?** 
+   • Budget-friendly: ₹8K-15K per person
+   • Mid-range: ₹15K-25K per person  
+   • Premium: ₹25K+ per person
+⏰ **How many days?** (weekend, week, extended trip)
+
+Once I have these details, I'll create a personalized {destination_name} adventure just for you! 🚀
+
+You can also use the trip planning bar above to set these details quickly! ⬆️"""
+                else:
+                    llm_response = f"""I'd love to help you plan something amazing! 🌟
+
+To get started, I need to know:
+
+🗺️ **Where would you like to go?** 
+   • Manali (mountains, adventure sports)
+   • Rishikesh (river rafting, spirituality)
+   • Andaman (scuba diving, beaches)
+   • Kerala (backwaters, culture)
+   • Rajasthan (desert, heritage)
+
+📅 **When are you traveling?**
+👥 **How many people?**
+💰 **Budget range?** (₹8K-15K, ₹15K-25K, or ₹25K+ per person)
+⏰ **How many days?**
+
+You can tell me like: "5-day Manali trip for 2 people in December, budget ₹20K each" and I'll create the perfect plan! 🎯"""
+            
+            else:
+                # We have all the info, now generate personalized itinerary
+                if destination_mentioned or destination_name:
+                    dest = destination_mentioned or next((dest for dest in MOCK_DESTINATIONS if dest["name"].lower() == destination_name.lower()), None)
+                    if dest:
+                        llm_response = await generate_personalized_itinerary(dest, request, user_profile)
+                    else:
+                        llm_response = "I couldn't find that destination. Could you specify which destination you'd like to book?"
+                else:
+                    llm_response = "I'd be happy to create your itinerary! Which destination interests you most?"
+
         # Check if this is a simple/general request that should get direct help
-        if any(phrase in message_lower for phrase in ["plan a trip", "help me plan", "trip planning", "travel plan", "plan my trip"]):
+        elif any(phrase in message_lower for phrase in ["plan a trip", "help me plan", "trip planning", "travel plan", "plan my trip"]):
             # Instead of asking questions again, provide immediate help with suggestions
             if destination_mentioned:
                 dest = destination_mentioned
@@ -740,13 +817,13 @@ Based on what I know about {dest['name']}, here's what I can suggest:
 🏔️ **Top Experiences in {dest['name']}:**
 {' • '.join([f"**{highlight}**" for highlight in dest['highlights'][:3]])}
 
-💡 **I can immediately help you with:**
-- Detailed day-by-day itineraries
-- Hotel recommendations in your budget
-- Adventure activity bookings
-- Local food and cultural experiences
+💡 **To create your perfect itinerary, just tell me:**
+- When are you traveling? (dates/month)
+- How many people? (solo, couple, family, group)
+- Budget preference? (₹8K-15K, ₹15K-25K, ₹25K+)
+- How many days?
 
-**What interests you most?** Just tell me something like "show me a 5-day itinerary" or "what are the best hotels" and I'll get specific! 🚀"""
+**Example:** "5-day {dest['name']} trip for 2 people in January, budget ₹20K each" 🚀"""
 
             else:
                 # No specific destination mentioned, suggest popular ones
@@ -766,7 +843,8 @@ Since you're open to suggestions, here are **India's hottest adventure destinati
 • **Rajasthan** - Desert safaris, palace stays, camel rides (₹20K-35K for 7 days)
 • **Kerala** - Backwater cruises, spice plantations, houseboat stays (₹18K-30K for 6 days)
 
-**Just pick one that excites you** and I'll create a detailed plan instantly! Or tell me your vibe - adventure sports, cultural exploration, beach relaxation, or mix of everything? 🎯"""
+💡 **To get your perfect itinerary, just say something like:**
+"5-day Manali trip for 2 people in December, budget ₹20K each" 🎯"""
 
         elif any(phrase in message_lower for phrase in ["itinerary", "detailed plan", "day by day", "schedule"]):
             # User wants detailed planning - provide it immediately
