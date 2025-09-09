@@ -186,10 +186,10 @@ const RecommendationCard = ({ item, onAction }) => {
           </div>
         )}
         
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <motion.button
             onClick={() => onAction(item.cta_primary?.action, item)}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2"
+            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -197,9 +197,22 @@ const RecommendationCard = ({ item, onAction }) => {
             <ChevronRight className="w-4 h-4" />
           </motion.button>
           
+          {/* Show Plan a Trip button only for destination cards */}
+          {item.category === 'destination' && (
+            <motion.button
+              onClick={() => onAction('plan_trip', item)}
+              className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200 flex items-center justify-center gap-2"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              Plan Trip
+              <Calendar className="w-4 h-4" />
+            </motion.button>
+          )}
+          
           <motion.button
             onClick={() => onAction(item.cta_secondary?.action, item)}
-            className="px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center"
+            className="px-4 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
