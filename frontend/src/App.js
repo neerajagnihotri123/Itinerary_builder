@@ -2118,6 +2118,34 @@ function App() {
         setShowTripBar(true);
         break;
         
+      case 'plan_trip':
+        // Extract destination name from the item title
+        const destinationName = item.title.split(',')[0].trim();
+        
+        // Create a plan trip message and send it through the chat
+        const planTripMessage = `Plan a trip to ${destinationName}`;
+        
+        // Add user message to chat
+        const userMessage = {
+          id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          role: 'user',
+          content: planTripMessage
+        };
+        setMessages(prev => [...prev, userMessage]);
+        
+        // Set the input and trigger sending
+        setInputMessage(planTripMessage);
+        setTimeout(() => {
+          setInputMessage('');
+          handleSendMessage();
+        }, 100);
+        
+        // Also show the trip planning bar
+        setShowTripBar(true);
+        
+        console.log('🗓️ Planning trip for:', destinationName);
+        break;
+        
       default:
         console.log('Unknown action:', action, item);
     }
