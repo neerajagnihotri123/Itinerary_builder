@@ -1888,6 +1888,13 @@ function App() {
     setTimeout(() => handleSendMessage(), 100);
   };
 
+  const handleQuestionChipClick = (questionChip) => {
+    // Clear existing question chips and send the question as a new message
+    setQuestionChips([]);
+    setInputMessage(questionChip.question);
+    setTimeout(() => handleSendMessage(), 100);
+  };
+
   const handleApplyFilters = () => {
     console.log('🎯 Applying filters with trip details:', tripDetails);
     
