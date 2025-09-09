@@ -2586,8 +2586,12 @@ function App() {
         onComplete={handlePersonalizationComplete}
       />
 
-      {/* Remove unnecessary destination exploration and destination modal */}
-      {/* These are replaced by right panel content */}
+      {/* Destination Modal for detailed view */}
+      <DestinationModal
+        destination={selectedDestination}
+        isOpen={isDestinationModalOpen}
+        onClose={() => setIsDestinationModalOpen(false)}
+      />
 
       {/* Sidebar */}
       <Sidebar
