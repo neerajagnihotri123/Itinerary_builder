@@ -30,6 +30,7 @@ import {
   Cloud,
   Shield,
   ArrowLeft,
+  ArrowLeft,
   Clock
 } from 'lucide-react';
 
