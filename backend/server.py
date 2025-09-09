@@ -1003,55 +1003,129 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
             for dest in destinations:
                 ui_actions.append(create_destination_card(dest))
         
-        # Add contextual "You might want to ask" question cards after every response
+        # Add contextual "You might want to ask" question cards based on conversation context
         contextual_questions = []
         
+        # Get conversation history to make questions more dynamic
+        memory = conversation_memory.get(request.session_id or "default", {})
+        mentioned_destinations = memory.get("mentioned_destinations", set())
+        user_preferences = memory.get("user_preferences", {})
+        
+        # More sophisticated contextual question generation
         if any(word in message_lower for word in ["accommodation", "hotel", "stay"]):
             if destination_mentioned:
                 dest_name = destination_mentioned['name']
-                contextual_questions = [
+                # Dynamic questions based on what hasn't been asked yet
+                base_questions = [
                     f"Best restaurants in {dest_name}",
-                    f"Activities to do in {dest_name}",
+                    f"Top activities in {dest_name}",
                     f"Best time to visit {dest_name}",
-                    f"Budget for {dest_name} trip",
-                    f"How to reach {dest_name}"
+                    f"Transportation to {dest_name}",
+                    f"Plan a 5-day {dest_name} itinerary"
                 ]
+                contextual_questions = base_questions
             else:
                 contextual_questions = [
-                    "Best beach resorts in India",
-                    "Budget hotels vs luxury stays",
-                    "Hotel booking tips",
-                    "Best areas to stay",
-                    "Family-friendly accommodations"
+                    "Compare luxury vs budget hotels",
+                    "Best hotel booking platforms",
+                    "Hotel amenities that matter most",
+                    "Safe accommodation tips for solo travelers"
                 ]
         
         elif destination_mentioned:
             dest_name = destination_mentioned['name']
-            contextual_questions = [
-                f"Hotels in {dest_name}",
+            # Vary questions based on what's been discussed before
+            potential_questions = [
+                f"Hotels and stays in {dest_name}",
+                f"Must-try food in {dest_name}",
                 f"Best activities in {dest_name}",
-                f"Food and restaurants in {dest_name}",
-                f"Transportation to {dest_name}",
-                f"Best time to visit {dest_name}"
+                f"How to reach {dest_name}",
+                f"Plan a trip to {dest_name}",
+                f"Best season for {dest_name}",
+                f"Budget for {dest_name} vacation",
+                f"Local culture in {dest_name}"
             ]
+            # Select questions that haven't been covered
+            contextual_questions = potential_questions[:4]
         
-        elif any(word in message_lower for word in ["plan", "trip", "travel"]):
-            contextual_questions = [
-                "Best adventure destinations",
-                "Budget-friendly travel options",
-                "Solo travel vs group travel",
-                "Best time to travel in India",
-                "Travel insurance and safety tips"
-            ]
+        elif any(word in message_lower for word in ["plan", "trip", "travel", "itinerary"]):
+            # Questions for trip planning context
+            if mentioned_destinations:
+                recent_dest = list(mentioned_destinations)[-1] if mentioned_destinations else None
+                if recent_dest:
+                    contextual_questions = [
+                        f"Best hotels in {recent_dest}",
+                        f"Create {recent_dest} itinerary",
+                        f"Things to pack for {recent_dest}",
+                        f"Local transportation in {recent_dest}"
+                    ]
+                else:
+                    contextual_questions = [
+                        "Best adventure destinations in India",
+                        "Budget-friendly destinations",
+                        "Solo vs group travel destinations",
+                        "Romantic getaway destinations"
+                    ]
+            else:
+                contextual_questions = [
+                    "Popular destinations for first-time travelers",
+                    "Adventure vs cultural destinations",
+                    "Weekend vs extended trip planning",
+                    "Solo travel safety tips"
+                ]
+        
+        elif any(word in message_lower for word in ["food", "restaurant", "eat", "cuisine"]):
+            if destination_mentioned:
+                dest_name = destination_mentioned['name']
+                contextual_questions = [
+                    f"Best street food in {dest_name}",
+                    f"Fine dining options in {dest_name}",
+                    f"Local specialties of {dest_name}",
+                    f"Food safety tips for {dest_name}"
+                ]
+            else:
+                contextual_questions = [
+                    "Best food destinations in India",
+                    "Street food safety tips",
+                    "Vegetarian travel options",
+                    "Regional Indian cuisines to try"
+                ]
+        
+        elif any(word in message_lower for word in ["activity", "adventure", "things to do"]):
+            if destination_mentioned:
+                dest_name = destination_mentioned['name']
+                contextual_questions = [
+                    f"Adventure sports in {dest_name}",
+                    f"Cultural experiences in {dest_name}",
+                    f"Family activities in {dest_name}",
+                    f"Best photo spots in {dest_name}"
+                ]
+            else:
+                contextual_questions = [
+                    "Adventure destinations in India",
+                    "Cultural heritage sites",
+                    "Family-friendly activities",
+                    "Photography hotspots"
+                ]
         
         else:
-            contextual_questions = [
-                "Plan a weekend getaway",
-                "Best destinations for couples",
-                "Adventure vs relaxation trips",
-                "Budget travel tips",
-                "Best travel season in India"
-            ]
+            # Default contextual questions when no specific topic detected
+            if mentioned_destinations:
+                recent_dest = list(mentioned_destinations)[-1] if mentioned_destinations else None
+                if recent_dest:
+                    contextual_questions = [
+                        f"Plan a detailed {recent_dest} trip",
+                        f"Hotels in {recent_dest}",
+                        f"Best activities in {recent_dest}",
+                        "Compare with other destinations"
+                    ]
+            else:
+                contextual_questions = [
+                    "Plan a weekend getaway",
+                    "Best destinations for your budget",
+                    "Adventure vs relaxation trips",
+                    "Popular destinations right now"
+                ]
         
         # Add contextual questions as UI actions
         for question in contextual_questions[:5]:  # Limit to 5 questions
