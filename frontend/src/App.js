@@ -1597,7 +1597,16 @@ function App() {
     setInputMessage('');
     setIsLoading(true);
 
-    // Check if user is expressing interest in planning a trip
+    // Check if user is asking about a specific destination
+    const destinationKeywords = ['explore', 'visit', 'go to', 'about', 'tell me about'];
+    const mentionedDestination = MOCK_DESTINATIONS.find(dest => 
+      inputMessage.toLowerCase().includes(dest.name.toLowerCase()) ||
+      inputMessage.toLowerCase().includes(dest.country.toLowerCase())
+    );
+    
+    if (mentionedDestination && destinationKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword))) {
+      setHighlightedDestinations([mentionedDestination.id]);
+    }
     const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
     const containsTripKeyword = tripKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword));
     
