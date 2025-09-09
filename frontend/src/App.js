@@ -1453,10 +1453,10 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters 
       >
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-600" />
+            <MapPin className="w-5 h-5 text-green-600" />
             <button 
               onClick={() => setShowWhereModal(true)}
-              className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+              className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
             >
               {tripDetails.destination || 'Choose destination'}
             </button>
