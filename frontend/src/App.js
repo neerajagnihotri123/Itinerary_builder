@@ -2553,7 +2553,10 @@ function App() {
                           whileHover={{ scale: 1.05 }}
                           onClick={() => {
                             const fullDest = destinations.find(d => d.name === dest.name);
-                            if (fullDest) handleMapMarkerClick(fullDest);
+                            if (fullDest) {
+                              setSelectedDestination(fullDest);
+                              setIsDestinationModalOpen(true);
+                            }
                           }}
                         >
                           <img
