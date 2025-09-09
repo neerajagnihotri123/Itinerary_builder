@@ -576,152 +576,90 @@ async def root():
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
-        # Initialize chat session
-        session_id = request.session_id or str(uuid.uuid4())
+        # Get or create user profile
         user_profile = request.user_profile or {}
+        
+        # Extract trip context from the request
+        trip_context = ""
+        if hasattr(request, 'trip_details') and request.trip_details:
+            trip_details = request.trip_details
+            trip_context = f"""
+CURRENT TRIP PLANNING CONTEXT:
+- Destination: {trip_details.get('destination', 'Not selected')}
+- Travel Dates: {trip_details.get('dates', 'Not selected')}
+- Number of Travelers: {trip_details.get('travelers', 'Not specified')}
+- Budget Range: {trip_details.get('budget', 'Not specified')}
+- Trip Duration: {trip_details.get('duration', 'Not specified')}
+"""
+        
+        # Enhanced system message with context
+        contextual_system_message = system_message
+        if trip_context:
+            contextual_system_message += trip_context + "\nUse this trip information to personalize your recommendations."
         
         # Initialize LLM chat
         chat = LlmChat(
             api_key=emergent_key,
-            session_id=session_id,
-            system_message=system_message
+            session_id=request.session_id or str(uuid.uuid4()),
+            system_message=contextual_system_message
         ).with_model("openai", "gpt-4o-mini")
         
         # Create user message
         user_message = UserMessage(text=request.message)
         
-        # Enhanced response generation with structured content
+        # Check message type and provide tailored responses
         message_lower = request.message.lower()
         
         # Check if destination is mentioned in the message
         destination_mentioned = None
         for dest in MOCK_DESTINATIONS:
             if dest["name"].lower() in message_lower or dest["state"].lower() in message_lower:
-                destination_mentioned = f"{dest['name']}, {dest['state']}"
+                destination_mentioned = dest
                 break
         
+        # Generate personalized response based on query type
         if any(word in message_lower for word in ["itinerary", "plan", "schedule", "day by day", "detailed plan"]):
-            llm_response = f"""🗓️ **Perfect! Let me create a detailed {destination_mentioned if destination_mentioned else '7-day'} adventure itinerary for you:**
-
-## {destination_mentioned if destination_mentioned else 'Adventure'} Complete Travel Plan 🌟
-
-### Day 1 – 🛬 Arrival & Welcome
-**Morning:** Check-in at premium accommodation
-- **Recommended Hotels:** Taj MG Road or The Oberoi (luxury) | Lemon Tree Premier (mid-range)
-- **Activity:** City orientation walk, local SIM card, currency exchange
-
-**Afternoon:** Explore local markets and cultural sites
-- **Must-visit:** Main cultural district and heritage walk
-- **Local Experience:** Traditional welcome lunch at authentic restaurant
-
-**Evening:** Sunset views and welcome dinner
-- **Restaurant:** Local specialty cuisine experience
-- **Tip:** Try regional delicacies and interact with locals
-
-### Day 2 – 🏰 Heritage & Culture
-**Morning:** Historical landmarks and palaces
-- **Activities:** Guided heritage tour, photo opportunities
-- **Duration:** 3-4 hours with professional guide
-
-**Afternoon:** Art galleries and cultural centers  
-- **Experience:** Traditional craft workshops, local art scene
-- **Shopping:** Authentic handicrafts and souvenirs
-
-**Evening:** Cultural performance or cooking class
-- **Options:** Classical dance show, food tour, or hands-on cooking
-
-### Day 3 – 🌿 Nature & Adventure
-**Full Day Adventure Experience:**
-- **Morning:** Nature park or botanical gardens
-- **Afternoon:** Adventure activities (based on location)
-- **Equipment:** All safety gear provided
-- **Meals:** Packed adventure lunch included
-
-### Days 4-7 – Customized Based on Your Interests 🎯
-
-**Would you like me to customize the remaining days based on:**
-- Adventure activities (trekking, water sports, wildlife)
-- Cultural immersion (festivals, workshops, local life)
-- Relaxation (spa, beaches, wellness)
-- Food exploration (cooking classes, market tours, fine dining)
-
-**🏨 Accommodation Recommendations:**
-- **Luxury:** ₹8,000-15,000/night - Premium hotels with full amenities
-- **Mid-Range:** ₹3,000-6,000/night - Comfortable hotels with good service  
-- **Budget:** ₹1,000-2,500/night - Clean, safe options with basic amenities
-
-**💰 Estimated Budget (per person):**
-- **Premium Experience:** ₹25,000-40,000 for 7 days
-- **Standard Experience:** ₹15,000-25,000 for 7 days
-- **Budget Experience:** ₹8,000-15,000 for 7 days
-
-*All estimates include accommodation, meals, activities, and local transport*"""
+            # Create personalized itinerary
+            destination = destination_mentioned or (MOCK_DESTINATIONS[0] if hasattr(request, 'trip_details') and request.trip_details.get('destination') else None)
+            
+            if destination:
+                llm_response = await generate_personalized_itinerary(destination, request, user_profile)
+            else:
+                # Use AI to generate itinerary
+                enhanced_message = f"Create a detailed itinerary. Context: {request.message}"
+                if trip_context:
+                    enhanced_message += f"\n\nTrip Context: {trip_context}"
+                
+                user_message_enhanced = UserMessage(text=enhanced_message)
+                llm_response_obj = await chat.send_message(user_message_enhanced)
+                llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
 
         elif any(word in message_lower for word in ["hotel", "accommodation", "stay", "where to stay"]):
-            llm_response = f"""🏨 **Perfect accommodation recommendations for {destination_mentioned if destination_mentioned else 'your destination'}:**
-
-## Premium Hotels & Resorts 🌟🌟🌟🌟🌟
-
-### Luxury Category (₹10,000-20,000/night)
-**The Oberoi** ⭐⭐⭐⭐⭐
-- **Features:** Spa, rooftop dining, concierge service
-- **Best for:** Honeymoon, luxury travel, business
-- **Amenities:** Pool, gym, multiple restaurants, airport transfer
-
-**Taj Hotels** ⭐⭐⭐⭐⭐  
-- **Features:** Heritage property, premium location
-- **Best for:** Cultural enthusiasts, luxury seekers
-- **Special:** Traditional architecture with modern amenities
-
-## Mid-Range Options (₹4,000-8,000/night) 
-
-### Boutique Properties
-**Lemon Tree Premier** ⭐⭐⭐⭐
-- **Features:** Contemporary design, central location
-- **Best for:** Families, business travelers
-- **Amenities:** Restaurant, fitness center, business center
-
-**Local Heritage Hotels** ⭐⭐⭐⭐
-- **Features:** Converted palaces/mansions with character
-- **Best for:** Cultural experience, unique stays
-- **Special:** Authentic architecture, local hospitality
-
-## Budget-Friendly (₹1,500-3,500/night)
-
-### Clean & Comfortable
-**OYO Premium Properties** ⭐⭐⭐
-- **Features:** Standardized quality, good locations
-- **Best for:** Budget travelers, solo travel
-- **Amenities:** AC, WiFi, clean bathrooms
-
-**Local Guesthouses** ⭐⭐⭐
-- **Features:** Family-run, authentic experience  
-- **Best for:** Cultural immersion, meeting locals
-- **Special:** Home-cooked meals, insider tips
-
-## 🎯 **My Top Recommendations Based on Travel Style:**
-
-**For Adventure Travelers:** Mid-range hotels near activity centers
-**For Cultural Enthusiasts:** Heritage properties in old city areas
-**For Families:** Resort-style hotels with amenities and space
-**For Solo Travelers:** Boutique hotels in safe, central locations
-**For Budget Travelers:** Clean guesthouses in local neighborhoods
-
-**📍 Location Tips:**
-- **City Center:** Best for sightseeing and restaurants
-- **Heritage Quarter:** Authentic experience, walking distance to attractions  
-- **Modern District:** Shopping, nightlife, business facilities
-- **Outskirts:** Peaceful, often better value, may need transport
-
-**💡 Booking Tips:**
-- Book 2-3 weeks in advance for better rates
-- Check for festival dates (prices increase significantly)
-- Many hotels offer airport pickup - ask when booking
-- Read recent reviews for current condition updates"""
+            # Create personalized hotel recommendations
+            destination = destination_mentioned or (MOCK_DESTINATIONS[0] if hasattr(request, 'trip_details') and request.trip_details.get('destination') else None)
+            
+            if destination:
+                llm_response = await generate_personalized_hotels(destination, request, user_profile)
+            else:
+                # Use AI to generate hotel recommendations
+                enhanced_message = f"Recommend accommodations. Context: {request.message}"
+                if trip_context:
+                    enhanced_message += f"\n\nTrip Context: {trip_context}"
+                
+                user_message_enhanced = UserMessage(text=enhanced_message)
+                llm_response_obj = await chat.send_message(user_message_enhanced)
+                llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
 
         else:
-            # Regular AI response with enhanced formatting
-            llm_response_obj = await chat.send_message(user_message)
+            # Regular AI response with enhanced context
+            enhanced_message = f"""User message: {request.message}
+            
+            Context from conversation: {trip_context if trip_context else 'No trip details selected yet'}
+            
+            Please provide a helpful, personalized response that guides the user in their travel planning journey."""
+            
+            user_message_enhanced = UserMessage(text=enhanced_message)
+            llm_response_obj = await chat.send_message(user_message_enhanced)
             llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
         
         # Generate UI actions based on message content
