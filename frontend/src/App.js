@@ -241,10 +241,10 @@ const MessageBubble = ({ message, isUser }) => (
         
         {/* Message bubble */}
         <div
-          className={`p-4 rounded-2xl ${
+          className={`p-4 rounded-2xl shadow-lg ${
             isUser
               ? 'bg-gradient-to-r from-green-600 to-orange-600 text-white'
-              : 'bg-white/80 backdrop-blur-sm text-gray-800 border border-white/30'
+              : 'bg-white/90 backdrop-blur-md text-gray-800 border border-white/40 shadow-xl'
           }`}
         >
           <p className="leading-relaxed">{message.content}</p>
