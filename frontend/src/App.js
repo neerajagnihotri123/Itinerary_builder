@@ -1247,8 +1247,11 @@ function App() {
 
     // Check if user is expressing interest in planning a trip
     const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
-    if (tripKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword))) {
+    const containsTripKeyword = tripKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword));
+    
+    if (containsTripKeyword) {
       setShowTripBar(true);
+      console.log('Trip planning detected, showing trip bar');
     }
 
     try {
