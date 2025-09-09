@@ -1595,7 +1595,44 @@ function App() {
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
-  const [destinations] = useState([]);
+  const [destinations] = useState([
+    {
+      id: "paris_france",
+      name: "Paris",
+      country: "France",
+      coordinates: {"lat": 48.8566, "lng": 2.3522},
+      hero_image: "https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=800&h=400&fit=crop",
+      category: ["Culture & History", "Urban", "Romance"],
+      weather: {"temp": "18°C", "condition": "Partly Cloudy"},
+      description: "The City of Light captivates with its iconic landmarks, world-class museums, and charming boulevards.",
+      highlights: ["Eiffel Tower", "Louvre Museum", "Notre-Dame Cathedral", "Seine River Cruises"],
+      why_match: "Perfect for culture lovers seeking romance and history"
+    },
+    {
+      id: "goa_india",
+      name: "Goa",
+      country: "India",
+      coordinates: {"lat": 15.2993, "lng": 74.1240},
+      hero_image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&h=400&fit=crop",
+      category: ["Beach", "Culture & History", "Relaxation"],
+      weather: {"temp": "32°C", "condition": "Sunny"},
+      description: "India's beach paradise with golden sands, Portuguese heritage, and vibrant nightlife.",
+      highlights: ["Baga Beach", "Old Goa Churches", "Spice Plantations", "Dudhsagar Falls"],
+      why_match: "Perfect for beach lovers seeking culture and relaxation"
+    },
+    {
+      id: "tokyo_japan",
+      name: "Tokyo",
+      country: "Japan",
+      coordinates: {"lat": 35.6762, "lng": 139.6503},
+      hero_image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&h=400&fit=crop",
+      category: ["Urban", "Culture & History", "Adventure"],
+      weather: {"temp": "22°C", "condition": "Clear"},
+      description: "A fascinating blend of ultra-modern technology and traditional culture in Japan's vibrant capital.",
+      highlights: ["Shibuya Crossing", "Tokyo Skytree", "Senso-ji Temple", "Tsukiji Fish Market"],
+      why_match: "Ideal for urban explorers and culture enthusiasts"
+    }
+  ]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const [tripDetails, setTripDetails] = useState({});
