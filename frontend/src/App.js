@@ -2321,7 +2321,7 @@ function App() {
               <motion.button
                 onClick={handleSendMessage}
                 disabled={!inputMessage.trim() || isLoading}
-                className="p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
+                className="p-4 bg-gradient-to-r from-green-600 to-orange-600 text-white rounded-2xl hover:from-green-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
