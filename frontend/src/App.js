@@ -1855,6 +1855,12 @@ function App() {
         console.log('🔸 Setting chips:', newChips.length);
       }
 
+      // Set question chips if we have them
+      if (newQuestionChips.length > 0) {
+        setQuestionChips(newQuestionChips);
+        console.log('❓ Setting question chips:', newQuestionChips.length);
+      }
+
       setUserProfile(response.data.updated_profile);
 
     } catch (error) {
