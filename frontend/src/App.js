@@ -1606,6 +1606,9 @@ function App() {
   const [exploringDestination, setExploringDestination] = useState(null);
   const [showPersonalizationModal, setShowPersonalizationModal] = useState(false);
   const [highlightedDestinations, setHighlightedDestinations] = useState([]);
+  const [showGeneratedContent, setShowGeneratedContent] = useState(false);
+  const [generatedItinerary, setGeneratedItinerary] = useState([]);
+  const [generatedAccommodations, setGeneratedAccommodations] = useState([]);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
