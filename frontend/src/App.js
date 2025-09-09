@@ -2087,7 +2087,7 @@ function App() {
                           <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 p-1">
                             <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
                               <img
-                                src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=200&h=200&fit=crop"
+                                src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=200&h=200&fit=crop"
                                 alt="Travel destinations"
                                 className="w-full h-full object-cover"
                               />
