@@ -803,18 +803,33 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
             llm_response_obj = await chat.send_message(user_message_enhanced)
             llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
         
-        # Generate UI actions based on message content
+        # Generate UI actions based on message content - make it more inclusive
         ui_actions = []
         message_lower = request.message.lower()
         
-        # Check for destination requests
-        if any(word in message_lower for word in ["visit", "go to", "travel to", "destination", "plan", "explore", "want to explore", "want to visit", "tell me about"]):
+        # Check for destination requests - be more inclusive
+        if any(word in message_lower for word in [
+            "visit", "go to", "travel to", "destination", "plan", "explore", "trip", 
+            "adventure", "want to explore", "want to visit", "tell me about", 
+            "suggestions", "recommend", "best places", "where to go", "travel"
+        ]):
             destinations = get_recommendations_for_query(request.message, "destination")
+            
+            # If no specific destinations found, show popular adventure destinations
+            if not destinations:
+                # Show popular Indian adventure destinations for general queries
+                popular_destinations = [
+                    dest for dest in MOCK_DESTINATIONS 
+                    if any(category in ["Adventure", "Mountains", "Beach", "Desert Safari"] 
+                          for category in dest["category"])
+                ][:3]
+                destinations = popular_destinations
+            
             for dest in destinations:
                 ui_actions.append(create_destination_card(dest))
         
         # Check for hotel requests
-        if any(word in message_lower for word in ["hotel", "stay", "accommodation", "sleep"]):
+        if any(word in message_lower for word in ["hotel", "stay", "accommodation", "sleep", "lodge"]):
             hotels = get_recommendations_for_query(request.message, "hotel")
             for hotel in hotels:
                 ui_actions.append(create_hotel_card(hotel))
