@@ -967,8 +967,10 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
         message_lower = request.message.lower()
         
         # Check for accommodation/hotel requests - priority handling
-        if any(word in message_lower for word in ["accommodation", "hotel", "stay", "sleep", "lodge", "resort"]):
-            # If destination is mentioned, get hotels for that destination
+        accommodation_requested = any(word in message_lower for word in ["accommodation", "hotel", "stay", "sleep", "lodge", "resort"])
+        
+        if accommodation_requested:
+            # ONLY show hotel cards when accommodation is explicitly requested
             hotels = []
             if destination_mentioned:
                 # Get hotels specifically for the mentioned destination
@@ -981,9 +983,11 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
             
             for hotel in hotels:
                 ui_actions.append(create_hotel_card(hotel))
+            
+            print(f"🏨 Generated {len(hotels)} hotel cards for accommodation request")
         
-        # Check for destination requests - be more inclusive
-        elif any(word in message_lower for word in [
+        # Check for destination requests - ONLY if accommodation was NOT requested
+        elif not accommodation_requested and any(word in message_lower for word in [
             "visit", "go to", "travel to", "destination", "plan", "explore", "trip", 
             "adventure", "want to explore", "want to visit", "tell me about", 
             "suggestions", "recommend", "best places", "where to go", "travel"
@@ -1002,6 +1006,8 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
             
             for dest in destinations:
                 ui_actions.append(create_destination_card(dest))
+            
+            print(f"🗺️ Generated {len(destinations)} destination cards for destination request")
         
         # Add contextual "You might want to ask" question cards based on conversation context
         contextual_questions = []
