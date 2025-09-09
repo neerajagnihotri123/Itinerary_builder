@@ -323,7 +323,7 @@ const WorldMap = ({ destinations, onDestinationClick }) => (
   </div>
 );
 
-const DestinationModal = ({ destination, isOpen, onClose }) => {
+const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
   const [activeTab, setActiveTab] = useState('overview');
   
   if (!isOpen || !destination) return null;
