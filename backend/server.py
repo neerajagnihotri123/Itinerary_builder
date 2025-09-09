@@ -605,7 +605,8 @@ async def chat_endpoint(request: ChatRequest):
 
         else:
             # Regular AI response with enhanced formatting
-            llm_response = await chat.send_message(user_message)
+            llm_response_obj = await chat.send_message(user_message)
+            llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
         
         # Generate UI actions based on message content
         ui_actions = []
