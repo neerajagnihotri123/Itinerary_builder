@@ -342,11 +342,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Accommodation card generation and filtering"
-    - "Question chip UI actions generation"
     - "Hotel card processing and display"
-    - "Question chip UI implementation"
-  stuck_tasks: []
+    - "Plan Trip button on destination cards"
+  stuck_tasks:
+    - "Hotel card processing and display"
   test_all: false
   test_priority: "high_first"
 
