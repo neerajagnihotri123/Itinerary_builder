@@ -1427,13 +1427,15 @@ const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) 
   </motion.div>
 );
 // Trip Planning Bar Component
-const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible }) => {
+const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters }) => {
   const [showWhereModal, setShowWhereModal] = useState(false);
   const [showWhenModal, setShowWhenModal] = useState(false);
   const [showTravelersModal, setShowTravelersModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
 
   if (!isVisible) return null;
+
+  const hasAllDetails = tripDetails.destination && tripDetails.dates && tripDetails.travelers && tripDetails.budget;
 
   return (
     <motion.div
@@ -1482,9 +1484,22 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible }) => {
           </button>
         </div>
         
-        <button className="ml-auto p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-          <Edit3 className="w-4 h-4 text-gray-500" />
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+            <Edit3 className="w-4 h-4 text-gray-500" />
+          </button>
+          
+          {hasAllDetails && (
+            <motion.button
+              onClick={onApplyFilters}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Apply
+            </motion.button>
+          )}
+        </div>
       </div>
 
       {/* Modals */}
