@@ -173,13 +173,246 @@ class TravelloAPITester:
         """Test the chat history endpoint"""
         return self.run_test("Chat History", "GET", f"chat-history/{self.session_id}", 200)
 
+    def test_contextual_responses(self):
+        """Test improved system message for contextual responses"""
+        print(f"\n🎯 Testing Contextual Response Quality...")
+        
+        test_scenarios = [
+            {
+                "query": "I want to plan a trip to Paris",
+                "expected_keywords": ["paris", "trip", "planning", "visual", "card"],
+                "expected_ui_actions": ["card_add"],
+                "description": "Trip planning message"
+            },
+            {
+                "query": "Tell me about Tokyo",
+                "expected_keywords": ["tokyo", "destination", "explore"],
+                "expected_ui_actions": ["card_add"],
+                "description": "Destination query"
+            },
+            {
+                "query": "Show me hotels in Bali",
+                "expected_keywords": ["bali", "hotel", "accommodation"],
+                "expected_ui_actions": ["card_add"],
+                "description": "Hotel request"
+            }
+        ]
+        
+        contextual_tests_passed = 0
+        for i, scenario in enumerate(test_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            
+            chat_data = {
+                "message": scenario["query"],
+                "session_id": f"{self.session_id}_context_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Contextual Query {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                chat_text = response.get('chat_text', '').lower()
+                ui_actions = response.get('ui_actions', [])
+                
+                # Check for contextual keywords in response
+                keyword_matches = sum(1 for keyword in scenario['expected_keywords'] 
+                                    if keyword in chat_text)
+                
+                # Check for expected UI actions
+                ui_action_types = [action.get('type') for action in ui_actions]
+                ui_matches = sum(1 for expected_type in scenario['expected_ui_actions'] 
+                               if expected_type in ui_action_types)
+                
+                # Evaluate contextual quality
+                if keyword_matches >= 2 and ui_matches > 0:
+                    contextual_tests_passed += 1
+                    print(f"   ✅ Contextual response quality: Good")
+                    print(f"      Keywords found: {keyword_matches}/{len(scenario['expected_keywords'])}")
+                    print(f"      UI actions: {len(ui_actions)} generated")
+                else:
+                    print(f"   ⚠️  Contextual response quality: Needs improvement")
+                    print(f"      Keywords found: {keyword_matches}/{len(scenario['expected_keywords'])}")
+                    print(f"      UI actions: {len(ui_actions)} generated")
+                    print(f"      Response preview: {chat_text[:100]}...")
+        
+        print(f"\n🎯 Contextual Response Results: {contextual_tests_passed}/{len(test_scenarios)} scenarios passed")
+        return contextual_tests_passed == len(test_scenarios)
+
+    def test_ui_actions_generation(self):
+        """Test UI actions generation for different query types"""
+        print(f"\n🎨 Testing UI Actions Generation...")
+        
+        test_cases = [
+            {
+                "query": "I want to explore destinations in Europe",
+                "expected_action_types": ["card_add"],
+                "expected_categories": ["destination"],
+                "description": "Destination cards generation"
+            },
+            {
+                "query": "Find me accommodation in Tokyo",
+                "expected_action_types": ["card_add"],
+                "expected_categories": ["hotel"],
+                "description": "Hotel cards generation"
+            },
+            {
+                "query": "Plan a romantic trip",
+                "expected_action_types": ["prompt"],
+                "expected_categories": ["chips"],
+                "description": "Contextual chips generation"
+            }
+        ]
+        
+        ui_tests_passed = 0
+        for i, test_case in enumerate(test_cases):
+            print(f"\n   Testing: {test_case['description']}")
+            
+            chat_data = {
+                "message": test_case["query"],
+                "session_id": f"{self.session_id}_ui_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"UI Actions {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                ui_actions = response.get('ui_actions', [])
+                
+                if ui_actions:
+                    action_types = [action.get('type') for action in ui_actions]
+                    
+                    # Check if expected action types are present
+                    type_matches = any(expected_type in action_types 
+                                     for expected_type in test_case['expected_action_types'])
+                    
+                    if type_matches:
+                        ui_tests_passed += 1
+                        print(f"   ✅ UI actions generated correctly")
+                        print(f"      Actions: {len(ui_actions)} ({', '.join(action_types)})")
+                        
+                        # Show sample action details
+                        for action in ui_actions[:2]:  # Show first 2 actions
+                            if action.get('payload'):
+                                payload = action['payload']
+                                if 'title' in payload:
+                                    print(f"      Sample: {payload.get('title', 'N/A')}")
+                    else:
+                        print(f"   ⚠️  Expected UI action types not found")
+                        print(f"      Expected: {test_case['expected_action_types']}")
+                        print(f"      Got: {action_types}")
+                else:
+                    print(f"   ⚠️  No UI actions generated")
+        
+        print(f"\n🎨 UI Actions Results: {ui_tests_passed}/{len(test_cases)} test cases passed")
+        return ui_tests_passed == len(test_cases)
+
+    def test_session_handling(self):
+        """Test session handling for conversation continuity"""
+        print(f"\n🔄 Testing Session Handling...")
+        
+        session_id = f"{self.session_id}_session_test"
+        
+        # First message
+        chat_data_1 = {
+            "message": "I want to plan a trip to Japan",
+            "session_id": session_id,
+            "user_profile": {"budget": "mid_range"}
+        }
+        
+        success_1, response_1 = self.run_test("Session Message 1", "POST", "chat", 200, data=chat_data_1)
+        
+        if not success_1:
+            print("   ❌ First message failed")
+            return False
+        
+        # Second message in same session
+        chat_data_2 = {
+            "message": "What about hotels there?",
+            "session_id": session_id,
+            "user_profile": {"budget": "mid_range", "destination": "japan"}
+        }
+        
+        success_2, response_2 = self.run_test("Session Message 2", "POST", "chat", 200, data=chat_data_2)
+        
+        if success_2:
+            print("   ✅ Session continuity maintained")
+            
+            # Check if chat history can be retrieved
+            history_success, history_response = self.run_test("Session History", "GET", f"chat-history/{session_id}", 200)
+            
+            if history_success:
+                messages = history_response.get('messages', [])
+                print(f"   ✅ Chat history retrieved: {len(messages)} messages")
+                return True
+            else:
+                print("   ⚠️  Chat history retrieval failed")
+                return False
+        else:
+            print("   ❌ Second message failed")
+            return False
+
+    def test_data_consistency(self):
+        """Test that all mock destinations and hotels are accessible"""
+        print(f"\n📊 Testing Data Consistency...")
+        
+        # Test destinations consistency
+        dest_success, dest_response = self.run_test("All Destinations", "GET", "destinations", 200)
+        
+        if not dest_success:
+            print("   ❌ Failed to retrieve destinations")
+            return False
+        
+        destinations = dest_response.get('destinations', [])
+        expected_destinations = ['paris_france', 'tokyo_japan', 'bali_indonesia', 'new_york_usa', 'santorini_greece', 'goa_india']
+        
+        found_destinations = [dest['id'] for dest in destinations]
+        missing_destinations = [dest_id for dest_id in expected_destinations if dest_id not in found_destinations]
+        
+        if missing_destinations:
+            print(f"   ⚠️  Missing destinations: {missing_destinations}")
+        else:
+            print(f"   ✅ All expected destinations found: {len(destinations)}")
+        
+        # Test hotels consistency
+        hotel_success, hotel_response = self.run_test("All Hotels", "GET", "hotels", 200)
+        
+        if not hotel_success:
+            print("   ❌ Failed to retrieve hotels")
+            return False
+        
+        hotels = hotel_response.get('hotels', [])
+        expected_hotels = ['hotel_paris_1', 'hotel_tokyo_1', 'hotel_bali_1']
+        
+        found_hotels = [hotel['id'] for hotel in hotels]
+        missing_hotels = [hotel_id for hotel_id in expected_hotels if hotel_id not in found_hotels]
+        
+        if missing_hotels:
+            print(f"   ⚠️  Missing hotels: {missing_hotels}")
+        else:
+            print(f"   ✅ All expected hotels found: {len(hotels)}")
+        
+        # Test individual destination access
+        individual_tests_passed = 0
+        for dest_id in expected_destinations[:3]:  # Test first 3
+            individual_success, _ = self.run_test(f"Individual Destination {dest_id}", "GET", f"destinations/{dest_id}", 200)
+            if individual_success:
+                individual_tests_passed += 1
+        
+        print(f"   ✅ Individual destination access: {individual_tests_passed}/3")
+        
+        consistency_score = (len(destinations) >= 6 and len(hotels) >= 3 and 
+                           len(missing_destinations) == 0 and len(missing_hotels) == 0 and 
+                           individual_tests_passed >= 3)
+        
+        return consistency_score
+
     def test_ai_integration(self):
         """Test AI integration with multiple travel queries"""
         print(f"\n🤖 Testing AI Integration...")
         
         test_queries = [
             "I want to visit Japan for cherry blossoms",
-            "Find me luxury hotels in Bali",
+            "Find me luxury hotels in Bali", 
             "Plan a cultural trip to Europe",
             "What are the best beaches in Thailand?"
         ]
