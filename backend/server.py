@@ -902,12 +902,28 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
             llm_response_obj = await chat.send_message(user_message_enhanced)
             llm_response = llm_response_obj.content if hasattr(llm_response_obj, 'content') else str(llm_response_obj)
         
-        # Generate UI actions based on message content - make it more inclusive
+        # Generate UI actions based on message content - make it more comprehensive
         ui_actions = []
         message_lower = request.message.lower()
         
+        # Check for accommodation/hotel requests - priority handling
+        if any(word in message_lower for word in ["accommodation", "hotel", "stay", "sleep", "lodge", "resort"]):
+            # If destination is mentioned, get hotels for that destination
+            hotels = []
+            if destination_mentioned:
+                # Get hotels specifically for the mentioned destination
+                for hotel in MOCK_HOTELS:
+                    if hotel["destination_id"] == destination_mentioned["id"]:
+                        hotels.append(hotel)
+            else:
+                # Get hotels from context or popular destinations
+                hotels = MOCK_HOTELS[:3]  # Show top 3 hotels
+            
+            for hotel in hotels:
+                ui_actions.append(create_hotel_card(hotel))
+        
         # Check for destination requests - be more inclusive
-        if any(word in message_lower for word in [
+        elif any(word in message_lower for word in [
             "visit", "go to", "travel to", "destination", "plan", "explore", "trip", 
             "adventure", "want to explore", "want to visit", "tell me about", 
             "suggestions", "recommend", "best places", "where to go", "travel"
@@ -927,11 +943,66 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
             for dest in destinations:
                 ui_actions.append(create_destination_card(dest))
         
-        # Check for hotel requests
-        if any(word in message_lower for word in ["hotel", "stay", "accommodation", "sleep", "lodge"]):
-            hotels = get_recommendations_for_query(request.message, "hotel")
-            for hotel in hotels:
-                ui_actions.append(create_hotel_card(hotel))
+        # Add contextual "You might want to ask" question cards after every response
+        contextual_questions = []
+        
+        if any(word in message_lower for word in ["accommodation", "hotel", "stay"]):
+            if destination_mentioned:
+                dest_name = destination_mentioned['name']
+                contextual_questions = [
+                    f"Best restaurants in {dest_name}",
+                    f"Activities to do in {dest_name}",
+                    f"Best time to visit {dest_name}",
+                    f"Budget for {dest_name} trip",
+                    f"How to reach {dest_name}"
+                ]
+            else:
+                contextual_questions = [
+                    "Best beach resorts in India",
+                    "Budget hotels vs luxury stays",
+                    "Hotel booking tips",
+                    "Best areas to stay",
+                    "Family-friendly accommodations"
+                ]
+        
+        elif destination_mentioned:
+            dest_name = destination_mentioned['name']
+            contextual_questions = [
+                f"Hotels in {dest_name}",
+                f"Best activities in {dest_name}",
+                f"Food and restaurants in {dest_name}",
+                f"Transportation to {dest_name}",
+                f"Best time to visit {dest_name}"
+            ]
+        
+        elif any(word in message_lower for word in ["plan", "trip", "travel"]):
+            contextual_questions = [
+                "Best adventure destinations",
+                "Budget-friendly travel options",
+                "Solo travel vs group travel",
+                "Best time to travel in India",
+                "Travel insurance and safety tips"
+            ]
+        
+        else:
+            contextual_questions = [
+                "Plan a weekend getaway",
+                "Best destinations for couples",
+                "Adventure vs relaxation trips",
+                "Budget travel tips",
+                "Best travel season in India"
+            ]
+        
+        # Add contextual questions as UI actions
+        for question in contextual_questions[:5]:  # Limit to 5 questions
+            ui_actions.append({
+                "type": "question_chip",
+                "payload": {
+                    "id": f"q_{hash(question)}",
+                    "question": question,
+                    "category": "suggestion"
+                }
+            })
         
         # Generate contextual chips
         chips = generate_contextual_chips(request.message, user_profile)
