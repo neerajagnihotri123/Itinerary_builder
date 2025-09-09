@@ -213,21 +213,37 @@ const MessageBubble = ({ message, isUser }) => (
     transition={{ duration: 0.3 }}
     className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
   >
-    <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'}`}>
-      {!isUser && (
-        <div className="flex items-center gap-3 mb-2">
-          <Avatar />
-          <span className="text-sm text-gray-600 font-medium">Travello.ai</span>
+    <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'} flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
+      {/* User Icon */}
+      {isUser && (
+        <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+          U
         </div>
       )}
-      <div
-        className={`p-4 rounded-2xl ${
-          isUser
-            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white ml-4'
-            : 'bg-white/80 backdrop-blur-sm text-gray-800 mr-4 border border-white/30'
-        }`}
-      >
-        <p className="leading-relaxed">{message.content}</p>
+      
+      {/* AI Avatar */}
+      {!isUser && (
+        <div className="flex-shrink-0">
+          <Avatar />
+        </div>
+      )}
+      
+      <div className="flex flex-col">
+        {/* Name label */}
+        {!isUser && (
+          <span className="text-sm text-gray-600 font-medium mb-1 ml-1">Travello.ai</span>
+        )}
+        
+        {/* Message bubble */}
+        <div
+          className={`p-4 rounded-2xl ${
+            isUser
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+              : 'bg-white/80 backdrop-blur-sm text-gray-800 border border-white/30'
+          }`}
+        >
+          <p className="leading-relaxed">{message.content}</p>
+        </div>
       </div>
     </div>
   </motion.div>
