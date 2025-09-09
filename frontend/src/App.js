@@ -609,7 +609,342 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
   </AnimatePresence>
 );
 
-// Trip Planning Modals
+// Personalization Questionnaire Modal
+const PersonalizationModal = ({ isOpen, onClose, onComplete }) => {
+  const [currentPage, setCurrentPage] = useState(0);
+  const [responses, setResponses] = useState({});
+
+  const questionnaire = [
+    {
+      id: 'vacation_style',
+      title: 'How do you like to vacation?',
+      subtitle: 'Is your ideal vacation day an exhilarating adventure or a relaxing break?',
+      type: 'single',
+      options: [
+        { id: 'adventurous', label: 'Adventurous', icon: '🏃' },
+        { id: 'relaxing', label: 'Relaxing', icon: '🏖️' },
+        { id: 'balanced', label: 'Strike a balance', icon: '⚖️' }
+      ]
+    },
+    {
+      id: 'experience_type',
+      title: 'Would you rather explore the great outdoors or pursue a cultural experience?',
+      type: 'single',
+      options: [
+        { id: 'nature', label: 'Nature', icon: '⛰️' },
+        { id: 'culture', label: 'Culture', icon: '🛖' },
+        { id: 'no_preference', label: 'No preference', icon: '🤷' }
+      ]
+    },
+    {
+      id: 'attraction_preference',
+      title: 'In a new place, do you prefer to visit popular attractions or engage in authentic local experiences?',
+      subtitle: 'e.g. Eiffel Tower vs neighborhood tour or market',
+      type: 'single',
+      options: [
+        { id: 'popular', label: 'Popular', icon: '🗽' },
+        { id: 'local', label: 'Local', icon: '🏠' },
+        { id: 'both', label: 'Like both equally', icon: '🤝' }
+      ]
+    },
+    {
+      id: 'accommodation',
+      title: 'What\'s your usual accommodation style?',
+      subtitle: 'Select any of the following or add your own.',
+      type: 'multiple',
+      options: [
+        { id: 'luxury_hotels', label: 'Luxury Hotels', icon: '🏨' },
+        { id: 'boutique_hotels', label: 'Boutique Hotels', icon: '🌟' },
+        { id: 'bnb', label: 'Bed & Breakfast', icon: '🏡' },
+        { id: 'budget_hotels', label: 'Budget-friendly Hotels', icon: '💰' },
+        { id: 'hostels', label: 'Hostels', icon: '🛌' },
+        { id: 'camping', label: 'Camping Grounds', icon: '🏕️' },
+        { id: 'eco_lodges', label: 'Eco-lodges', icon: '🍃' },
+        { id: 'inns', label: 'Inns', icon: '🛋️' },
+        { id: 'resorts', label: 'Resorts', icon: '🛎️' },
+        { id: 'motels', label: 'Motels', icon: '🛏️' },
+        { id: 'vacation_rentals', label: 'Vacation Rentals', icon: '🏠' }
+      ],
+      allowCustom: true
+    },
+    {
+      id: 'dining',
+      title: 'What type of dining experiences do you usually look for?',
+      subtitle: 'Select any of the following or add your own.',
+      type: 'multiple',
+      options: [
+        { id: 'fine_dining', label: 'Fine Dining & Gourmet', icon: '🍽️' },
+        { id: 'street_food', label: 'Local Street Food', icon: '🍢' },
+        { id: 'cafes', label: 'Cafes/Bistros', icon: '🥐' },
+        { id: 'family_restaurants', label: 'Family Restaurants', icon: '👪' },
+        { id: 'vegetarian', label: 'Vegetarian / Vegan Eateries', icon: '🥗' },
+        { id: 'food_trucks', label: 'Food Trucks', icon: '🚚' },
+        { id: 'ethnic_cuisine', label: 'Ethnic Cuisine', icon: '🥘' },
+        { id: 'farm_to_table', label: 'Farm-to-Table', icon: '🌾' },
+        { id: 'fast_casual', label: 'Fast Casual', icon: '🍔' },
+        { id: 'pub_food', label: 'Pub / Tavern Food', icon: '🍺' },
+        { id: 'bakeries', label: 'Bakeries', icon: '🍰' },
+        { id: 'coffee_shops', label: 'Coffee Shops', icon: '☕' }
+      ],
+      allowCustom: true
+    },
+    {
+      id: 'interests',
+      title: 'What are your interests or favorite things to do while traveling?',
+      subtitle: 'Select any of the following or add your own.',
+      type: 'multiple',
+      options: [
+        { id: 'beach', label: 'Beach', icon: '🏖' },
+        { id: 'hiking', label: 'Hiking', icon: '🥾' },
+        { id: 'adventure_sports', label: 'Adventure Sports', icon: '🧗‍' },
+        { id: 'theater', label: 'Theater', icon: '🎭' },
+        { id: 'museums', label: 'Museums', icon: '🖼' },
+        { id: 'historical_tours', label: 'Historical Tours', icon: '🏰' },
+        { id: 'spa_wellness', label: 'Spa / Wellness', icon: '🧖' },
+        { id: 'photography', label: 'Photography', icon: '📸' },
+        { id: 'cooking_classes', label: 'Cooking Classes', icon: '🍳' },
+        { id: 'fine_dining_exp', label: 'Fine Dining', icon: '🍽️' },
+        { id: 'nightlife', label: 'Nightlife', icon: '🌃' },
+        { id: 'wine_tasting', label: 'Wine Tasting', icon: '🍷' },
+        { id: 'shopping', label: 'Shopping', icon: '🛍️' },
+        { id: 'water_sports', label: 'Water Sports', icon: '🏄' },
+        { id: 'cruises', label: 'Cruises', icon: '🚢' },
+        { id: 'cycling', label: 'Cycling', icon: '🚴' },
+        { id: 'volunteering', label: 'Volunteering', icon: '🤝' },
+        { id: 'wildlife', label: 'Wildlife', icon: '🐾' }
+      ],
+      allowCustom: true
+    },
+    {
+      id: 'traveler_type',
+      title: 'What describes you as a traveler?',
+      subtitle: 'Select up to 3 travel types that resonate with you most.',
+      type: 'multiple',
+      maxSelections: 3,
+      options: [
+        { id: 'cultural_explorer', label: 'The Cultural Explorer', icon: '🏛' },
+        { id: 'adventure_seeker', label: 'The Adventure Seeker', icon: '🧗' },
+        { id: 'luxury_traveler', label: 'The Luxury Traveler', icon: '💎' },
+        { id: 'social_butterfly', label: 'The Social Butterfly', icon: '🎉' },
+        { id: 'nature_lover', label: 'The Nature Lover', icon: '🌿' },
+        { id: 'foodie', label: 'The Foodie', icon: '🍲' },
+        { id: 'solo_wanderer', label: 'The Solo Wanderer', icon: '👤' },
+        { id: 'urban_explorer', label: 'The Urban Explorer', icon: '🏙' },
+        { id: 'festival_goer', label: 'The Festival Goer', icon: '🎪' },
+        { id: 'digital_nomad', label: 'The Digital Nomad', icon: '💻' },
+        { id: 'wellness_traveler', label: 'The Wellness Traveler', icon: '🧘' },
+        { id: 'budget_traveler', label: 'The Budget Traveler', icon: '💰' },
+        { id: 'family_traveler', label: 'The Family Traveler', icon: '👨‍👩‍👧‍👦' },
+        { id: 'romantic_traveler', label: 'The Romantic Traveler', icon: '💕' },
+        { id: 'business_traveler', label: 'The Business Traveler', icon: '💼' }
+      ],
+      allowCustom: true
+    }
+  ];
+
+  const currentQuestion = questionnaire[currentPage];
+  const [customInput, setCustomInput] = useState('');
+
+  const handleOptionSelect = (optionId) => {
+    const questionId = currentQuestion.id;
+    
+    if (currentQuestion.type === 'single') {
+      setResponses(prev => ({ ...prev, [questionId]: [optionId] }));
+    } else {
+      const currentSelections = responses[questionId] || [];
+      
+      if (currentQuestion.maxSelections && currentSelections.length >= currentQuestion.maxSelections && !currentSelections.includes(optionId)) {
+        return; // Don't allow more selections
+      }
+      
+      if (currentSelections.includes(optionId)) {
+        setResponses(prev => ({
+          ...prev,
+          [questionId]: currentSelections.filter(id => id !== optionId)
+        }));
+      } else {
+        setResponses(prev => ({
+          ...prev,
+          [questionId]: [...currentSelections, optionId]
+        }));
+      }
+    }
+  };
+
+  const handleCustomAdd = () => {
+    if (customInput.trim()) {
+      const questionId = currentQuestion.id;
+      const currentSelections = responses[questionId] || [];
+      const customId = `custom_${customInput.toLowerCase().replace(/\s+/g, '_')}`;
+      
+      setResponses(prev => ({
+        ...prev,
+        [questionId]: [...currentSelections, customId],
+        [`${questionId}_custom`]: [...(prev[`${questionId}_custom`] || []), { id: customId, label: customInput }]
+      }));
+      setCustomInput('');
+    }
+  };
+
+  const handleNext = () => {
+    if (currentPage < questionnaire.length - 1) {
+      setCurrentPage(prev => prev + 1);
+    } else {
+      onComplete(responses);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 0) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const isCurrentAnswered = () => {
+    const questionId = currentQuestion.id;
+    const selections = responses[questionId];
+    return selections && selections.length > 0;
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-70 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">Tell me more about you</h2>
+                  <p className="text-gray-600 mt-1">Page {currentPage + 1} of {questionnaire.length}</p>
+                </div>
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="mt-4 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((currentPage + 1) / questionnaire.length) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Question Content */}
+            <div className="p-6">
+              <div className="mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{currentQuestion.title}</h3>
+                {currentQuestion.subtitle && (
+                  <p className="text-gray-600">{currentQuestion.subtitle}</p>
+                )}
+              </div>
+
+              {/* Options Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                {currentQuestion.options.map((option) => {
+                  const isSelected = (responses[currentQuestion.id] || []).includes(option.id);
+                  return (
+                    <motion.button
+                      key={option.id}
+                      onClick={() => handleOptionSelect(option.id)}
+                      className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
+                        isSelected 
+                          ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="text-2xl mb-2">{option.icon}</div>
+                      <div className="font-medium text-sm">{option.label}</div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Custom Input */}
+              {currentQuestion.allowCustom && (
+                <div className="border-t border-gray-200 pt-6">
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={customInput}
+                      onChange={(e) => setCustomInput(e.target.value)}
+                      placeholder="Add your own..."
+                      className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onKeyPress={(e) => e.key === 'Enter' && handleCustomAdd()}
+                    />
+                    <button
+                      onClick={handleCustomAdd}
+                      disabled={!customInput.trim()}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Options Display */}
+              {responses[`${currentQuestion.id}_custom`] && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {responses[`${currentQuestion.id}_custom`].map((custom) => (
+                    <span
+                      key={custom.id}
+                      className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium"
+                    >
+                      ✨ {custom.label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-3xl">
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentPage === 0}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  Previous
+                </button>
+                
+                <span className="text-sm text-gray-600">
+                  {currentPage + 1} of {questionnaire.length}
+                </span>
+                
+                <button
+                  onClick={handleNext}
+                  disabled={!isCurrentAnswered()}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                >
+                  {currentPage === questionnaire.length - 1 ? 'Complete' : 'Next'}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
 const WhereModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
   <AnimatePresence>
     {isOpen && (
