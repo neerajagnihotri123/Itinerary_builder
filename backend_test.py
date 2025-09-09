@@ -413,10 +413,10 @@ class TravelloAPITester:
         # Test the specific scenario from review request
         session_id = f"{self.session_id}_accommodation_test"
         
-        # First message: "i want to go to adaman"
+        # First message: "i want to go to andaman"
         print(f"\n   Step 1: Testing initial destination query...")
         chat_data_1 = {
-            "message": "i want to go to adaman",
+            "message": "i want to go to andaman",
             "session_id": session_id,
             "user_profile": {}
         }
@@ -426,6 +426,14 @@ class TravelloAPITester:
         if not success_1:
             print("   ❌ Initial destination query failed")
             return False
+        
+        # Analyze first response (should have destination cards)
+        ui_actions_1 = response_1.get('ui_actions', [])
+        dest_cards_1 = [action for action in ui_actions_1 
+                        if action.get('type') == 'card_add' and 
+                        action.get('payload', {}).get('category') == 'destination']
+        
+        print(f"      Initial query generated {len(dest_cards_1)} destination cards")
         
         # Second message: "more on accommodations"
         print(f"\n   Step 2: Testing accommodation request...")
@@ -445,6 +453,7 @@ class TravelloAPITester:
         ui_actions = response_2.get('ui_actions', [])
         hotel_cards = []
         destination_cards = []
+        question_chips = []
         
         for action in ui_actions:
             if action.get('type') == 'card_add':
@@ -454,10 +463,13 @@ class TravelloAPITester:
                     hotel_cards.append(action)
                 elif category == 'destination':
                     destination_cards.append(action)
+            elif action.get('type') == 'question_chip':
+                question_chips.append(action)
         
         print(f"\n   📊 Card Analysis:")
         print(f"      Hotel cards: {len(hotel_cards)}")
         print(f"      Destination cards: {len(destination_cards)}")
+        print(f"      Question chips: {len(question_chips)}")
         print(f"      Total UI actions: {len(ui_actions)}")
         
         # Verify ONLY hotel cards are generated for accommodation requests
@@ -466,21 +478,24 @@ class TravelloAPITester:
             print(f"   ✅ PASS: Only accommodation cards generated")
             accommodation_test_passed = True
             
-            # Verify hotel card structure
-            for i, hotel_card in enumerate(hotel_cards[:2]):  # Check first 2
+            # Verify hotel card structure and details
+            for i, hotel_card in enumerate(hotel_cards):
                 payload = hotel_card.get('payload', {})
                 required_fields = ['id', 'category', 'title', 'rating', 'price_estimate', 'amenities']
                 missing_fields = [field for field in required_fields if field not in payload]
                 
                 if not missing_fields:
-                    print(f"      ✅ Hotel card {i+1} structure correct: {payload.get('title', 'N/A')}")
+                    print(f"      ✅ Hotel card {i+1}: {payload.get('title', 'N/A')}")
+                    print(f"         Rating: {payload.get('rating', 'N/A')}")
+                    print(f"         Price: ₹{payload.get('price_estimate', {}).get('min', 'N/A')}-{payload.get('price_estimate', {}).get('max', 'N/A')}/night")
+                    print(f"         Amenities: {len(payload.get('amenities', []))} listed")
                 else:
                     print(f"      ⚠️  Hotel card {i+1} missing fields: {missing_fields}")
         else:
             print(f"   ❌ FAIL: Expected only hotel cards, got {len(hotel_cards)} hotel + {len(destination_cards)} destination cards")
             
             # Show what cards were generated for debugging
-            for action in ui_actions[:3]:  # Show first 3 actions
+            for action in ui_actions[:5]:  # Show first 5 actions
                 if action.get('type') == 'card_add':
                     payload = action.get('payload', {})
                     print(f"      Debug: {payload.get('category', 'unknown')} card - {payload.get('title', 'N/A')}")
