@@ -2118,7 +2118,7 @@ function App() {
         </div>
 
         {/* Right Panel - Feature Canvas */}
-        <div className="w-[52%] flex flex-col bg-gradient-to-br from-white/40 to-white/60 backdrop-blur-xl">
+        <div className="w-[52%] flex flex-col bg-gradient-to-br from-white/40 to-white/60 backdrop-blur-xl relative z-10">
           {showGeneratedContent ? (
             /* Generated Content View */
             <div className="flex-1 overflow-y-auto">
