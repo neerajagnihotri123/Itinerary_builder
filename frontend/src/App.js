@@ -1987,25 +1987,42 @@ function App() {
   };
 
   const handleCardAction = (action, item) => {
+    console.log('🎯 Card action:', action, item.title);
+    
     switch (action) {
       case 'explore':
-        setExploringDestination(item);
-        setShowDestinationExploration(true);
+        // Don't open modal, just show message and guide user to trip planning
+        const exploreMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `Great choice! ${item.title} is perfect for your trip. I can see you're interested in exploring this destination. Let me help you plan your perfect trip!`
+        };
+        setMessages(prev => [...prev, exploreMessage]);
+        
+        // Show trip planning bar and pre-fill destination
+        setShowTripBar(true);
+        setTripDetails(prev => ({ ...prev, destination: item.title }));
         break;
-      case 'details':
-        setSelectedDestination(item);
-        setIsDestinationModalOpen(true);
-        break;
+        
       case 'map':
-        // Focus on map area or show item on map
-        console.log('Show on map:', item);
+        // Show destination in right panel instead of modal
+        setSelectedMapDestination(item);
+        setRightPanelContent('destination');
+        setHighlightedDestinations([item.id]);
         break;
+        
       case 'book':
-        // Open booking flow
-        console.log('Book:', item);
+        const bookingMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: `I'd love to help you book ${item.title}! First, let's complete your trip planning details so I can find the perfect accommodations for you.`
+        };
+        setMessages(prev => [...prev, bookingMessage]);
+        setShowTripBar(true);
         break;
+        
       default:
-        console.log('Action:', action, item);
+        console.log('Unknown action:', action, item);
     }
   };
 
