@@ -243,11 +243,11 @@ frontend:
 
   - task: "Destination card and map interactions"
     implemented: true
-    working: false
+    working: true
     file: "App.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
