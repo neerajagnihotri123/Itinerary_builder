@@ -2119,84 +2119,189 @@ function App() {
 
         {/* Right Panel - Feature Canvas */}
         <div className="w-[52%] flex flex-col bg-gradient-to-br from-white/40 to-white/60 backdrop-blur-xl">
-          {/* Map Section */}
-          <div className="p-6">
-            <div className="mb-4">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Know the Destinations</h2>
-              <p className="text-gray-600">Discover amazing places around the world</p>
-            </div>
-            <WorldMap
-              destinations={destinations}
-              onDestinationClick={(dest) => {
-                setSelectedDestination(dest);
-                setIsDestinationModalOpen(true);
-              }}
-            />
-          </div>
-
-          {/* Itinerary & Hotels Section */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            <div className="space-y-6">
-              {/* Itinerary Placeholder */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                  Your Itinerary
-                </h3>
-                <div className="text-center py-8 text-gray-500">
-                  <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Start planning to see your itinerary here</p>
-                </div>
-              </div>
-
-              {/* Popular Destinations */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-red-500" />
-                  Popular for You
-                </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { name: 'Paris', image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=300&h=200&fit=crop' },
-                    { name: 'Tokyo', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=300&h=200&fit=crop' },
-                    { name: 'Bali', image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=300&h=200&fit=crop' },
-                    { name: 'New York', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=300&h=200&fit=crop' }
-                  ].map((dest, index) => (
+          {showGeneratedContent ? (
+            /* Generated Content View */
+            <div className="flex-1 overflow-y-auto">
+              {/* Itinerary Section */}
+              <div className="p-6">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Personalized Itinerary</h2>
+                <div className="space-y-4">
+                  {generatedItinerary.map((day, index) => (
                     <motion.div
-                      key={dest.name}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
+                      key={day.day}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="relative rounded-xl overflow-hidden cursor-pointer group"
-                      whileHover={{ scale: 1.05 }}
+                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/30"
                     >
-                      <img
-                        src={dest.image}
-                        alt={dest.name}
-                        className="w-full h-24 object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-2 left-2 text-white text-sm font-semibold">
-                        {dest.name}
+                      <h3 className="text-lg font-bold text-gray-800 mb-3">
+                        Day {day.day}: {day.title}
+                      </h3>
+                      <div className="space-y-2">
+                        {day.activities.map((activity, actIndex) => (
+                          <div key={actIndex} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                            <div className="w-16 text-sm font-medium text-blue-600 shrink-0">
+                              {activity.time}
+                            </div>
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-800">{activity.activity}</div>
+                              <div className="text-sm text-gray-600">{activity.location}</div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </motion.div>
                   ))}
                 </div>
               </div>
-
-              {/* Accommodation Placeholder */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Hotel className="w-5 h-5 text-green-600" />
-                  Accommodation
-                </h3>
-                <div className="text-center py-8 text-gray-500">
-                  <Hotel className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Search for hotels to see options here</p>
+              
+              {/* Accommodations Section */}
+              <div className="p-6 border-t border-white/30">
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Recommended Accommodations</h2>
+                <div className="space-y-4">
+                  {generatedAccommodations.map((hotel, index) => (
+                    <motion.div
+                      key={hotel.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`bg-white/80 backdrop-blur-sm rounded-2xl p-4 border transition-all duration-200 ${
+                        hotel.highlighted 
+                          ? 'border-blue-300 shadow-lg shadow-blue-100' 
+                          : 'border-white/30 hover:border-gray-200'
+                      }`}
+                    >
+                      <div className="flex gap-4">
+                        <img
+                          src={hotel.image}
+                          alt={hotel.name}
+                          className="w-24 h-24 rounded-xl object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-bold text-gray-800">{hotel.name}</h3>
+                              <p className="text-sm text-gray-600">{hotel.type}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                                <span className="text-sm font-medium">{hotel.rating}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-green-600">{hotel.price}</div>
+                              <div className="text-xs text-gray-500">per night</div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2">
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {hotel.amenities.slice(0, 3).map((amenity, i) => (
+                                <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                  {amenity}
+                                </span>
+                              ))}
+                            </div>
+                            <p className="text-sm text-blue-600 font-medium">{hotel.match}</p>
+                          </div>
+                          
+                          {hotel.highlighted && (
+                            <button className="mt-3 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
+                              Book Now
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Default Canvas View */
+            <>
+              {/* Map Section */}
+              <div className="p-6">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Know the Destinations</h2>
+                  <p className="text-gray-600">Discover amazing places around the world</p>
+                </div>
+                <div className="h-80">
+                  <InteractiveMap
+                    destinations={destinations}
+                    onMarkerClick={(dest) => {
+                      setSelectedDestination(dest);
+                      setIsDestinationModalOpen(true);
+                    }}
+                    highlightedDestinations={highlightedDestinations}
+                  />
+                </div>
+              </div>
+
+              {/* Itinerary & Hotels Section */}
+              <div className="flex-1 p-6 overflow-y-auto">
+                <div className="space-y-6">
+                  {/* Itinerary Placeholder */}
+                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-blue-600" />
+                      Your Itinerary
+                    </h3>
+                    <div className="text-center py-8 text-gray-500">
+                      <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>Start planning to see your itinerary here</p>
+                    </div>
+                  </div>
+
+                  {/* Popular Destinations */}
+                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-red-500" />
+                      Popular for You
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { name: 'Paris', image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=300&h=200&fit=crop' },
+                        { name: 'Tokyo', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=300&h=200&fit=crop' },
+                        { name: 'Bali', image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=300&h=200&fit=crop' },
+                        { name: 'New York', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=300&h=200&fit=crop' }
+                      ].map((dest, index) => (
+                        <motion.div
+                          key={dest.name}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="relative rounded-xl overflow-hidden cursor-pointer group"
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          <img
+                            src={dest.image}
+                            alt={dest.name}
+                            className="w-full h-24 object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-2 left-2 text-white text-sm font-semibold">
+                            {dest.name}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Accommodation Placeholder */}
+                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <Hotel className="w-5 h-5 text-green-600" />
+                      Accommodation
+                    </h3>
+                    <div className="text-center py-8 text-gray-500">
+                      <Hotel className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>Search for hotels to see options here</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
