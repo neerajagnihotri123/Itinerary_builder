@@ -1661,42 +1661,54 @@ function App() {
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
+    console.log('🚀 Sending message:', inputMessage);
+
     const userMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: inputMessage
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => {
+      console.log('Adding user message to state');
+      return [...prev, userMessage];
+    });
+    
+    const currentInput = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
     // Check if user is asking about a specific destination
     const destinationKeywords = ['explore', 'visit', 'go to', 'about', 'tell me about'];
     const mentionedDestination = destinations.find(dest => 
-      inputMessage.toLowerCase().includes(dest.name.toLowerCase()) ||
-      inputMessage.toLowerCase().includes(dest.country.toLowerCase())
+      currentInput.toLowerCase().includes(dest.name.toLowerCase()) ||
+      currentInput.toLowerCase().includes(dest.country.toLowerCase())
     );
     
-    if (mentionedDestination && destinationKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword))) {
+    if (mentionedDestination && destinationKeywords.some(keyword => currentInput.toLowerCase().includes(keyword))) {
       setHighlightedDestinations([mentionedDestination.id]);
+      console.log('🎯 Highlighted destination:', mentionedDestination.name);
     }
 
     // Check if user is expressing interest in planning a trip
     const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
-    const containsTripKeyword = tripKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword));
+    const containsTripKeyword = tripKeywords.some(keyword => currentInput.toLowerCase().includes(keyword));
     
     if (containsTripKeyword) {
       setShowTripBar(true);
-      console.log('Trip planning detected, showing trip bar');
+      console.log('📋 Trip planning detected, showing trip bar');
     }
 
     try {
+      console.log('📡 Making API call to:', `${API}/chat`);
+      
       const response = await axios.post(`${API}/chat`, {
-        message: inputMessage,
+        message: currentInput,
         session_id: sessionId,
         user_profile: userProfile
       });
+
+      console.log('✅ API Response received:', response.data);
 
       const assistantMessage = {
         id: Date.now().toString() + '_assistant',
@@ -1704,14 +1716,17 @@ function App() {
         content: response.data.chat_text
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages(prev => {
+        console.log('Adding assistant message to state');
+        return [...prev, assistantMessage];
+      });
 
       // Process UI actions
       const newRecommendations = [];
       const newChips = [];
 
       if (response.data.ui_actions && response.data.ui_actions.length > 0) {
-        console.log('Processing UI actions:', response.data.ui_actions);
+        console.log('🎨 Processing UI actions:', response.data.ui_actions.length);
         
         response.data.ui_actions.forEach(action => {
           if (action.type === 'card_add') {
@@ -1722,24 +1737,26 @@ function App() {
             
             if (fullDestination) {
               // Use full destination data instead of payload
-              newRecommendations.push({
+              const enhancedCard = {
                 ...action.payload,
                 ...fullDestination,
                 title: `${fullDestination.name}, ${fullDestination.country}`
-              });
+              };
+              newRecommendations.push(enhancedCard);
+              console.log('📋 Enhanced card added:', enhancedCard.title);
             } else {
               newRecommendations.push(action.payload);
+              console.log('📋 Basic card added:', action.payload.title);
             }
-            console.log('Added recommendation card:', action.payload.title);
           } else if (action.type === 'prompt') {
             newChips.push(...action.payload.chips);
-            console.log('Added chips:', action.payload.chips);
+            console.log('🔸 Added chips:', action.payload.chips);
           }
         });
       } else {
         // Fallback: if no UI actions from backend, create recommendations from local data
         if (mentionedDestination) {
-          newRecommendations.push({
+          const fallbackCard = {
             id: mentionedDestination.id,
             category: "destination",
             title: `${mentionedDestination.name}, ${mentionedDestination.country}`,
@@ -1753,7 +1770,10 @@ function App() {
             cta_secondary: {"label": "View on map", "action": "map"},
             motion: {"enter_ms": 260, "stagger_ms": 80},
             ...mentionedDestination
-          });
+          };
+          
+          newRecommendations.push(fallbackCard);
+          console.log('🔄 Fallback card created for:', mentionedDestination.name);
           
           newChips.push(
             { label: "🏃 Adventurous", value: "adventure" },
@@ -1761,21 +1781,25 @@ function App() {
             { label: "🏛 Cultural", value: "culture" }
           );
         }
-        console.log('No UI actions from backend, using fallback');
+        console.log('⚠️ No UI actions from backend, using fallback');
       }
 
       if (newRecommendations.length > 0) {
-        setRecommendations(prev => [...prev, ...newRecommendations]);
-        console.log('Total recommendations:', newRecommendations.length);
+        setRecommendations(prev => {
+          console.log('🎴 Setting recommendations:', newRecommendations.length);
+          return [...prev, ...newRecommendations];
+        });
       }
       
       if (newChips.length > 0) {
         setCurrentChips(newChips);
+        console.log('🔸 Setting chips:', newChips.length);
       }
+
       setUserProfile(response.data.updated_profile);
 
     } catch (error) {
-      console.error('Chat API error:', error);
+      console.error('❌ Chat API error:', error);
       const errorMessage = {
         id: Date.now().toString() + '_error',
         role: 'assistant',
@@ -1784,6 +1808,7 @@ function App() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      console.log('✅ Message sending complete');
     }
   };
 
