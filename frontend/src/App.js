@@ -2103,11 +2103,6 @@ function App() {
                           <h2 className="text-3xl font-bold text-gray-800">
                             Dreaming of a getaway?
                           </h2>
-                          <p className="text-lg text-gray-600 leading-relaxed">
-                            <strong>Dreaming of a getaway?</strong>
-                            <br />
-                            Tell me your travel wishlist and I'll guide you. Ask anything about your upcoming travels!
-                          </p>
                         </div>
                       </div>
                     </motion.div>
