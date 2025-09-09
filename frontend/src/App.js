@@ -2491,8 +2491,8 @@ function App() {
                 
                 <div className="mb-6">
                   <p className="text-gray-700 leading-relaxed mb-4">{selectedMapDestination.description}</p>
-                  <div className="bg-blue-50 p-4 rounded-xl">
-                    <p className="text-blue-700 font-medium">
+                  <div className="bg-green-50 p-4 rounded-xl">
+                    <p className="text-green-700 font-medium">
                       <Heart className="w-4 h-4 inline mr-2" />
                       {selectedMapDestination.why_match}
                     </p>
@@ -2504,7 +2504,7 @@ function App() {
                   <div className="space-y-3">
                     {selectedMapDestination.highlights.map((highlight, index) => (
                       <div key={index} className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-white/30">
-                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <MapPin className="w-5 h-5 text-green-600" />
                         <span className="font-medium text-gray-800">{highlight}</span>
                       </div>
                     ))}
@@ -2517,12 +2517,204 @@ function App() {
                       setExploringDestination(selectedMapDestination);
                       setShowDestinationExploration(true);
                     }}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                    className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200"
                   >
                     Explore Details
                   </button>
                   <button className="px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200">
                     Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : rightPanelContent === 'tour' && selectedTour ? (
+            /* Tour Detail View */
+            <div className="flex-1 overflow-y-auto">
+              {/* Back Button */}
+              <div className="p-4 border-b border-white/20">
+                <button
+                  onClick={() => setRightPanelContent('default')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  <X className="w-4 h-4" />
+                  Back to Tours
+                </button>
+              </div>
+              
+              {/* Tour Details */}
+              <div className="p-6">
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
+                  <img
+                    src={selectedTour.image}
+                    alt={selectedTour.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  
+                  {/* Price Badge */}
+                  <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                    <div className="bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
+                      {selectedTour.price}
+                    </div>
+                    {selectedTour.originalPrice && (
+                      <div className="bg-red-500 text-white px-2 py-1 rounded text-sm line-through">
+                        {selectedTour.originalPrice}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Rating Badge */}
+                  <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-2 rounded-lg font-semibold flex items-center gap-2">
+                    <Star className="w-4 h-4 fill-current" />
+                    {selectedTour.rating}
+                  </div>
+                  
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h2 className="text-2xl font-bold mb-2">{selectedTour.name}</h2>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {selectedTour.location}
+                      </span>
+                      <span>•</span>
+                      <span className="bg-white/20 px-2 py-1 rounded">{selectedTour.duration}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">Tour Overview</h3>
+                    <div className="text-sm text-gray-600">
+                      ⭐ {selectedTour.rating} ({selectedTour.reviews} reviews)
+                    </div>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-xl mb-4">
+                    <p className="text-green-800 font-medium mb-2">🎯 {selectedTour.type}</p>
+                    <p className="text-green-700">Experience the best of {selectedTour.location} with this amazing {selectedTour.duration} tour package.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/60 p-4 rounded-xl border border-white/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Calendar className="w-5 h-5 text-orange-600" />
+                        <span className="font-semibold">Duration</span>
+                      </div>
+                      <p className="text-gray-700">{selectedTour.duration}</p>
+                    </div>
+                    <div className="bg-white/60 p-4 rounded-xl border border-white/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-5 h-5 text-green-600" />
+                        <span className="font-semibold">Group Size</span>
+                      </div>
+                      <p className="text-gray-700">Up to 15 people</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200">
+                    Book Now - {selectedTour.price}
+                  </button>
+                  <button className="px-6 py-3 border-2 border-green-200 text-green-700 font-semibold rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200">
+                    Save Tour
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : rightPanelContent === 'activity' && selectedActivity ? (
+            /* Activity Detail View */
+            <div className="flex-1 overflow-y-auto">
+              {/* Back Button */}
+              <div className="p-4 border-b border-white/20">
+                <button
+                  onClick={() => setRightPanelContent('default')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  <X className="w-4 h-4" />
+                  Back to Activities
+                </button>
+              </div>
+              
+              {/* Activity Details */}
+              <div className="p-6">
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
+                  <img
+                    src={selectedActivity.image}
+                    alt={selectedActivity.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  
+                  {/* Price Badge */}
+                  <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+                    <div className="bg-orange-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
+                      {selectedActivity.price}
+                    </div>
+                    {selectedActivity.originalPrice && (
+                      <div className="bg-red-500 text-white px-2 py-1 rounded text-sm line-through">
+                        {selectedActivity.originalPrice}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Rating Badge */}
+                  <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-2 rounded-lg font-semibold flex items-center gap-2">
+                    <Star className="w-4 h-4 fill-current" />
+                    {selectedActivity.rating}
+                  </div>
+                  
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h2 className="text-2xl font-bold mb-2">{selectedActivity.name}</h2>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {selectedActivity.location}
+                      </span>
+                      <span>•</span>
+                      <span className="bg-white/20 px-2 py-1 rounded">{selectedActivity.duration}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-800">Activity Details</h3>
+                    <div className="text-sm text-gray-600">
+                      ⭐ {selectedActivity.rating} ({selectedActivity.reviews} reviews)
+                    </div>
+                  </div>
+                  
+                  <div className="bg-orange-50 p-4 rounded-xl mb-4">
+                    <p className="text-orange-800 font-medium mb-2">🎯 {selectedActivity.type}</p>
+                    <p className="text-orange-700">Thrilling {selectedActivity.name.toLowerCase()} experience in {selectedActivity.location} for {selectedActivity.duration}.</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-white/60 p-4 rounded-xl border border-white/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="w-5 h-5 text-orange-600" />
+                        <span className="font-semibold">Duration</span>
+                      </div>
+                      <p className="text-gray-700">{selectedActivity.duration}</p>
+                    </div>
+                    <div className="bg-white/60 p-4 rounded-xl border border-white/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="w-5 h-5 text-green-600" />
+                        <span className="font-semibold">Safety</span>
+                      </div>
+                      <p className="text-gray-700">Professional guides</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button className="flex-1 bg-gradient-to-r from-orange-600 to-green-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-orange-700 hover:to-green-700 transition-all duration-200">
+                    Book Now - {selectedActivity.price}
+                  </button>
+                  <button className="px-6 py-3 border-2 border-orange-200 text-orange-700 font-semibold rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200">
+                    Save Activity
                   </button>
                 </div>
               </div>
