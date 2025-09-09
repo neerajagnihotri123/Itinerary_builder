@@ -1599,14 +1599,16 @@ function App() {
 
     // Check if user is asking about a specific destination
     const destinationKeywords = ['explore', 'visit', 'go to', 'about', 'tell me about'];
-    const mentionedDestination = MOCK_DESTINATIONS.find(dest => 
-      inputMessage.toLowerCase().includes(dest.name.toLowerCase()) ||
-      inputMessage.toLowerCase().includes(dest.country.toLowerCase())
+    const destinationNames = ['paris', 'tokyo', 'bali', 'new york', 'santorini', 'goa'];
+    const mentionedDestination = destinationNames.find(dest => 
+      inputMessage.toLowerCase().includes(dest)
     );
     
     if (mentionedDestination && destinationKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword))) {
-      setHighlightedDestinations([mentionedDestination.id]);
+      setHighlightedDestinations([mentionedDestination]);
     }
+
+    // Check if user is expressing interest in planning a trip
     const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
     const containsTripKeyword = tripKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword));
     
