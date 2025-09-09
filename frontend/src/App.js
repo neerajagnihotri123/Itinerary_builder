@@ -370,11 +370,34 @@ const DestinationModal = ({ destination, isOpen, onClose }) => {
           
           {/* Destination Info Overlay */}
           <div className="absolute bottom-6 left-6 right-6 text-white">
-            <div className="flex items-center gap-3 mb-3">
-              <h1 className="text-3xl font-bold">{destination.name}</h1>
-              <div className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                {destination.weather.temp}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold">{destination.name}</h1>
+                <div className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                  {destination.weather.temp}
+                </div>
               </div>
+              
+              {/* Plan a Trip Button */}
+              <motion.button
+                onClick={() => {
+                  onClose(); // Close the modal first
+                  // Trigger plan trip action
+                  const planTripMessage = `Plan a trip to ${destination.name}`;
+                  
+                  // This needs access to the parent component's functions
+                  // We'll pass this as a prop
+                  if (window.handlePlanTripFromModal) {
+                    window.handlePlanTripFromModal(destination.name);
+                  }
+                }}
+                className="bg-gradient-to-r from-green-600 to-orange-600 text-white px-4 py-2 rounded-xl hover:from-green-700 hover:to-orange-700 transition-colors duration-200 flex items-center gap-2 text-sm font-medium"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Calendar className="w-4 h-4" />
+                Plan Trip
+              </motion.button>
             </div>
             
             <div className="flex items-center gap-4 mb-3">
