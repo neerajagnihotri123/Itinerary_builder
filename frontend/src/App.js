@@ -757,6 +757,26 @@ function App() {
     setTimeout(() => handleSendMessage(), 100);
   };
 
+  const handleCardAction = (action, item) => {
+    switch (action) {
+      case 'explore':
+      case 'details':
+        setSelectedDestination(item);
+        setIsDestinationModalOpen(true);
+        break;
+      case 'map':
+        // Focus on map area or show item on map
+        console.log('Show on map:', item);
+        break;
+      case 'book':
+        // Open booking flow
+        console.log('Book:', item);
+        break;
+      default:
+        console.log('Action:', action, item);
+    }
+  };
+
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
       alert('Speech recognition is not supported in this browser');
