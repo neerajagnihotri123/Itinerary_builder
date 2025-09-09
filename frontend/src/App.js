@@ -1314,7 +1314,7 @@ const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations =
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5 }}
-              className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
+              className="w-16 h-16 bg-gradient-to-br from-green-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
             >
               <MapPin className="w-8 h-8 text-white" />
             </motion.div>
