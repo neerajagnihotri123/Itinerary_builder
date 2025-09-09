@@ -1715,7 +1715,21 @@ function App() {
         
         response.data.ui_actions.forEach(action => {
           if (action.type === 'card_add') {
-            newRecommendations.push(action.payload);
+            // Find the full destination data
+            const fullDestination = destinations.find(d => 
+              d.name.toLowerCase() === action.payload.title.split(',')[0].toLowerCase()
+            );
+            
+            if (fullDestination) {
+              // Use full destination data instead of payload
+              newRecommendations.push({
+                ...action.payload,
+                ...fullDestination,
+                title: `${fullDestination.name}, ${fullDestination.country}`
+              });
+            } else {
+              newRecommendations.push(action.payload);
+            }
             console.log('Added recommendation card:', action.payload.title);
           } else if (action.type === 'prompt') {
             newChips.push(...action.payload.chips);
@@ -1723,7 +1737,31 @@ function App() {
           }
         });
       } else {
-        console.log('No UI actions received');
+        // Fallback: if no UI actions from backend, create recommendations from local data
+        if (mentionedDestination) {
+          newRecommendations.push({
+            id: mentionedDestination.id,
+            category: "destination",
+            title: `${mentionedDestination.name}, ${mentionedDestination.country}`,
+            hero_image: mentionedDestination.hero_image,
+            pitch: mentionedDestination.description,
+            why_match: mentionedDestination.why_match,
+            weather: mentionedDestination.weather,
+            highlights: mentionedDestination.highlights,
+            coordinates: mentionedDestination.coordinates,
+            cta_primary: {"label": "Explore", "action": "explore"},
+            cta_secondary: {"label": "View on map", "action": "map"},
+            motion: {"enter_ms": 260, "stagger_ms": 80},
+            ...mentionedDestination
+          });
+          
+          newChips.push(
+            { label: "🏃 Adventurous", value: "adventure" },
+            { label: "🏖 Relaxing", value: "relax" },
+            { label: "🏛 Cultural", value: "culture" }
+          );
+        }
+        console.log('No UI actions from backend, using fallback');
       }
 
       if (newRecommendations.length > 0) {
