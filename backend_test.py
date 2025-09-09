@@ -776,6 +776,10 @@ def main():
     critical_tests = [contextual_success, ui_actions_success, session_success, data_consistency_success, ai_success]
     critical_passed = sum(critical_tests)
     
+    # Review-specific critical tests
+    review_tests = [accommodation_success, question_chip_success, structure_success, mock_data_success]
+    review_passed = sum(review_tests)
+    
     print(f"\n🎯 CRITICAL FEATURES ANALYSIS:")
     print(f"✅ Contextual Responses: {'PASS' if contextual_success else 'FAIL'}")
     print(f"✅ UI Actions Generation: {'PASS' if ui_actions_success else 'FAIL'}")
@@ -783,6 +787,13 @@ def main():
     print(f"✅ Data Consistency: {'PASS' if data_consistency_success else 'FAIL'}")
     print(f"✅ AI Integration: {'PASS' if ai_success else 'FAIL'}")
     print(f"\nCritical Features: {critical_passed}/5 passing")
+    
+    print(f"\n🔥 REVIEW REQUEST CRITICAL TESTS:")
+    print(f"🏨 Accommodation Card Filtering: {'PASS' if accommodation_success else 'FAIL'}")
+    print(f"💭 Question Chip Generation: {'PASS' if question_chip_success else 'FAIL'}")
+    print(f"🔍 UI Actions Structure: {'PASS' if structure_success else 'FAIL'}")
+    print(f"🇮🇳 Mock Data Integration: {'PASS' if mock_data_success else 'FAIL'}")
+    print(f"\nReview Tests: {review_passed}/4 passing")
     
     if success_rate >= 90 and critical_passed >= 4:
         print("🎉 Excellent! Backend is working great!")
