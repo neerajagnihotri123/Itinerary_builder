@@ -609,7 +609,488 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
   </AnimatePresence>
 );
 
-// Trip Planning Bar Component
+// Trip Planning Modals
+const WhereModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="bg-white rounded-3xl max-w-md w-full p-6"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-800">Choose Destination</h3>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+          
+          <div className="space-y-3">
+            {['Paris, France', 'Tokyo, Japan', 'Bali, Indonesia', 'New York, USA', 'Santorini, Greece'].map((dest, index) => (
+              <button
+                key={dest}
+                onClick={() => onSelect(dest)}
+                className="w-full text-left p-3 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200"
+              >
+                <div className="font-medium text-gray-800">{dest}</div>
+              </button>
+            ))}
+          </div>
+          
+          <div className="mt-6 p-3 bg-gray-50 rounded-xl">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" className="rounded" />
+              <span className="text-sm text-gray-700">Road trip?</span>
+            </label>
+          </div>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="bg-white rounded-3xl max-w-md w-full p-6"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-800">Select Dates</h3>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Check-in</label>
+              <input 
+                type="date" 
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Check-out</label>
+              <input 
+                type="date" 
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div className="flex gap-2 mt-4">
+              {['This Weekend', 'Next Week', 'Flexible'].map((option) => (
+                <button
+                  key={option}
+                  onClick={() => onSelect(option)}
+                  className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors duration-200"
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => onSelect('Selected dates')}
+            className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 rounded-xl hover:from-blue-700 hover:to-purple-700"
+          >
+            Confirm Dates
+          </button>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+const TravelersModal = ({ isOpen, onClose, onSelect, currentTravelers }) => {
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
+  const [pets, setPets] = useState(0);
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+          onClick={onClose}
+        >
+          <motion.div
+            variants={modalVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="bg-white rounded-3xl max-w-md w-full p-6"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-800">Travelers</h3>
+              <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {[
+                { label: 'Adults', value: adults, setter: setAdults, desc: 'Ages 13+' },
+                { label: 'Children', value: children, setter: setChildren, desc: 'Ages 2-12' },
+                { label: 'Infants', value: infants, setter: setInfants, desc: 'Under 2' },
+                { label: 'Pets', value: pets, setter: setPets, desc: 'Bringing a pet?' }
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
+                  <div>
+                    <div className="font-medium text-gray-800">{item.label}</div>
+                    <div className="text-sm text-gray-600">{item.desc}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => item.setter(Math.max(0, item.value - 1))}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                    >
+                      -
+                    </button>
+                    <span className="w-8 text-center font-medium">{item.value}</span>
+                    <button
+                      onClick={() => item.setter(item.value + 1)}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <button 
+              onClick={() => onSelect(`${adults + children + infants} travelers`)}
+              className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 rounded-xl hover:from-blue-700 hover:to-purple-700"
+            >
+              Confirm Travelers
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+};
+
+const BudgetModal = ({ isOpen, onClose, onSelect, currentBudget }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          variants={modalVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="bg-white rounded-3xl max-w-md w-full p-6"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-bold text-gray-800">Set Budget</h3>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+              <X className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Total Budget (USD)</label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input 
+                  type="number" 
+                  placeholder="5000"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              {['$1,000', '$2,500', '$5,000', '$10,000'].map((amount) => (
+                <button
+                  key={amount}
+                  onClick={() => onSelect(amount)}
+                  className="p-3 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200 text-center font-medium"
+                >
+                  {amount}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <button 
+            onClick={() => onSelect('Budget set')}
+            className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 rounded-xl hover:from-blue-700 hover:to-purple-700"
+          >
+            Set Budget
+          </button>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+// Upload Options Popup
+const UploadPopup = ({ isOpen, onClose, onFileUpload, onLinkSubmit }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="absolute bottom-16 left-0 bg-white/95 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl p-4 min-w-80 z-50"
+      >
+        <div className="space-y-3">
+          <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors duration-200">
+            <Upload className="w-5 h-5 text-blue-600" />
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-800 text-sm">Upload a file</h4>
+              <p className="text-xs text-gray-600">Start your journey with a travel-related photo, screenshot or PDF.</p>
+            </div>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.gif"
+              onChange={onFileUpload}
+              className="hidden"
+              id="file-upload-popup"
+            />
+            <label
+              htmlFor="file-upload-popup"
+              className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium cursor-pointer hover:bg-blue-200 transition-colors duration-200"
+            >
+              Browse
+            </label>
+          </div>
+          
+          <div className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition-colors duration-200">
+            <Link className="w-5 h-5 text-green-600" />
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-800 text-sm">Add a link</h4>
+              <p className="text-xs text-gray-600">Convert videos, social posts and articles into trip plans.</p>
+            </div>
+            <button
+              onClick={() => {
+                const link = prompt('Enter a link to process:');
+                if (link) onLinkSubmit(link);
+                onClose();
+              }}
+              className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors duration-200"
+            >
+              Add Link
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+// Interactive Map Component
+const InteractiveMap = ({ destinations, onMarkerClick, highlightedDestinations = [] }) => (
+  <div className="relative w-full h-full bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl overflow-hidden">
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20" />
+    
+    {/* World Map SVG or simplified representation */}
+    <div className="absolute inset-0">
+      {/* Simplified world map representation */}
+      <svg className="w-full h-full" viewBox="0 0 1000 500">
+        {/* Continents simplified shapes */}
+        <path d="M100 150 Q200 100 300 150 L350 200 Q300 250 200 200 Z" fill="#e2e8f0" opacity="0.5" />
+        <path d="M400 180 Q500 150 600 180 L650 220 Q600 260 500 230 Z" fill="#e2e8f0" opacity="0.5" />
+        <path d="M700 160 Q800 130 900 160 L920 200 Q870 240 780 210 Z" fill="#e2e8f0" opacity="0.5" />
+      </svg>
+    </div>
+    
+    {/* Destination Markers */}
+    {destinations.map((dest, index) => (
+      <motion.div
+        key={dest.id}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: index * 0.1, duration: 0.3 }}
+        className={`absolute cursor-pointer ${
+          highlightedDestinations.includes(dest.id) ? 'z-20' : 'z-10'
+        }`}
+        style={{
+          left: `${20 + index * 15}%`,
+          top: `${30 + (index % 2) * 20}%`
+        }}
+        onClick={() => onMarkerClick(dest)}
+        whileHover={{ scale: 1.3 }}
+      >
+        <div className={`w-10 h-10 rounded-full border-3 border-white shadow-lg flex items-center justify-center ${
+          highlightedDestinations.includes(dest.id) 
+            ? 'bg-blue-600 animate-pulse' 
+            : 'bg-red-500'
+        }`}>
+          <div className="w-4 h-4 bg-white rounded-full" />
+        </div>
+        {highlightedDestinations.includes(dest.id) && (
+          <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-2 py-1 rounded text-xs whitespace-nowrap">
+            {dest.name}
+          </div>
+        )}
+      </motion.div>
+    ))}
+    
+    {/* Map Controls */}
+    <div className="absolute top-4 right-4 flex flex-col gap-2">
+      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200">
+        +
+      </button>
+      <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-md flex items-center justify-center hover:bg-white transition-colors duration-200">
+        -
+      </button>
+    </div>
+  </div>
+);
+
+// Destination Exploration View
+const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="fixed inset-0 bg-gray-50 z-50"
+  >
+    <div className="h-full flex">
+      {/* Left Panel - Destination Summary */}
+      <div className="w-1/2 bg-white border-r border-gray-200 overflow-y-auto">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+            >
+              <X className="w-5 h-5" />
+              Back to Chat
+            </button>
+          </div>
+          
+          {/* Destination Hero */}
+          <div className="relative h-64 rounded-2xl overflow-hidden mb-6">
+            <img
+              src={destination.hero_image}
+              alt={destination.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute bottom-4 left-4 text-white">
+              <h1 className="text-3xl font-bold mb-2">{destination.name}, {destination.country}</h1>
+              <div className="flex items-center gap-4 text-sm">
+                <span>{destination.weather.temp}</span>
+                <span>•</span>
+                <span>{destination.weather.condition}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Quick Facts */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Quick Facts</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 p-4 rounded-xl">
+                <div className="text-blue-600 font-semibold">Best Time</div>
+                <div className="text-gray-700">Mar - May</div>
+              </div>
+              <div className="bg-green-50 p-4 rounded-xl">
+                <div className="text-green-600 font-semibold">Currency</div>
+                <div className="text-gray-700">USD</div>
+              </div>
+              <div className="bg-purple-50 p-4 rounded-xl">
+                <div className="text-purple-600 font-semibold">Language</div>
+                <div className="text-gray-700">English</div>
+              </div>
+              <div className="bg-orange-50 p-4 rounded-xl">
+                <div className="text-orange-600 font-semibold">Time Zone</div>
+                <div className="text-gray-700">GMT-5</div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Tailored Questions */}
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Let's Plan Your Trip</h3>
+            <div className="space-y-3">
+              {[
+                "What's your travel style?",
+                "How many days are you planning?",
+                "What's your budget range?",
+                "Any specific interests?"
+              ].map((question, index) => (
+                <button
+                  key={index}
+                  className="w-full text-left p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors duration-200 border border-gray-200"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Quick Ask Bar */}
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 p-4 -mx-6">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Ask about this destination..."
+                className="flex-1 p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <button className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200">
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Right Panel - Interactive Map */}
+      <div className="w-1/2 bg-gray-100 p-6">
+        <div className="h-full">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Explore {destination.name}</h3>
+          <InteractiveMap
+            destinations={[destination]}
+            onMarkerClick={onMapMarkerClick}
+            highlightedDestinations={[destination.id]}
+          />
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
 const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible }) => {
   if (!isVisible) return null;
 
