@@ -2104,9 +2104,9 @@ function App() {
                             Where to today?
                           </h2>
                           <p className="text-lg text-gray-600 leading-relaxed">
-                            Hey there, I'm here to assist you in planning your experience.
+                            <strong>Dreaming of a getaway?</strong>
                             <br />
-                            Ask me anything travel related.
+                            Tell me your travel wishlist and I'll guide you. Ask anything about your upcoming travels!
                           </p>
                         </div>
                       </div>
