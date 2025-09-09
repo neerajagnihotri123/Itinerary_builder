@@ -1303,6 +1303,9 @@ function App() {
   const handleCardAction = (action, item) => {
     switch (action) {
       case 'explore':
+        setExploringDestination(item);
+        setShowDestinationExploration(true);
+        break;
       case 'details':
         setSelectedDestination(item);
         setIsDestinationModalOpen(true);
