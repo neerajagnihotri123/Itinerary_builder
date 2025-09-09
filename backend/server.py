@@ -829,76 +829,39 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
                 }
             })
         
-        # Generate enhanced contextual followup questions
+        # Generate smarter, contextual followup questions that build on the conversation
         followup_questions = []
-        message_lower = request.message.lower()
-        trip_details = getattr(request, 'trip_details', {}) or {}
         
-        # Context-aware follow-up questions based on trip planning state and conversation
-        if destination_mentioned:
+        # Only add follow-up questions if the response was helpful and specific
+        if destination_mentioned and any(phrase in message_lower for phrase in ["plan a trip", "help me plan"]):
             dest_name = destination_mentioned['name']
-            
-            if any(word in message_lower for word in ["itinerary", "plan"]):
-                followup_questions.extend([
-                    f"What specific activities interest you most in {dest_name}?",
-                    f"Would you like restaurant recommendations for {dest_name}?",
-                    f"Should I include adventure activities in your {dest_name} plan?"
-                ])
-            elif any(word in message_lower for word in ["hotel", "accommodation"]):
-                followup_questions.extend([
-                    f"What area of {dest_name} would you prefer to stay in?",
-                    f"Do you need family-friendly accommodations in {dest_name}?",
-                    f"Would you like hotels near {dest_name}'s main attractions?"
-                ])
-            else:
-                followup_questions.extend([
-                    f"Would you like a detailed {dest_name} itinerary?",
-                    f"What's your budget range for {dest_name}?",
-                    f"How many days are you planning in {dest_name}?"
-                ])
-        
-        # Trip details based questions
-        elif not trip_details.get('destination'):
             followup_questions.extend([
-                "Which destination interests you most for adventure activities?",
-                "Are you looking for mountain adventures or beach experiences?",
-                "Would you prefer cultural experiences or outdoor activities?"
+                f"Show me a 5-day {dest_name} itinerary",
+                f"What are the best hotels in {dest_name}?",
+                f"Best time to visit {dest_name}?"
             ])
-        elif not trip_details.get('budget'):
+        elif "itinerary" in message_lower and not destination_mentioned:
             followup_questions.extend([
-                "What's your preferred budget range for this trip?",
-                "Are you looking for luxury, mid-range, or budget travel?",
-                "Should I focus on premium experiences or value options?"
+                "5-day Manali adventure itinerary",
+                "7-day Kerala backwaters plan", 
+                "4-day Rishikesh spiritual trip"
             ])
-        elif not trip_details.get('travelers'):
+        elif "hotel" in message_lower and not destination_mentioned:
             followup_questions.extend([
-                "How many people will be traveling?",
-                "Is this a solo trip, couple's getaway, or family vacation?",
-                "Any special requirements for your travel group?"
+                "Best hotels in Manali under ₹5K",
+                "Luxury resorts in Kerala",
+                "Budget stays in Rishikesh"
+            ])
+        elif not any(phrase in message_lower for phrase in ["plan", "itinerary", "hotel"]):
+            # Only ask for general direction if user hasn't specified anything
+            followup_questions.extend([
+                "Plan a weekend getaway",
+                "Show me adventure destinations",
+                "Budget-friendly trip ideas"
             ])
         
-        # Activity-based follow-ups
-        if any(word in message_lower for word in ["adventure", "activity", "experience"]):
-            followup_questions.extend([
-                "What level of adventure activities do you prefer?",
-                "Are you interested in water sports or mountain activities?",
-                "Would you like to include cultural experiences too?"
-            ])
-        
-        # Fallback questions if none added yet
-        if not followup_questions:
-            if any(word in message_lower for word in ["food", "restaurant", "cuisine"]):
-                followup_questions.extend([
-                    "Do you have any dietary preferences or restrictions?",
-                    "Are you interested in local street food experiences?",
-                    "Would you like fine dining or authentic local restaurants?"
-                ])
-            else:
-                followup_questions.extend([
-                    "What type of travel experience are you looking for?",
-                    "Would you like adventure activities or cultural experiences?",
-                    "What's most important to you in this trip?"
-                ])
+        # Keep it short and actionable - max 3 questions
+        followup_questions = followup_questions[:3]
         
         # Store chat message in database
         chat_message = ChatMessage(
