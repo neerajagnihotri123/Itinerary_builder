@@ -652,9 +652,19 @@ class TravelloAPITester:
                         location = payload.get('location', '').lower()
                         
                         # Check if hotel is related to the destination
-                        if (destination in hotel_name or destination in location or
-                            any(dest_keyword in hotel_name or dest_keyword in location 
-                                for dest_keyword in [destination])):
+                        # For Andaman, accept Havelock Island locations as valid
+                        is_valid_hotel = False
+                        if destination == "andaman":
+                            if ("havelock" in hotel_name or "havelock" in location or
+                                "andaman" in hotel_name or "andaman" in location):
+                                is_valid_hotel = True
+                        else:
+                            if (destination in hotel_name or destination in location or
+                                any(dest_keyword in hotel_name or dest_keyword in location 
+                                    for dest_keyword in [destination])):
+                                is_valid_hotel = True
+                        
+                        if is_valid_hotel:
                             valid_hotels += 1
                             print(f"      ✅ Valid hotel: {payload.get('title', 'N/A')}")
                             
