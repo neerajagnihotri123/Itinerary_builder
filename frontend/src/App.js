@@ -1605,40 +1605,76 @@ function App() {
   const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
   const [destinations] = useState([
     {
-      id: "paris_france",
-      name: "Paris",
-      country: "France",
-      coordinates: {"lat": 48.8566, "lng": 2.3522},
-      hero_image: "https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=800&h=400&fit=crop",
-      category: ["Culture & History", "Urban", "Romance"],
-      weather: {"temp": "18°C", "condition": "Partly Cloudy"},
-      description: "The City of Light captivates with its iconic landmarks, world-class museums, and charming boulevards.",
-      highlights: ["Eiffel Tower", "Louvre Museum", "Notre-Dame Cathedral", "Seine River Cruises"],
-      why_match: "Perfect for culture lovers seeking romance and history"
+      id: "kashmir_india",
+      name: "Kashmir",
+      country: "India",
+      coordinates: {"lat": 34.0837, "lng": 74.7973},
+      hero_image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
+      category: ["Adventure", "Nature", "Trekking"],
+      weather: {"temp": "15°C", "condition": "Clear"},
+      description: "Paradise on Earth with stunning lakes, snow-capped mountains, and pristine valleys perfect for trekking and adventure.",
+      highlights: ["Dal Lake", "Great Lakes Trek", "Gulmarg Skiing", "Pahalgam Valley"],
+      why_match: "Perfect for adventure seekers and nature lovers"
+    },
+    {
+      id: "manali_india",
+      name: "Manali",
+      country: "India",
+      coordinates: {"lat": 32.2396, "lng": 77.1887},
+      hero_image: "https://images.unsplash.com/photo-1464822759844-d150baec0494?w=800&h=400&fit=crop",
+      category: ["Adventure", "Mountains", "Trekking"],
+      weather: {"temp": "18°C", "condition": "Pleasant"},  
+      description: "Hill station paradise offering river rafting, paragliding, trekking, and stunning mountain views.",
+      highlights: ["Solang Valley", "Rohtang Pass", "River Rafting", "Paragliding"],
+      why_match: "Ideal for thrill seekers and mountain enthusiasts"
+    },
+    {
+      id: "rishikesh_india", 
+      name: "Rishikesh",
+      country: "India",
+      coordinates: {"lat": 30.0869, "lng": 78.2676},
+      hero_image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop",
+      category: ["Adventure", "Spiritual", "Water Sports"],
+      weather: {"temp": "25°C", "condition": "Sunny"},
+      description: "Adventure capital of India with world-class river rafting, bungee jumping, and spiritual experiences.",
+      highlights: ["River Rafting", "Bungee Jumping", "Lakshman Jhula", "Yoga Ashrams"],
+      why_match: "Perfect blend of adventure and spirituality"
     },
     {
       id: "goa_india",
       name: "Goa",
-      country: "India",
+      country: "India", 
       coordinates: {"lat": 15.2993, "lng": 74.1240},
       hero_image: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&h=400&fit=crop",
-      category: ["Beach", "Culture & History", "Relaxation"],
+      category: ["Beach", "Water Sports", "Party"],
       weather: {"temp": "32°C", "condition": "Sunny"},
-      description: "India's beach paradise with golden sands, Portuguese heritage, and vibrant nightlife.",
-      highlights: ["Baga Beach", "Old Goa Churches", "Spice Plantations", "Dudhsagar Falls"],
-      why_match: "Perfect for beach lovers seeking culture and relaxation"
+      description: "India's beach paradise with golden sands, water sports, vibrant nightlife, and Portuguese heritage.",
+      highlights: ["Baga Beach", "Water Sports", "Old Goa Churches", "Beach Parties"],
+      why_match: "Perfect for beach lovers and party enthusiasts"
     },
     {
-      id: "tokyo_japan",
-      name: "Tokyo",
-      country: "Japan",
-      coordinates: {"lat": 35.6762, "lng": 139.6503},
-      hero_image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&h=400&fit=crop",
-      category: ["Urban", "Culture & History", "Adventure"],
-      weather: {"temp": "22°C", "condition": "Clear"},
-      description: "A fascinating blend of ultra-modern technology and traditional culture in Japan's vibrant capital.",
-      highlights: ["Shibuya Crossing", "Tokyo Skytree", "Senso-ji Temple", "Tsukiji Fish Market"],
-      why_match: "Ideal for urban explorers and culture enthusiasts"
+      id: "andaman_india",
+      name: "Andaman Islands",
+      country: "India",
+      coordinates: {"lat": 11.7401, "lng": 92.6586},
+      hero_image: "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=800&h=400&fit=crop",
+      category: ["Beach", "Scuba Diving", "Marine Life"],
+      weather: {"temp": "30°C", "condition": "Tropical"},
+      description: "Pristine islands with crystal clear waters, coral reefs, and world-class scuba diving experiences.",
+      highlights: ["Scuba Diving", "Snorkeling", "Radhanagar Beach", "Cellular Jail"],
+      why_match: "Paradise for marine life enthusiasts and beach lovers"
+    },
+    {
+      id: "rajasthan_india",
+      name: "Rajasthan",
+      country: "India",
+      coordinates: {"lat": 27.0238, "lng": 74.2179},
+      hero_image: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=400&fit=crop",
+      category: ["Heritage", "Culture", "Desert Safari"],
+      weather: {"temp": "28°C", "condition": "Sunny"},
+      description: "Land of kings with majestic palaces, desert safaris, vibrant culture, and royal heritage.",
+      highlights: ["Desert Safari", "Amber Fort", "Lake Pichola", "Hawa Mahal"],
+      why_match: "Perfect for heritage lovers and cultural enthusiasts"
     }
   ]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
