@@ -1916,7 +1916,7 @@ function App() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="flex h-screen">
         {/* Left Panel - Chat */}
-        <div className="w-[48%] flex flex-col bg-white/80 backdrop-blur-xl border-r border-white/30">
+        <div className="w-[48%] flex flex-col bg-white/80 backdrop-blur-xl border-r border-white/30 relative z-10">
           {/* Header */}
           <div className="p-6 border-b border-white/30 bg-white/50 backdrop-blur-sm">
             <div className="flex items-center gap-4">
