@@ -52,79 +52,227 @@ CONTEXTUAL RESPONSES:
 - When personalization is triggered: Explain what's happening next
 - Always be aware of the current conversation flow and UI state"""
 
-# Mock Travel Data - Updated with Indian Adventure Destinations
+# Real Thrillophilia Travel Data - Updated with actual packages
 MOCK_DESTINATIONS = [
     {
-        "id": "kashmir_india",
-        "name": "Kashmir",
-        "country": "India",
-        "coordinates": {"lat": 34.0837, "lng": 74.7973},
-        "hero_image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop",
-        "category": ["Adventure", "Nature", "Trekking"],
-        "weather": {"temp": "15°C", "condition": "Clear"},
-        "description": "Paradise on Earth with stunning lakes, snow-capped mountains, and pristine valleys perfect for trekking and adventure.",
-        "highlights": ["Dal Lake", "Great Lakes Trek", "Gulmarg Skiing", "Pahalgam Valley"],
-        "why_match": "Perfect for adventure seekers and nature lovers"
-    },
-    {
-        "id": "manali_india",
+        "id": "manali_himachal",
         "name": "Manali",
-        "country": "India",
+        "country": "India", 
+        "state": "Himachal Pradesh",
         "coordinates": {"lat": 32.2396, "lng": 77.1887},
         "hero_image": "https://images.unsplash.com/photo-1464822759844-d150baec0494?w=800&h=400&fit=crop",
-        "category": ["Adventure", "Mountains", "Trekking"],
+        "category": ["Adventure", "Mountains", "Paragliding", "River Rafting"],
         "weather": {"temp": "18°C", "condition": "Pleasant"},  
-        "description": "Hill station paradise offering river rafting, paragliding, trekking, and stunning mountain views.",
-        "highlights": ["Solang Valley", "Rohtang Pass", "River Rafting", "Paragliding"],
-        "why_match": "Ideal for thrill seekers and mountain enthusiasts"
+        "description": "Adventure hub of Himachal Pradesh offering paragliding, river rafting, trekking, and stunning Himalayan views.",
+        "highlights": ["Solang Valley Paragliding", "Beas River Rafting", "Rohtang Pass", "Snow Activities"],
+        "why_match": "Perfect for adventure sports enthusiasts",
+        "activities": [
+            {"name": "River Rafting + Paragliding Combo", "price": "₹2,199", "duration": "Full Day"},
+            {"name": "Paragliding Flight", "price": "₹3,000", "duration": "15 mins"},
+            {"name": "River Rafting", "price": "₹1,500", "duration": "2 hours"}
+        ]
     },
     {
-        "id": "rishikesh_india", 
+        "id": "rishikesh_uttarakhand",
         "name": "Rishikesh",
         "country": "India",
+        "state": "Uttarakhand", 
         "coordinates": {"lat": 30.0869, "lng": 78.2676},
         "hero_image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop",
-        "category": ["Adventure", "Spiritual", "Water Sports"],
+        "category": ["Adventure", "Spiritual", "River Rafting", "Bungee Jumping"],
         "weather": {"temp": "25°C", "condition": "Sunny"},
-        "description": "Adventure capital of India with world-class river rafting, bungee jumping, and spiritual experiences.",
-        "highlights": ["River Rafting", "Bungee Jumping", "Lakshman Jhula", "Yoga Ashrams"],
-        "why_match": "Perfect blend of adventure and spirituality"
+        "description": "Yoga capital and adventure hub offering world-class river rafting, bungee jumping, and spiritual experiences.",
+        "highlights": ["White Water Rafting", "Bungee Jumping", "Lakshman Jhula", "Yoga Ashrams"],
+        "why_match": "Ultimate destination for adventure and spirituality",
+        "activities": [
+            {"name": "16km White Water Rafting", "price": "₹3,000", "duration": "4 hours"},
+            {"name": "Adventure Camp Package", "price": "₹4,500", "duration": "2 days"},
+            {"name": "Bungee Jumping", "price": "₹3,500", "duration": "1 hour"}
+        ]
     },
     {
-        "id": "goa_india",
-        "name": "Goa",
-        "country": "India", 
-        "coordinates": {"lat": 15.2993, "lng": 74.1240},
-        "hero_image": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=800&h=400&fit=crop",
-        "category": ["Beach", "Water Sports", "Party"],
-        "weather": {"temp": "32°C", "condition": "Sunny"},
-        "description": "India's beach paradise with golden sands, water sports, vibrant nightlife, and Portuguese heritage.",
-        "highlights": ["Baga Beach", "Water Sports", "Old Goa Churches", "Beach Parties"],
-        "why_match": "Perfect for beach lovers and party enthusiasts"
-    },
-    {
-        "id": "andaman_india",
-        "name": "Andaman Islands",
+        "id": "andaman_islands",
+        "name": "Andaman Islands", 
         "country": "India",
+        "state": "Andaman & Nicobar",
         "coordinates": {"lat": 11.7401, "lng": 92.6586},
         "hero_image": "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=800&h=400&fit=crop",
-        "category": ["Beach", "Scuba Diving", "Marine Life"],
+        "category": ["Beach", "Scuba Diving", "Marine Life", "Water Sports"],
         "weather": {"temp": "30°C", "condition": "Tropical"},
-        "description": "Pristine islands with crystal clear waters, coral reefs, and world-class scuba diving experiences.",
-        "highlights": ["Scuba Diving", "Snorkeling", "Radhanagar Beach", "Cellular Jail"],
-        "why_match": "Paradise for marine life enthusiasts and beach lovers"
+        "description": "Pristine tropical islands with crystal clear waters, coral reefs, and world-class scuba diving.",
+        "highlights": ["Scuba Diving", "Snorkeling", "Radhanagar Beach", "Neil Island"],
+        "why_match": "Paradise for marine life and beach lovers",
+        "activities": [
+            {"name": "Scuba Diving Session", "price": "₹3,500", "duration": "30 mins"},
+            {"name": "Snorkeling Experience", "price": "₹2,000", "duration": "1 hour"},
+            {"name": "Island Hopping Tour", "price": "₹5,500", "duration": "Full Day"}
+        ]
     },
     {
-        "id": "rajasthan_india",
+        "id": "pondicherry_tamil_nadu",
+        "name": "Pondicherry",
+        "country": "India",
+        "state": "Tamil Nadu",
+        "coordinates": {"lat": 11.9416, "lng": 79.8083},
+        "hero_image": "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=800&h=400&fit=crop",
+        "category": ["Beach", "Scuba Diving", "French Culture", "Water Sports"],
+        "weather": {"temp": "29°C", "condition": "Sunny"},
+        "description": "French colonial charm meets adventure with scuba diving, surfing, and cultural experiences.",
+        "highlights": ["Scuba Diving", "French Quarter", "Auroville", "Paradise Beach"],
+        "why_match": "Unique blend of culture and water sports",
+        "activities": [
+            {"name": "Scuba Diving with Videography", "price": "₹6,499", "duration": "2 hours"},
+            {"name": "Surfing Lessons", "price": "₹2,500", "duration": "1 hour"},
+            {"name": "Heritage Walk", "price": "₹1,500", "duration": "3 hours"}
+        ]
+    },
+    {
+        "id": "kerala_backwaters",
+        "name": "Kerala",
+        "country": "India",
+        "state": "Kerala",
+        "coordinates": {"lat": 10.8505, "lng": 76.2711},
+        "hero_image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&h=400&fit=crop",
+        "category": ["Backwaters", "Houseboat", "Nature", "Cultural"],
+        "weather": {"temp": "28°C", "condition": "Humid"},
+        "description": "God's own country with serene backwaters, houseboat cruises, spice plantations, and Ayurvedic treatments.",
+        "highlights": ["Alleppey Houseboat", "Munnar Tea Gardens", "Thekkady Wildlife", "Kochi Heritage"],
+        "why_match": "Perfect for nature lovers and cultural enthusiasts",
+        "activities": [
+            {"name": "8-Day Kerala Expedition", "price": "₹25,999", "duration": "8 days"},
+            {"name": "Houseboat Stay Package", "price": "₹8,500", "duration": "2 days"},
+            {"name": "Spice Plantation Tour", "price": "₹2,000", "duration": "Half Day"}
+        ]
+    },
+    {
+        "id": "rajasthan_desert",
         "name": "Rajasthan",
         "country": "India",
+        "state": "Rajasthan", 
         "coordinates": {"lat": 27.0238, "lng": 74.2179},
         "hero_image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=400&fit=crop",
-        "category": ["Heritage", "Culture", "Desert Safari"],
-        "weather": {"temp": "28°C", "condition": "Sunny"},
-        "description": "Land of kings with majestic palaces, desert safaris, vibrant culture, and royal heritage.",
-        "highlights": ["Desert Safari", "Amber Fort", "Lake Pichola", "Hawa Mahal"],
-        "why_match": "Perfect for heritage lovers and cultural enthusiasts"
+        "category": ["Desert Safari", "Heritage", "Culture", "Palaces"],
+        "weather": {"temp": "32°C", "condition": "Sunny"},
+        "description": "Land of maharajas with majestic palaces, desert safaris, camel rides, and royal heritage.",
+        "highlights": ["Jaisalmer Desert Safari", "Udaipur Palaces", "Jaipur Pink City", "Camel Safari"],
+        "why_match": "Ultimate destination for heritage and desert adventure",
+        "activities": [
+            {"name": "Desert Safari Package", "price": "₹4,500", "duration": "2 days"},
+            {"name": "Heritage Palace Tour", "price": "₹15,999", "duration": "7 days"},
+            {"name": "Camel Safari", "price": "₹2,500", "duration": "1 day"}
+        ]
+    }
+]
+
+# Real Thrillophilia Tours Data
+THRILLOPHILIA_TOURS = [
+    {
+        "id": "manali_adventure_combo",
+        "name": "River Rafting + Paragliding Combo",
+        "location": "Manali, Himachal Pradesh",
+        "price": "₹2,199",
+        "original_price": "₹3,500",
+        "duration": "Full Day",
+        "image": "https://images.unsplash.com/photo-1464822759844-d150baec0494?w=400&h=300&fit=crop",
+        "rating": 4.8,
+        "reviews": 1250,
+        "highlights": ["9km Beas River Rafting", "12-min Paragliding from 7000ft", "Grade II & III Rapids"],
+        "category": "Adventure Combo"
+    },
+    {
+        "id": "rishikesh_rafting_camp",
+        "name": "16km White Water Rafting + Adventure Camp",
+        "location": "Rishikesh, Uttarakhand", 
+        "price": "₹3,000",
+        "original_price": "₹4,000",
+        "duration": "2 Days",
+        "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&h=300&fit=crop",
+        "rating": 4.9,
+        "reviews": 2100,
+        "highlights": ["Grade III & IV Rapids", "Rock Climbing", "Rappelling", "Riverside Camping"],
+        "category": "Adventure Package"
+    },
+    {
+        "id": "kerala_enchanting_expedition",
+        "name": "8-Day Enchanting Expedition of Kerala",
+        "location": "Kerala (Kochi to Trivandrum)",
+        "price": "₹25,999", 
+        "original_price": "₹32,000",
+        "duration": "8 Days",
+        "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=400&h=300&fit=crop",
+        "rating": 4.7,
+        "reviews": 890,
+        "highlights": ["Munnar Tea Gardens", "Alleppey Houseboat", "Thekkady Wildlife", "Kovalam Beach"],
+        "category": "Cultural Tour"
+    },
+    {
+        "id": "rajasthan_heritage_tour",
+        "name": "Rajasthan Heritage & Desert Safari",
+        "location": "Rajasthan (Jaipur to Jaisalmer)",
+        "price": "₹15,999",
+        "original_price": "₹20,000", 
+        "duration": "7 Days",
+        "image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&h=300&fit=crop",
+        "rating": 4.6,
+        "reviews": 750,
+        "highlights": ["Amber Fort", "Desert Safari", "Camel Ride", "Palace Hotels"],
+        "category": "Heritage Tour"
+    }
+]
+
+# Real Thrillophilia Activities Data  
+THRILLOPHILIA_ACTIVITIES = [
+    {
+        "id": "manali_paragliding",
+        "name": "Paragliding in Manali",
+        "location": "Solang Valley, Manali",
+        "price": "₹3,000",
+        "original_price": "₹3,500",
+        "duration": "15 minutes",
+        "image": "https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=400&h=300&fit=crop",
+        "rating": 4.8,
+        "reviews": 1845,
+        "highlights": ["300m Launch Height", "Himalayan Views", "Certified Instructors"],
+        "category": "Adventure"
+    },
+    {
+        "id": "pondicherry_scuba_diving",
+        "name": "Scuba Diving with Free Videography",
+        "location": "Pondicherry", 
+        "price": "₹6,499",
+        "original_price": "₹7,500",
+        "duration": "2 Hours",
+        "image": "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=400&h=300&fit=crop",
+        "rating": 4.9,
+        "reviews": 920,
+        "highlights": ["Bay of Bengal Diving", "Professional Video", "Beginner Friendly"],
+        "category": "Water Sports"
+    },
+    {
+        "id": "andaman_scuba_diving",
+        "name": "Scuba Diving in Andaman",
+        "location": "Havelock Island, Andaman",
+        "price": "₹3,500", 
+        "original_price": "₹4,200",
+        "duration": "30 minutes",
+        "image": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=300&fit=crop",
+        "rating": 4.9,
+        "reviews": 1150,
+        "highlights": ["Coral Reef Diving", "Tropical Fish", "Crystal Clear Waters"],
+        "category": "Marine Adventure"
+    },
+    {
+        "id": "rishikesh_bungee_jumping",
+        "name": "Bungee Jumping in Rishikesh",
+        "location": "Jumpin Heights, Rishikesh",
+        "price": "₹3,500",
+        "original_price": "₹4,000", 
+        "duration": "1 Hour",
+        "image": "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop",
+        "rating": 4.7,
+        "reviews": 2200,
+        "highlights": ["83m Jump Height", "Fixed Platform", "Safety Certified"],
+        "category": "Extreme Adventure"
     }
 ]
 
