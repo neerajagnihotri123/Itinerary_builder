@@ -2324,6 +2324,40 @@ function App() {
               </div>
             )}
 
+            {/* Question Chips - "You might want to ask" */}
+            {questionChips.length > 0 && (
+              <div className="mb-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3"
+                >
+                  <p className="text-sm font-medium text-gray-600">You might want to ask:</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <AnimatePresence>
+                      {questionChips.map((questionChip, index) => (
+                        <motion.button
+                          key={`question_${questionChip.id}_${index}`}
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          onClick={() => handleQuestionChipClick(questionChip)}
+                          className="bg-gradient-to-r from-green-50 to-orange-50 border border-green-200 text-gray-700 px-4 py-3 rounded-xl text-sm font-medium hover:from-green-100 hover:to-orange-100 hover:border-green-300 transition-all duration-200 text-left shadow-sm"
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-600">❓</span>
+                            <span className="flex-1">{questionChip.question}</span>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
             {/* Input */}
             <div className="flex gap-3">
               {/* Upload Plus Button - Moved to left */}
