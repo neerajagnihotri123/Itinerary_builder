@@ -945,6 +945,47 @@ function App() {
 
           {/* Input Area */}
           <div className="p-6 border-t border-white/30 bg-white/50 backdrop-blur-sm">
+            {/* Upload Options */}
+            <div className="mb-4 space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/30">
+                <Upload className="w-5 h-5 text-blue-600" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-800 text-sm">Upload a file</h4>
+                  <p className="text-xs text-gray-600">Start your journey with a travel-related photo, screenshot or PDF.</p>
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,.gif"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs font-medium cursor-pointer hover:bg-blue-200 transition-colors duration-200"
+                >
+                  Browse
+                </label>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/30">
+                <Link className="w-5 h-5 text-green-600" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-800 text-sm">Add a link</h4>
+                  <p className="text-xs text-gray-600">Convert videos, social posts and articles into trip plans.</p>
+                </div>
+                <button
+                  onClick={() => {
+                    const link = prompt('Enter a link to process:');
+                    if (link) handleLinkSubmit(link);
+                  }}
+                  className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs font-medium hover:bg-green-200 transition-colors duration-200"
+                >
+                  Add Link
+                </button>
+              </div>
+            </div>
+
             {/* Chips */}
             {currentChips.length > 0 && (
               <div className="mb-4">
@@ -978,8 +1019,15 @@ function App() {
                   placeholder="Ask about destinations, hotels, activities..."
                   className="w-full p-4 pr-12 bg-white/90 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent placeholder-gray-500 text-gray-800"
                 />
-                <button className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                  <Camera className="w-5 h-5" />
+                <button 
+                  onClick={handleVoiceInput}
+                  className={`absolute right-3 top-1/2 transform -translate-y-1/2 p-2 rounded-full transition-all duration-200 ${
+                    isRecording 
+                      ? 'text-red-500 bg-red-50 animate-pulse' 
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <Mic className="w-5 h-5" />
                 </button>
               </div>
               <motion.button
@@ -991,16 +1039,6 @@ function App() {
               >
                 <Send className="w-5 h-5" />
               </motion.button>
-            </div>
-
-            {/* Footer Actions */}
-            <div className="flex justify-between items-center mt-4 text-sm text-gray-600">
-              <button className="hover:text-blue-600 transition-colors duration-200">
-                Save & Exit
-              </button>
-              <button className="hover:text-blue-600 transition-colors duration-200">
-                Invite Collaborator
-              </button>
             </div>
           </div>
         </div>
