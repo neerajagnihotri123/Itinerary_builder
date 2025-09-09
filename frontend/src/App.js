@@ -660,7 +660,7 @@ function App() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hi! I\'m Travello.ai, your personal travel planner. I can help you discover amazing destinations, find perfect accommodations, and create unforgettable itineraries. Where would you like to explore today?'
+      content: 'Dreaming of a getaway? Tell me your travel wishlist and I\'ll guide you.\nAsk anything about your upcoming travels!'
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
@@ -672,6 +672,11 @@ function App() {
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
   const [destinations] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [chatHistory, setChatHistory] = useState([]);
+  const [tripDetails, setTripDetails] = useState({});
+  const [showTripBar, setShowTripBar] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
