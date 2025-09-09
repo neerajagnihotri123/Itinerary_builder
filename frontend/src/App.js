@@ -850,8 +850,14 @@ function App() {
           {/* Header */}
           <div className="p-6 border-b border-white/30 bg-white/50 backdrop-blur-sm">
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 hover:bg-white/50 rounded-lg transition-colors duration-200"
+              >
+                <Menu className="w-5 h-5 text-gray-600" />
+              </button>
               <Avatar />
-              <div>
+              <div className="flex-1">
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   Travello.ai
                 </h1>
@@ -860,15 +866,46 @@ function App() {
             </div>
           </div>
 
+          {/* Trip Planning Bar */}
+          <TripPlanningBar 
+            tripDetails={tripDetails}
+            onUpdateTrip={setTripDetails}
+            isVisible={showTripBar}
+          />
+
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             <AnimatePresence>
               {messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  isUser={message.role === 'user'}
-                />
+                <div key={message.id}>
+                  {message.role === 'assistant' && message.id === '1' ? (
+                    // Centered welcome message
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="text-center py-12"
+                    >
+                      <div className="max-w-md mx-auto">
+                        <Avatar />
+                        <div className="mt-6">
+                          <h2 className="text-2xl font-bold text-gray-800 mb-4 leading-relaxed">
+                            {message.content.split('\n').map((line, index) => (
+                              <div key={index} className={index === 0 ? 'mb-2' : ''}>
+                                {line}
+                              </div>
+                            ))}
+                          </h2>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <MessageBubble
+                      message={message}
+                      isUser={message.role === 'user'}
+                    />
+                  )}
+                </div>
               ))}
             </AnimatePresence>
 
