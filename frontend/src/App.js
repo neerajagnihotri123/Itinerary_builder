@@ -1091,40 +1091,58 @@ const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) 
     </div>
   </motion.div>
 );
+// Trip Planning Bar Component
 const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible }) => {
+  const [showWhereModal, setShowWhereModal] = useState(false);
+  const [showWhenModal, setShowWhenModal] = useState(false);
+  const [showTravelersModal, setShowTravelersModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+
   if (!isVisible) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl p-4 mb-4 shadow-lg"
+      className="bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl p-4 mb-4 shadow-lg mx-6"
     >
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <MapPin className="w-5 h-5 text-blue-600" />
-          <button className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">
+          <button 
+            onClick={() => setShowWhereModal(true)}
+            className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200"
+          >
             {tripDetails.destination || 'Choose destination'}
           </button>
         </div>
         
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-green-600" />
-          <button className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors duration-200">
+          <button 
+            onClick={() => setShowWhenModal(true)}
+            className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors duration-200"
+          >
             {tripDetails.dates || 'Select dates'}
           </button>
         </div>
         
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-purple-600" />
-          <button className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors duration-200">
+          <button 
+            onClick={() => setShowTravelersModal(true)}
+            className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors duration-200"
+          >
             {tripDetails.travelers || '1 traveler'}
           </button>
         </div>
         
         <div className="flex items-center gap-2">
           <DollarSign className="w-5 h-5 text-orange-600" />
-          <button className="text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors duration-200">
+          <button 
+            onClick={() => setShowBudgetModal(true)}
+            className="text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors duration-200"
+          >
             {tripDetails.budget || 'Set budget'}
           </button>
         </div>
@@ -1133,6 +1151,47 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible }) => {
           <Edit3 className="w-4 h-4 text-gray-500" />
         </button>
       </div>
+
+      {/* Modals */}
+      <WhereModal
+        isOpen={showWhereModal}
+        onClose={() => setShowWhereModal(false)}
+        currentDestination={tripDetails.destination}
+        onSelect={(dest) => {
+          onUpdateTrip({ ...tripDetails, destination: dest });
+          setShowWhereModal(false);
+        }}
+      />
+      
+      <WhenModal
+        isOpen={showWhenModal}
+        onClose={() => setShowWhenModal(false)}
+        currentDates={tripDetails.dates}
+        onSelect={(dates) => {
+          onUpdateTrip({ ...tripDetails, dates });
+          setShowWhenModal(false);
+        }}
+      />
+      
+      <TravelersModal
+        isOpen={showTravelersModal}
+        onClose={() => setShowTravelersModal(false)}
+        currentTravelers={tripDetails.travelers}
+        onSelect={(travelers) => {
+          onUpdateTrip({ ...tripDetails, travelers });
+          setShowTravelersModal(false);
+        }}
+      />
+      
+      <BudgetModal
+        isOpen={showBudgetModal}
+        onClose={() => setShowBudgetModal(false)}
+        currentBudget={tripDetails.budget}
+        onSelect={(budget) => {
+          onUpdateTrip({ ...tripDetails, budget });
+          setShowBudgetModal(false);
+        }}
+      />
     </motion.div>
   );
 };
