@@ -322,6 +322,18 @@ frontend:
         agent: "main"
         comment: "✅ FULLY FUNCTIONAL: After fixing sidebar z-index, destination cards are fully clickable, explore buttons work, map markers are interactive, and right panel displays destination details correctly."
 
+  - task: "Plan Trip button on destination cards"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ MISSING FUNCTIONALITY: Plan Trip buttons not found on destination cards during testing. Searched for 'Plan Trip' buttons after sending destination queries but found 0 buttons. This is a critical missing feature from the review request - destination cards should have Plan Trip buttons that trigger trip planning flow when clicked."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
