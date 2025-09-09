@@ -1570,6 +1570,8 @@ function App() {
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showDestinationExploration, setShowDestinationExploration] = useState(false);
   const [exploringDestination, setExploringDestination] = useState(null);
+  const [showPersonalizationModal, setShowPersonalizationModal] = useState(false);
+  const [highlightedDestinations, setHighlightedDestinations] = useState([]);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
