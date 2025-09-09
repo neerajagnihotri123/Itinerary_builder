@@ -1858,9 +1858,10 @@ function App() {
     
     setMessages(prev => [...prev, itineraryMessage]);
     
-    // Set the generated content to state
+    // Set the generated content to state and switch right panel
     setGeneratedItinerary(personalizedItinerary);
     setGeneratedAccommodations(personalizedAccommodations);
+    setRightPanelContent('itinerary');
     setShowGeneratedContent(true);
     
     console.log('Generated itinerary:', personalizedItinerary);
