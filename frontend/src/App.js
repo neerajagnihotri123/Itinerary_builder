@@ -545,7 +545,7 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[90]"
         onClick={onClose}
       >
         <motion.div
