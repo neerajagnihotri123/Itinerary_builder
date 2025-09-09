@@ -757,23 +757,68 @@ function App() {
     setTimeout(() => handleSendMessage(), 100);
   };
 
-  const handleCardAction = (action, item) => {
-    switch (action) {
-      case 'explore':
-      case 'details':
-        setSelectedDestination(item);
-        setIsDestinationModalOpen(true);
-        break;
-      case 'map':
-        // Focus on map area or show item on map
-        console.log('Show on map:', item);
-        break;
-      case 'book':
-        // Open booking flow
-        console.log('Book:', item);
-        break;
-      default:
-        console.log('Action:', action, item);
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Speech recognition is not supported in this browser');
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputMessage(transcript);
+    };
+
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+    };
+
+    recognition.start();
+  };
+
+  const handleNewChat = () => {
+    setMessages([
+      {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: 'Dreaming of a getaway? Tell me your travel wishlist and I\'ll guide you.\nAsk anything about your upcoming travels!'
+      }
+    ]);
+    setRecommendations([]);
+    setCurrentChips([]);
+    setTripDetails({});
+    setShowTripBar(false);
+    setIsSidebarOpen(false);
+  };
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Handle file upload logic here
+      console.log('File uploaded:', file);
+      // You could process the file and add it to the conversation
+    }
+  };
+
+  const handleLinkSubmit = (link) => {
+    if (link.trim()) {
+      setInputMessage(`Process this link for travel planning: ${link}`);
+      setTimeout(() => handleSendMessage(), 100);
     }
   };
 
