@@ -960,11 +960,16 @@ def main():
     print(f"\nCritical Features: {critical_passed}/5 passing")
     
     print(f"\n🔥 REVIEW REQUEST CRITICAL TESTS:")
+    print(f"🎯 Critical Scenarios (Review Request): {'PASS' if critical_scenarios_success else 'FAIL'}")
     print(f"🏨 Accommodation Card Filtering: {'PASS' if accommodation_success else 'FAIL'}")
     print(f"💭 Question Chip Generation: {'PASS' if question_chip_success else 'FAIL'}")
     print(f"🔍 UI Actions Structure: {'PASS' if structure_success else 'FAIL'}")
     print(f"🇮🇳 Mock Data Integration: {'PASS' if mock_data_success else 'FAIL'}")
-    print(f"\nReview Tests: {review_passed}/4 passing")
+    
+    # Update review tests count
+    review_tests = [critical_scenarios_success, accommodation_success, question_chip_success, structure_success, mock_data_success]
+    review_passed = sum(review_tests)
+    print(f"\nReview Tests: {review_passed}/5 passing")
     
     # Overall assessment including review-specific tests
     total_critical_score = critical_passed + review_passed
