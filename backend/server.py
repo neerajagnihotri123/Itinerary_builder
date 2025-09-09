@@ -669,10 +669,15 @@ CURRENT TRIP PLANNING CONTEXT:
 - Trip Duration: {trip_details.get('duration', 'Not specified')}
 """
         
-        # Enhanced system message with context
+        # Get conversation context
+        conversation_context = get_conversation_context(request.session_id or "default")
+        
+        # Enhanced system message with context and conversation memory
         contextual_system_message = system_message
         if trip_context:
             contextual_system_message += trip_context + "\nUse this trip information to personalize your recommendations."
+        if conversation_context:
+            contextual_system_message += f"\n\nCONVERSATION CONTEXT:\n{conversation_context}\n\nReference previous discussions and build upon established preferences."
         
         # Initialize LLM chat
         chat = LlmChat(
