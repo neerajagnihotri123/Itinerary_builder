@@ -1840,15 +1840,32 @@ function App() {
                       className="text-center py-12"
                     >
                       <div className="max-w-md mx-auto">
-                        <Avatar />
-                        <div className="mt-6">
-                          <h2 className="text-2xl font-bold text-gray-800 mb-4 leading-relaxed">
-                            {message.content.split('\n').map((line, index) => (
-                              <div key={index} className={index === 0 ? 'mb-2' : ''}>
-                                {line}
-                              </div>
-                            ))}
+                        {/* Hero Image */}
+                        <div className="relative w-32 h-32 mx-auto mb-6">
+                          <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 p-1">
+                            <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                              <img
+                                src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=200&h=200&fit=crop"
+                                alt="Travel destinations"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          </div>
+                          {/* Location pin */}
+                          <div className="absolute top-0 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white text-xs transform rotate-12">
+                            📍
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <h2 className="text-3xl font-bold text-gray-800">
+                            Where to today?
                           </h2>
+                          <p className="text-lg text-gray-600 leading-relaxed">
+                            Hey there, I'm here to assist you in planning your experience.
+                            <br />
+                            Ask me anything travel related.
+                          </p>
                         </div>
                       </div>
                     </motion.div>
