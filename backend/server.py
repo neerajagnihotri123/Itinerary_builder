@@ -945,38 +945,51 @@ Be helpful, natural, and conversational. Provide specific suggestions and action
                 }
             })
         
-        # Generate smarter, contextual followup questions that build on the conversation
+        # Generate smarter, contextual followup questions that guide information gathering
         followup_questions = []
         
-        # Only add follow-up questions if the response was helpful and specific
-        if destination_mentioned and any(phrase in message_lower for phrase in ["plan a trip", "help me plan"]):
-            dest_name = destination_mentioned['name']
+        # If user wants to book/plan but we're missing info, guide them to provide it
+        if any(phrase in message_lower for phrase in ["book it", "book", "plan it", "let's plan"]):
+            if destination_mentioned:
+                dest_name = destination_mentioned['name']
+                followup_questions.extend([
+                    f"5-day {dest_name} trip for 2 people, budget ₹20K",
+                    f"Weekend {dest_name} getaway for couple",
+                    f"Family trip to {dest_name} in December"
+                ])
+            else:
+                followup_questions.extend([
+                    "5-day Manali trip for 2 people, budget ₹20K",
+                    "Weekend Rishikesh adventure for couple",
+                    "7-day Kerala backwaters family trip"
+                ])
+        
+        # If asking for general planning help, provide structured examples
+        elif any(phrase in message_lower for phrase in ["plan a trip", "help me plan", "recommend"]):
             followup_questions.extend([
-                f"Show me a 5-day {dest_name} itinerary",
-                f"What are the best hotels in {dest_name}?",
-                f"Best time to visit {dest_name}?"
-            ])
-        elif "itinerary" in message_lower and not destination_mentioned:
-            followup_questions.extend([
-                "5-day Manali adventure itinerary",
-                "7-day Kerala backwaters plan", 
-                "4-day Rishikesh spiritual trip"
-            ])
-        elif "hotel" in message_lower and not destination_mentioned:
-            followup_questions.extend([
-                "Best hotels in Manali under ₹5K",
-                "Luxury resorts in Kerala",
-                "Budget stays in Rishikesh"
-            ])
-        elif not any(phrase in message_lower for phrase in ["plan", "itinerary", "hotel"]):
-            # Only ask for general direction if user hasn't specified anything
-            followup_questions.extend([
-                "Plan a weekend getaway",
-                "Show me adventure destinations",
-                "Budget-friendly trip ideas"
+                "5-day mountain adventure in Manali",
+                "Beach vacation in Andaman Islands",
+                "Cultural tour of Rajasthan"
             ])
         
-        # Keep it short and actionable - max 3 questions
+        # If they mention a destination but no details, guide them to be specific
+        elif destination_mentioned and not any(word in message_lower for word in ["day", "budget", "people", "travelers"]):
+            dest_name = destination_mentioned['name']
+            followup_questions.extend([
+                f"5-day {dest_name} adventure for ₹20K",
+                f"Weekend {dest_name} trip for couple",
+                f"Best time to visit {dest_name}?"
+            ])
+        
+        # For other queries, provide helpful examples
+        else:
+            followup_questions.extend([
+                "Plan a 5-day adventure trip",
+                "Best destinations for couples",
+                "Budget-friendly weekend getaways"
+            ])
+        
+        # Keep it actionable - max 3 questions
         followup_questions = followup_questions[:3]
         
         # Store chat message in database
