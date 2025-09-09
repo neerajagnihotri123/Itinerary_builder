@@ -2281,9 +2281,20 @@ function App() {
 
         {/* Right Panel - Feature Canvas */}
         <div className="w-[52%] flex flex-col bg-gradient-to-br from-white/40 to-white/60 backdrop-blur-xl relative z-10">
-          {showGeneratedContent ? (
-            /* Generated Content View */
+          {rightPanelContent === 'itinerary' ? (
+            /* Generated Itinerary Content View */
             <div className="flex-1 overflow-y-auto">
+              {/* Back Button */}
+              <div className="p-4 border-b border-white/20">
+                <button
+                  onClick={() => setRightPanelContent('default')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  <X className="w-4 h-4" />
+                  Back to Overview
+                </button>
+              </div>
+              
               {/* Itinerary Section */}
               <div className="p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Personalized Itinerary</h2>
@@ -2378,6 +2389,79 @@ function App() {
                 </div>
               </div>
             </div>
+          ) : rightPanelContent === 'destination' && selectedMapDestination ? (
+            /* Destination Detail View */
+            <div className="flex-1 overflow-y-auto">
+              {/* Back Button */}
+              <div className="p-4 border-b border-white/20">
+                <button
+                  onClick={() => setRightPanelContent('default')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  <X className="w-4 h-4" />
+                  Back to Map
+                </button>
+              </div>
+              
+              {/* Destination Details */}
+              <div className="p-6">
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
+                  <img
+                    src={selectedMapDestination.hero_image}
+                    alt={selectedMapDestination.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h2 className="text-2xl font-bold mb-2">
+                      {selectedMapDestination.name}, {selectedMapDestination.country}
+                    </h2>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span>{selectedMapDestination.weather.temp}</span>
+                      <span>•</span>
+                      <span>{selectedMapDestination.weather.condition}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-gray-700 leading-relaxed mb-4">{selectedMapDestination.description}</p>
+                  <div className="bg-blue-50 p-4 rounded-xl">
+                    <p className="text-blue-700 font-medium">
+                      <Heart className="w-4 h-4 inline mr-2" />
+                      {selectedMapDestination.why_match}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-gray-800 mb-4">Top Highlights</h3>
+                  <div className="space-y-3">
+                    {selectedMapDestination.highlights.map((highlight, index) => (
+                      <div key={index} className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-white/30">
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <span className="font-medium text-gray-800">{highlight}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => {
+                      setExploringDestination(selectedMapDestination);
+                      setShowDestinationExploration(true);
+                    }}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
+                  >
+                    Explore Details
+                  </button>
+                  <button className="px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200">
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             /* Default Canvas View */
             <>
@@ -2385,21 +2469,18 @@ function App() {
               <div className="p-6">
                 <div className="mb-4">
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">Know the Destinations</h2>
-                  <p className="text-gray-600">Discover amazing places around the world</p>
+                  <p className="text-gray-600">Click on any location to explore</p>
                 </div>
                 <div className="h-80">
                   <InteractiveMap
                     destinations={destinations}
-                    onMarkerClick={(dest) => {
-                      setSelectedDestination(dest);
-                      setIsDestinationModalOpen(true);
-                    }}
+                    onMarkerClick={handleMapMarkerClick}
                     highlightedDestinations={highlightedDestinations}
                   />
                 </div>
               </div>
 
-              {/* Itinerary & Hotels Section */}
+              {/* Popular Destinations */}
               <div className="flex-1 p-6 overflow-y-auto">
                 <div className="space-y-6">
                   {/* Itinerary Placeholder */}
@@ -2410,7 +2491,7 @@ function App() {
                     </h3>
                     <div className="text-center py-8 text-gray-500">
                       <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>Start planning to see your itinerary here</p>
+                      <p>Complete trip planning to see your personalized itinerary</p>
                     </div>
                   </div>
 
@@ -2434,6 +2515,10 @@ function App() {
                           transition={{ delay: index * 0.1 }}
                           className="relative rounded-xl overflow-hidden cursor-pointer group"
                           whileHover={{ scale: 1.05 }}
+                          onClick={() => {
+                            const fullDest = destinations.find(d => d.name === dest.name);
+                            if (fullDest) handleMapMarkerClick(fullDest);
+                          }}
                         >
                           <img
                             src={dest.image}
@@ -2457,7 +2542,7 @@ function App() {
                     </h3>
                     <div className="text-center py-8 text-gray-500">
                       <Hotel className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                      <p>Search for hotels to see options here</p>
+                      <p>Select a destination to see accommodation options</p>
                     </div>
                   </div>
                 </div>
