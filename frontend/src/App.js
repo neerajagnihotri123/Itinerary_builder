@@ -1570,6 +1570,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [currentChips, setCurrentChips] = useState([]);
+  const [questionChips, setQuestionChips] = useState([]);
   const [userProfile, setUserProfile] = useState({});
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [selectedDestination, setSelectedDestination] = useState(null);
