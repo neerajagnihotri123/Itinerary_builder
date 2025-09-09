@@ -1675,7 +1675,25 @@ function App() {
     setTimeout(() => handleSendMessage(), 100);
   };
 
-  const handleCardAction = (action, item) => {
+  const handleApplyFilters = () => {
+    console.log('Applying filters with trip details:', tripDetails);
+    setShowPersonalizationModal(true);
+  };
+
+  const handlePersonalizationComplete = (responses) => {
+    console.log('Personalization completed:', responses);
+    setShowPersonalizationModal(false);
+    
+    // Here you would typically send the responses to your backend
+    // to get tailored recommendations
+    const message = `Based on your preferences, here are tailored recommendations for ${tripDetails.destination}`;
+    
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: message
+    }]);
+  };
     switch (action) {
       case 'explore':
         setExploringDestination(item);
