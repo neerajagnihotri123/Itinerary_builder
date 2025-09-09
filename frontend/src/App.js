@@ -1736,7 +1736,8 @@ function App() {
       const response = await axios.post(`${API}/chat`, {
         message: currentInput,
         session_id: sessionId,
-        user_profile: userProfile
+        user_profile: userProfile,
+        trip_details: tripDetails
       });
 
       console.log('✅ API Response received:', response.data);
