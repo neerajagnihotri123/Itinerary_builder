@@ -2203,6 +2203,25 @@ function App() {
 
             {/* Input */}
             <div className="flex gap-3">
+              {/* Upload Plus Button - Moved to left */}
+              <div className="relative">
+                <motion.button
+                  onClick={() => setShowUploadPopup(!showUploadPopup)}
+                  className="p-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl transition-all duration-200 shadow-md"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Plus className="w-5 h-5" />
+                </motion.button>
+                
+                <UploadPopup
+                  isOpen={showUploadPopup}
+                  onClose={() => setShowUploadPopup(false)}
+                  onFileUpload={handleFileUpload}
+                  onLinkSubmit={handleLinkSubmit}
+                />
+              </div>
+              
               <div className="flex-1 relative">
                 <input
                   ref={inputRef}
@@ -2223,25 +2242,6 @@ function App() {
                 >
                   <Mic className="w-5 h-5" />
                 </button>
-              </div>
-              
-              {/* Upload Plus Button */}
-              <div className="relative">
-                <motion.button
-                  onClick={() => setShowUploadPopup(!showUploadPopup)}
-                  className="p-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-2xl transition-all duration-200 shadow-md"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Plus className="w-5 h-5" />
-                </motion.button>
-                
-                <UploadPopup
-                  isOpen={showUploadPopup}
-                  onClose={() => setShowUploadPopup(false)}
-                  onFileUpload={handleFileUpload}
-                  onLinkSubmit={handleLinkSubmit}
-                />
               </div>
               
               <motion.button
