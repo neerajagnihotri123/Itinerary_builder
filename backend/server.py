@@ -357,12 +357,45 @@ async def chat_endpoint(request: ChatRequest):
                 }
             })
         
-        # Generate followup questions
+        # Generate contextual followup questions based on conversation
         followup_questions = []
-        if not user_profile.get("travel_dates"):
-            followup_questions.append("When are you planning to travel?")
-        if not user_profile.get("budget"):
-            followup_questions.append("Do you have a budget range in mind?")
+        message_lower = request.message.lower()
+        
+        # Context-aware follow-up questions
+        if any(word in message_lower for word in ["destination", "place", "visit", "go to"]):
+            if not user_profile.get("travel_dates"):
+                followup_questions.append("When are you planning to travel?")
+            if not user_profile.get("travel_style"):
+                followup_questions.append("Are you looking for adventure or relaxation?")
+                
+        elif any(word in message_lower for word in ["plan", "trip", "vacation"]):
+            if not user_profile.get("duration"):
+                followup_questions.append("How many days are you planning to stay?")
+            if not user_profile.get("budget"):
+                followup_questions.append("What's your budget range?")
+                
+        elif any(word in message_lower for word in ["hotel", "stay", "accommodation"]):
+            followup_questions.append("What type of accommodation do you prefer?")
+            followup_questions.append("Any specific amenities you're looking for?")
+            
+        elif any(word in message_lower for word in ["food", "restaurant", "eat"]):
+            followup_questions.append("Do you have any dietary preferences?")
+            followup_questions.append("Are you interested in local cuisine or international food?")
+            
+        elif any(word in message_lower for word in ["activity", "do", "see", "experience"]):
+            followup_questions.append("Are you interested in cultural experiences?")
+            followup_questions.append("Do you prefer indoor or outdoor activities?")
+            
+        # Default fallback questions if no specific context
+        if not followup_questions:
+            if not user_profile.get("travel_dates"):
+                followup_questions.append("When are you planning to travel?")
+            if not user_profile.get("budget"):
+                followup_questions.append("Do you have a budget range in mind?")
+            if not user_profile.get("travel_companions"):
+                followup_questions.append("Are you traveling solo or with others?")
+            if not user_profile.get("interests"):
+                followup_questions.append("What interests you most when traveling?")
         
         # Store chat message in database
         chat_message = ChatMessage(
