@@ -1656,6 +1656,8 @@ function App() {
   const [showGeneratedContent, setShowGeneratedContent] = useState(false);
   const [generatedItinerary, setGeneratedItinerary] = useState([]);
   const [generatedAccommodations, setGeneratedAccommodations] = useState([]);
+  const [rightPanelContent, setRightPanelContent] = useState('default'); // 'default', 'destination', 'itinerary'
+  const [selectedMapDestination, setSelectedMapDestination] = useState(null);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
