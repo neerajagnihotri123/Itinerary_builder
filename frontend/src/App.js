@@ -8,7 +8,7 @@ import {
   Star, 
   Calendar, 
   Users, 
-  Camera, 
+  Mic, 
   Navigation, 
   Hotel,
   Plane,
@@ -16,7 +16,15 @@ import {
   Clock,
   DollarSign,
   X,
-  ChevronRight
+  ChevronRight,
+  Upload,
+  Link,
+  Menu,
+  Plus,
+  MessageCircle,
+  FileText,
+  Image,
+  Edit3
 } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
