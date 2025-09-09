@@ -322,7 +322,7 @@ async def chat_endpoint(request: ChatRequest):
         message_lower = request.message.lower()
         
         # Check for destination requests
-        if any(word in message_lower for word in ["visit", "go to", "travel to", "destination", "plan", "explore", "want to explore"]):
+        if any(word in message_lower for word in ["visit", "go to", "travel to", "destination", "plan", "explore", "want to explore", "want to visit", "tell me about"]):
             destinations = get_recommendations_for_query(request.message, "destination")
             for dest in destinations:
                 ui_actions.append(create_destination_card(dest))
