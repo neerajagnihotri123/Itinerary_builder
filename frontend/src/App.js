@@ -1673,13 +1673,13 @@ function App() {
 
     // Check if user is asking about a specific destination
     const destinationKeywords = ['explore', 'visit', 'go to', 'about', 'tell me about'];
-    const destinationNames = ['paris', 'tokyo', 'bali', 'new york', 'santorini', 'goa'];
-    const mentionedDestination = destinationNames.find(dest => 
-      inputMessage.toLowerCase().includes(dest)
+    const mentionedDestination = destinations.find(dest => 
+      inputMessage.toLowerCase().includes(dest.name.toLowerCase()) ||
+      inputMessage.toLowerCase().includes(dest.country.toLowerCase())
     );
     
     if (mentionedDestination && destinationKeywords.some(keyword => inputMessage.toLowerCase().includes(keyword))) {
-      setHighlightedDestinations([mentionedDestination]);
+      setHighlightedDestinations([mentionedDestination.id]);
     }
 
     // Check if user is expressing interest in planning a trip
