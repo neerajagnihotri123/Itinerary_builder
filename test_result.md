@@ -163,6 +163,30 @@ frontend:
         agent: "testing"
         comment: "✅ VERIFIED: Chat messaging works correctly when sidebar overlay is closed. Messages send successfully, AI responses received, conversation flow maintained."
 
+  - task: "Hotel card processing and display"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Frontend was not properly handling hotel cards vs destination cards. Updated UI action processing to handle both categories correctly."
+
+  - task: "Question chip UI implementation"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Frontend was not handling question_chip UI actions from backend. Added question chip state management, click handlers, and display UI."
+
   - task: "Modal z-index and overlap issues"
     implemented: true
     working: true
