@@ -2535,42 +2535,166 @@ function App() {
               {/* Popular Destinations */}
               <div className="flex-1 p-6 overflow-y-auto">
                 <div className="space-y-6">
-                  {/* Popular Destinations */}
+                  {/* Popular Tours for You */}
                   <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <Heart className="w-5 h-5 text-red-500" />
-                      Popular for You
+                      <MapPin className="w-5 h-5 text-green-600" />
+                      Popular Tours for You
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {[
-                        { name: 'Paris', image: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=300&h=200&fit=crop' },
-                        { name: 'Tokyo', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=300&h=200&fit=crop' },
-                        { name: 'Bali', image: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?w=300&h=200&fit=crop' },
-                        { name: 'New York', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=300&h=200&fit=crop' }
-                      ].map((dest, index) => (
+                        { 
+                          name: 'Kashmir Great Lakes Trek', 
+                          location: 'Kashmir, India',
+                          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop',
+                          price: '₹12,999',
+                          duration: '8 Days',
+                          type: 'Trekking'
+                        },
+                        { 
+                          name: 'Manali Adventure Package', 
+                          location: 'Manali, India',
+                          image: 'https://images.unsplash.com/photo-1464822759844-d150baec0494?w=300&h=200&fit=crop',
+                          price: '₹8,999',
+                          duration: '5 Days',
+                          type: 'Adventure'
+                        },
+                        { 
+                          name: 'Goa Beach Hopping', 
+                          location: 'Goa, India',
+                          image: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=300&h=200&fit=crop',
+                          price: '₹6,499',
+                          duration: '4 Days',
+                          type: 'Beach'
+                        },
+                        { 
+                          name: 'Rajasthan Heritage Tour', 
+                          location: 'Rajasthan, India',
+                          image: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=300&h=200&fit=crop',
+                          price: '₹15,999',
+                          duration: '7 Days',
+                          type: 'Heritage'
+                        }
+                      ].map((tour, index) => (
                         <motion.div
-                          key={dest.name}
+                          key={tour.name}
                           initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ delay: index * 0.1 }}
-                          className="relative rounded-xl overflow-hidden cursor-pointer group"
+                          className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg"
                           whileHover={{ scale: 1.05 }}
                           onClick={() => {
-                            const fullDest = destinations.find(d => d.name === dest.name);
-                            if (fullDest) {
-                              setSelectedDestination(fullDest);
-                              setIsDestinationModalOpen(true);
-                            }
+                            // Handle tour click - could open tour details modal
+                            console.log('Tour clicked:', tour.name);
                           }}
                         >
                           <img
-                            src={dest.image}
-                            alt={dest.name}
-                            className="w-full h-24 object-cover group-hover:scale-110 transition-transform duration-300"
+                            src={tour.image}
+                            alt={tour.name}
+                            className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          <div className="absolute bottom-2 left-2 text-white text-sm font-semibold">
-                            {dest.name}
+                          
+                          {/* Price Badge */}
+                          <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                            {tour.price}
+                          </div>
+                          
+                          {/* Tour Info */}
+                          <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                            <h4 className="font-semibold text-sm mb-1">{tour.name}</h4>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {tour.location}
+                              </span>
+                              <span className="bg-white/20 px-2 py-1 rounded">
+                                {tour.duration}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Activities for You */}
+                  <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 border border-white/30">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <Star className="w-5 h-5 text-orange-600" />
+                      Activities for You
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      {[
+                        { 
+                          name: 'River Rafting', 
+                          location: 'Rishikesh',
+                          image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=300&h=200&fit=crop',
+                          price: '₹1,499',
+                          duration: '3 Hours',
+                          type: 'Adventure'
+                        },
+                        { 
+                          name: 'Paragliding', 
+                          location: 'Bir Billing',
+                          image: 'https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=300&h=200&fit=crop',
+                          price: '₹2,999',
+                          duration: '2 Hours',
+                          type: 'Adventure'
+                        },
+                        { 
+                          name: 'Scuba Diving', 
+                          location: 'Andaman',
+                          image: 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=300&h=200&fit=crop',
+                          price: '₹4,999',
+                          duration: '4 Hours',
+                          type: 'Water Sports'
+                        },
+                        { 
+                          name: 'Wildlife Safari', 
+                          location: 'Jim Corbett',
+                          image: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=300&h=200&fit=crop',
+                          price: '₹3,499',
+                          duration: '6 Hours',
+                          type: 'Wildlife'
+                        }
+                      ].map((activity, index) => (
+                        <motion.div
+                          key={activity.name}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="relative rounded-xl overflow-hidden cursor-pointer group bg-white shadow-lg"
+                          whileHover={{ scale: 1.05 }}
+                          onClick={() => {
+                            // Handle activity click - could open activity details modal
+                            console.log('Activity clicked:', activity.name);
+                          }}
+                        >
+                          <img
+                            src={activity.image}
+                            alt={activity.name}
+                            className="w-full h-32 object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          
+                          {/* Price Badge */}
+                          <div className="absolute top-2 right-2 bg-orange-600 text-white px-2 py-1 rounded-lg text-xs font-semibold">
+                            {activity.price}
+                          </div>
+                          
+                          {/* Activity Info */}
+                          <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                            <h4 className="font-semibold text-sm mb-1">{activity.name}</h4>
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                {activity.location}
+                              </span>
+                              <span className="bg-white/20 px-2 py-1 rounded">
+                                {activity.duration}
+                              </span>
+                            </div>
                           </div>
                         </motion.div>
                       ))}
