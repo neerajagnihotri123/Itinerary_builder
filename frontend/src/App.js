@@ -537,7 +537,124 @@ const DestinationModal = ({ destination, isOpen, onClose }) => {
   );
 };
 
-// Main App Component
+// Sidebar Component
+const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
+  <AnimatePresence>
+    {isOpen && (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ x: -300 }}
+          animate={{ x: 0 }}
+          exit={{ x: -300 }}
+          className="w-80 h-full bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="p-6 border-b border-white/30">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-800">Chat History</h2>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4">
+            <motion.button
+              onClick={onNewChat}
+              className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 mb-4"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Plus className="w-5 h-5" />
+              New Travel Chat
+            </motion.button>
+
+            <div className="space-y-2">
+              {chatHistory.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>No previous chats</p>
+                </div>
+              ) : (
+                chatHistory.map((chat, index) => (
+                  <motion.button
+                    key={chat.id}
+                    onClick={() => onSelectChat(chat)}
+                    className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 border border-gray-100"
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="font-medium text-gray-800 truncate">
+                      {chat.title || 'Travel Planning Chat'}
+                    </div>
+                    <div className="text-sm text-gray-500 mt-1">
+                      {new Date(chat.timestamp).toLocaleDateString()}
+                    </div>
+                  </motion.button>
+                ))
+              )}
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
+
+// Trip Planning Bar Component
+const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible }) => {
+  if (!isVisible) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl p-4 mb-4 shadow-lg"
+    >
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-blue-600" />
+          <button className="text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors duration-200">
+            {tripDetails.destination || 'Choose destination'}
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-green-600" />
+          <button className="text-sm font-medium text-gray-700 hover:text-green-600 transition-colors duration-200">
+            {tripDetails.dates || 'Select dates'}
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-purple-600" />
+          <button className="text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors duration-200">
+            {tripDetails.travelers || '1 traveler'}
+          </button>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-orange-600" />
+          <button className="text-sm font-medium text-gray-700 hover:text-orange-600 transition-colors duration-200">
+            {tripDetails.budget || 'Set budget'}
+          </button>
+        </div>
+        
+        <button className="ml-auto p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+          <Edit3 className="w-4 h-4 text-gray-500" />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
 function App() {
   const [messages, setMessages] = useState([
     {
