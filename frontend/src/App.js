@@ -1694,6 +1694,8 @@ function App() {
       content: message
     }]);
   };
+
+  const handleCardAction = (action, item) => {
     switch (action) {
       case 'explore':
         setExploringDestination(item);
