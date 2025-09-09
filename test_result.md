@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix the conversations and showing the modals which are not necessary and I want the correct replies from the chatbot and update the responses to cope up with the updated flow and fix the Trip planner modals and Personalization form overlapping with the chatbot responses and add the correct functionality to both"
+user_problem_statement: "Fix accommodation card display issue - when user asks for accommodations, only accommodation cards with details should show instead of all cards. Also implement contextual question suggestions ('You might want to ask' cards) after each chatbot response based on previous user questions."
 
 backend:
   - task: "Chat API endpoint functionality"
