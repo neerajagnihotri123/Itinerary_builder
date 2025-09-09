@@ -1729,15 +1729,96 @@ function App() {
     console.log('Personalization completed:', responses);
     setShowPersonalizationModal(false);
     
-    // Here you would typically send the responses to your backend
-    // to get tailored recommendations
-    const message = `Based on your preferences, here are tailored recommendations for ${tripDetails.destination}`;
+    // Generate personalized itinerary and recommendations
+    const personalizedItinerary = generateItinerary(tripDetails, responses);
+    const personalizedAccommodations = generateAccommodations(tripDetails, responses);
     
-    setMessages(prev => [...prev, {
+    // Add itinerary message to chat
+    const itineraryMessage = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: message
-    }]);
+      content: `Perfect! Based on your preferences, I've created a personalized ${tripDetails.dates || '5-day'} itinerary for ${tripDetails.destination || 'your destination'}. Check the right panel for your customized recommendations!`
+    };
+    
+    setMessages(prev => [...prev, itineraryMessage]);
+    
+    // Set the generated content to state (you'll need to add these state variables)
+    setGeneratedItinerary(personalizedItinerary);
+    setGeneratedAccommodations(personalizedAccommodations);
+    setShowGeneratedContent(true);
+  };
+
+  const generateItinerary = (tripDetails, preferences) => {
+    // Generate a personalized itinerary based on preferences
+    const days = [
+      {
+        day: 1,
+        title: "Arrival & Local Exploration",
+        activities: [
+          { time: "9:00 AM", activity: "Hotel Check-in & Freshen Up", location: "Hotel" },
+          { time: "11:00 AM", activity: preferences.attraction_preference?.includes('local') ? "Local Market Tour" : "Popular Landmarks Tour", location: "City Center" },
+          { time: "1:00 PM", activity: preferences.dining?.includes('street_food') ? "Street Food Experience" : "Local Restaurant", location: "Downtown" },
+          { time: "3:00 PM", activity: preferences.interests?.includes('museums') ? "Cultural Museum Visit" : "Scenic Viewpoints", location: "Cultural District" },
+          { time: "7:00 PM", activity: "Welcome Dinner", location: "Recommended Restaurant" }
+        ]
+      },
+      {
+        day: 2,
+        title: preferences.vacation_style?.includes('adventurous') ? "Adventure Day" : "Relaxation Day",
+        activities: [
+          { time: "8:00 AM", activity: "Breakfast at Hotel", location: "Hotel" },
+          { time: "9:30 AM", activity: preferences.vacation_style?.includes('adventurous') ? "Adventure Sports" : "Spa & Wellness", location: "Activity Center" },
+          { time: "12:30 PM", activity: "Lunch Break", location: "Local Eatery" },
+          { time: "2:00 PM", activity: preferences.interests?.includes('beach') ? "Beach Activities" : "Cultural Experience", location: "Beach/Cultural Site" },
+          { time: "6:00 PM", activity: "Sunset Experience", location: "Scenic Spot" }
+        ]
+      },
+      {
+        day: 3,
+        title: "Cultural Immersion",
+        activities: [
+          { time: "9:00 AM", activity: "Historical Sites Tour", location: "Heritage Area" },
+          { time: "11:30 AM", activity: preferences.interests?.includes('cooking_classes') ? "Cooking Class" : "Art Gallery Visit", location: "Cultural Center" },
+          { time: "1:30 PM", activity: "Traditional Lunch", location: "Authentic Restaurant" },
+          { time: "3:30 PM", activity: "Local Crafts Shopping", location: "Artisan Markets" },
+          { time: "7:00 PM", activity: preferences.interests?.includes('nightlife') ? "Night Entertainment" : "Quiet Dinner", location: "Entertainment District" }
+        ]
+      }
+    ];
+    
+    return days;
+  };
+
+  const generateAccommodations = (tripDetails, preferences) => {
+    // Generate accommodations based on preferences
+    const accommodationTypes = preferences.accommodation || ['luxury_hotels'];
+    
+    const accommodations = [
+      {
+        id: 'hotel_1',
+        name: accommodationTypes.includes('luxury_hotels') ? 'Grand Luxury Resort' : accommodationTypes.includes('boutique_hotels') ? 'Boutique Heritage Hotel' : 'Comfort Inn',
+        type: accommodationTypes.includes('luxury_hotels') ? 'Luxury Resort' : accommodationTypes.includes('boutique_hotels') ? 'Boutique Hotel' : 'Budget Hotel',
+        rating: accommodationTypes.includes('luxury_hotels') ? 4.8 : 4.2,
+        price: accommodationTypes.includes('luxury_hotels') ? '$300-450' : accommodationTypes.includes('budget_hotels') ? '$80-120' : '$150-200',
+        image: 'https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=400&h=300&fit=crop',
+        amenities: accommodationTypes.includes('luxury_hotels') ? ['Spa', 'Pool', 'Fine Dining', 'Concierge'] : ['WiFi', 'Restaurant', 'Gym'],
+        match: 'Perfect for your preferences and budget',
+        highlighted: true
+      },
+      {
+        id: 'hotel_2',
+        name: accommodationTypes.includes('bnb') ? 'Cozy Local B&B' : 'City Center Hotel',
+        type: accommodationTypes.includes('bnb') ? 'Bed & Breakfast' : 'City Hotel',
+        rating: 4.3,
+        price: accommodationTypes.includes('bnb') ? '$120-180' : '$200-280',
+        image: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&h=300&fit=crop',
+        amenities: ['WiFi', 'Breakfast', 'Local Experience'],
+        match: 'Great alternative option',
+        highlighted: false
+      }
+    ];
+    
+    return accommodations;
   };
 
   const handleCardAction = (action, item) => {
