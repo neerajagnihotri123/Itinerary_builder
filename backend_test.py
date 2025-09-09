@@ -795,17 +795,23 @@ def main():
     print(f"🇮🇳 Mock Data Integration: {'PASS' if mock_data_success else 'FAIL'}")
     print(f"\nReview Tests: {review_passed}/4 passing")
     
-    if success_rate >= 90 and critical_passed >= 4:
-        print("🎉 Excellent! Backend is working great!")
+    # Overall assessment including review-specific tests
+    total_critical_score = critical_passed + review_passed
+    max_critical_score = 9  # 5 general + 4 review-specific
+    
+    if success_rate >= 90 and critical_passed >= 4 and review_passed >= 3:
+        print("🎉 Excellent! Backend is working great including review requirements!")
         return 0
-    elif success_rate >= 70 and critical_passed >= 3:
+    elif success_rate >= 70 and critical_passed >= 3 and review_passed >= 2:
         print("✅ Good! Backend is mostly functional with minor issues")
         return 0
-    elif success_rate >= 50 and critical_passed >= 2:
+    elif success_rate >= 50 and (critical_passed >= 2 or review_passed >= 2):
         print("⚠️  Warning! Backend has significant issues")
         return 1
     else:
         print("❌ Critical! Backend is severely broken")
+        print(f"   Review-specific tests: {review_passed}/4 passing")
+        print(f"   General critical tests: {critical_passed}/5 passing")
         return 1
 
 if __name__ == "__main__":
