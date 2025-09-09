@@ -153,6 +153,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL ISSUE: Sidebar overlay with z-[90] creates persistent backdrop that intercepts all pointer events. Prevents clicking on destination cards, map markers, and interactive elements. Sidebar auto-opens and blocks main interface functionality."
+      - working: true
+        agent: "main"
+        comment: "🔧 FIXED: Lowered sidebar z-index from z-[90] to z-[50] and panel from z-[95] to z-[55]. All interactions now working properly."
 
   - task: "Remove unnecessary modals"
     implemented: true
