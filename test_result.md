@@ -315,7 +315,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All critical issues resolved - comprehensive testing complete"
+    - "Accommodation card generation and filtering"
+    - "Question chip UI actions generation"
+    - "Hotel card processing and display"
+    - "Question chip UI implementation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
