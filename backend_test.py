@@ -915,6 +915,10 @@ def main():
     # CRITICAL TESTS FOR REVIEW REQUEST
     print("\n" + "🎯" * 20 + " CRITICAL REVIEW TESTS " + "🎯" * 20)
     
+    # NEW: Critical scenarios from review request
+    critical_scenarios_success = tester.test_review_request_critical_scenarios()
+    test_results.append((critical_scenarios_success, {}))
+    
     accommodation_success = tester.test_accommodation_card_functionality()
     test_results.append((accommodation_success, {}))
     
