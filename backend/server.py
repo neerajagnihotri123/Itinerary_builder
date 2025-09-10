@@ -737,52 +737,77 @@ async def root():
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
-        # Get or create user profile
-        user_profile = request.user_profile or {}
-        
-        # Extract trip context from the request
-        trip_context = ""
-        if hasattr(request, 'trip_details') and request.trip_details:
-            trip_details = request.trip_details
-            trip_context = f"""
-CURRENT TRIP PLANNING CONTEXT:
-- Destination: {trip_details.get('destination', 'Not selected')}
-- Travel Dates: {trip_details.get('dates', 'Not selected')}
-- Number of Travelers: {trip_details.get('travelers', 'Not specified')}
-- Budget Range: {trip_details.get('budget', 'Not specified')}
-- Trip Duration: {trip_details.get('duration', 'Not specified')}
-"""
-        
-        # Get conversation context
-        conversation_context = get_conversation_context(request.session_id or "default")
-        
-        # Enhanced system message with context and conversation memory
-        contextual_system_message = system_message
-        if trip_context:
-            contextual_system_message += trip_context + "\nUse this trip information to personalize your recommendations."
-        if conversation_context:
-            contextual_system_message += f"\n\nCONVERSATION CONTEXT:\n{conversation_context}\n\nReference previous discussions and build upon established preferences."
-        
-        # Initialize LLM chat
-        chat = LlmChat(
+        # Initialize the Conversation Manager
+        chat_client = LlmChat(
             api_key=emergent_key,
-            session_id=request.session_id or str(uuid.uuid4()),
-            system_message=contextual_system_message
+            session_id=request.session_id or str(uuid.uuid4())
         ).with_model("openai", "gpt-4o-mini")
         
-        # Create user message
-        user_message = UserMessage(text=request.message)
+        conversation_manager = ConversationManager(chat_client)
         
-        # Get conversation context and make responses more natural and progressive
-        conversation_context = get_conversation_context(request.session_id or "default")
-        message_lower = request.message.lower()
+        # Extract current slots from request
+        current_slots = {}
+        if request.trip_details:
+            current_slots = {
+                "destination": request.trip_details.get('destination'),
+                "start_date": request.trip_details.get('dates', {}).get('start_date') if isinstance(request.trip_details.get('dates'), dict) else None,
+                "end_date": request.trip_details.get('dates', {}).get('end_date') if isinstance(request.trip_details.get('dates'), dict) else None,
+                "adults": request.trip_details.get('travelers', {}).get('adults', 2) if isinstance(request.trip_details.get('travelers'), dict) else 2,
+                "children": request.trip_details.get('travelers', {}).get('children', 0) if isinstance(request.trip_details.get('travelers'), dict) else 0,
+                "budget_per_night": request.trip_details.get('budget', {}).get('per_night') if isinstance(request.trip_details.get('budget'), dict) else None,
+                "currency": "INR"
+            }
         
-        # Check if destination is mentioned in the message
-        destination_mentioned = None
-        for dest in MOCK_DESTINATIONS:
-            if dest["name"].lower() in message_lower or dest["state"].lower() in message_lower:
-                destination_mentioned = dest
-                break
+        # Process message through conversation manager
+        result = await conversation_manager.process_message(
+            message=request.message,
+            session_id=request.session_id or str(uuid.uuid4()),
+            current_slots=current_slots
+        )
+        
+        # Convert to ChatResponse format
+        rr_payload = result.get("rr_payload", {})
+        
+        # Extract UI actions from rr_payload
+        ui_actions = rr_payload.get("ui_actions", [])
+        
+        # Add backward compatibility UI actions based on rr_payload content
+        if rr_payload.get("itinerary"):
+            # Add destination and hotel cards as UI actions for backward compatibility
+            for hotel in rr_payload.get("hotels", []):
+                ui_actions.append({
+                    "type": "card_add",
+                    "payload": {
+                        "id": hotel.get("id"),
+                        "title": hotel.get("name"),
+                        "category": "hotel",
+                        "rating": hotel.get("rating"),
+                        "price_estimate": {"min": hotel.get("price_estimate", 0), "max": hotel.get("price_estimate", 0)},
+                        "pitch": hotel.get("reason", ""),
+                        "cta_primary": {"label": "Book Now", "action": "book"},
+                        "cta_secondary": {"label": "Details", "action": "details"}
+                    }
+                })
+        
+        # Generate contextual questions as UI actions
+        contextual_questions = await generate_contextual_questions(request.message, current_slots)
+        for question in contextual_questions:
+            ui_actions.append({
+                "type": "question_chip",
+                "payload": {
+                    "id": f"q_{len(ui_actions)}",
+                    "question": question,
+                    "category": "suggestion"
+                }
+            })
+        
+        return ChatResponse(
+            chat_text=result.get("human_text", "I'd be happy to help you plan your trip!"),
+            ui_actions=ui_actions,
+            updated_profile=request.user_profile or {},
+            followup_questions=[],
+            analytics_tags=["multi_agent_response"]
+        )
         
         # Check if this is a booking/planning request - gather essential info first
         if any(phrase in message_lower for phrase in ["book it", "book", "plan it", "let's plan", "create itinerary"]):
