@@ -2370,6 +2370,38 @@ function App() {
     return days;
   };
   
+  // Helper function to generate accommodations from AI
+  const generateAccommodationsFromAI = async (destination, preferences) => {
+    try {
+      const accommodationRequest = `Recommend 3-5 hotels in ${destination} based on these preferences: ${Object.entries(preferences).map(([key, value]) => `${key}: ${value}`).join(', ')}`;
+      
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: accommodationRequest,
+          session_id: sessionId,
+          user_profile: userProfile,
+          trip_details: tripDetails
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.hotels && Array.isArray(data.hotels)) {
+          return data.hotels;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to generate AI accommodations:', error);
+    }
+    
+    // Return mock accommodations as fallback
+    return generateMockAccommodations(tripDetails, preferences, destination);
+  };
+  
   // Enhanced mock itinerary generator as fallback
   const generateEnhancedMockItinerary = (tripDetails, preferences, destination) => {
     // Get destination-specific data
