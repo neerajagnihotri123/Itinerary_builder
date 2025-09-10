@@ -693,6 +693,15 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip, onViewAllI
                       />
                     ))}
                   </div>
+                  
+                  {/* View All Button */}
+                  <button
+                    onClick={handleViewAllImages}
+                    className="absolute bottom-4 right-4 glass-morphism rounded-lg px-3 py-2 text-white text-sm font-medium hover:bg-white/20 transition-all duration-200 flex items-center gap-2"
+                  >
+                    <Image className="w-4 h-4" />
+                    View All ({images.length})
+                  </button>
                 </>
               )}
               
