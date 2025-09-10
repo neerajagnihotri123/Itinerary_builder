@@ -407,10 +407,9 @@ class ConversationManager:
         }
     
     async def _handle_destination_specific_query(self, message: str, session_id: str) -> Dict[str, Any]:
-        """Handle queries about specific destinations (e.g., 'tell me about Kerala')"""
+        """Handle destination-specific queries like 'kerala', 'tell me about goa'"""
         
-        # Extract the destination from the message
-        message_lower = message.lower()
+        # Extract destination from message
         destinations = [
             "kerala", "goa", "rajasthan", "himachal", "uttarakhand", "kashmir",
             "manali", "shimla", "rishikesh", "haridwar", "dharamshala", "mcleodganj",
@@ -421,39 +420,127 @@ class ConversationManager:
             "hampi", "mysore", "darjeeling", "gangtok", "shillong", "kaziranga"
         ]
         
-        # Find the destination mentioned in the message
         detected_destination = None
+        message_lower = message.lower().strip()
+        
         for dest in destinations:
             if dest in message_lower:
                 detected_destination = dest.title()
                 break
         
         if not detected_destination:
-            # Fallback if no specific destination detected
-            detected_destination = "this destination"
+            return await self._handle_general_query(message, session_id)
         
-        # Use UX agent to provide specific destination information
-        ux_result = await self.ux_agent.format_destination_specific_response(message, detected_destination)
-        
-        return {
-            "human_text": ux_result.get("human_text", f"Here's what makes {detected_destination} special!"),
-            "rr_payload": {
-                "session_id": session_id,
-                "slots": asdict(UserSlots(destination=detected_destination if detected_destination != "this destination" else None)),
-                "ui_actions": ux_result.get("actions", [
-                    {"label": f"Plan Trip to {detected_destination}", "action": "set_destination", "data": detected_destination},
-                    {"label": "See Hotels", "action": "show_hotels", "data": detected_destination},
-                    {"label": "Get Itinerary", "action": "plan_itinerary", "data": detected_destination},
-                    {"label": "More Destinations", "action": "show_destinations"}
-                ]),
-                "metadata": {
-                    "generated_at": datetime.now(timezone.utc).isoformat(),
-                    "llm_confidence": 0.8,
-                    "query_type": "destination_specific",
-                    "detected_destination": detected_destination
+        try:
+            # Use LLM to generate informative response about the destination
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            import os
+            
+            # Get detailed destination data from mock_data
+            destination_context = self._get_destination_context(detected_destination)
+            
+            # Create context for LLM
+            context = f"""
+User is asking about {detected_destination}. Provide an engaging, informative response about this destination.
+
+Context about {detected_destination}:
+{destination_context}
+
+Create a response that:
+1. Highlights why {detected_destination} is special
+2. Mentions 2-3 key attractions or experiences
+3. Keeps it conversational and exciting
+4. Ends with encouraging them to plan a trip
+
+Keep response to 2-3 sentences maximum.
+"""
+            
+            # Create LLM client for this call
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=session_id,
+                system_message="You are a knowledgeable travel guide who provides engaging, concise information about destinations."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Generate response
+            user_message = UserMessage(text=context)
+            response = await llm_client.send_message(user_message)
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                ai_text = response.content
+            else:
+                ai_text = str(response)
+            
+            print(f"✅ Generated destination response for {detected_destination}: {len(ai_text)} chars")
+            
+            return {
+                "human_text": ai_text.strip(),
+                "rr_payload": {
+                    "session_id": session_id,
+                    "ui_actions": [],
+                    "metadata": {
+                        "query_type": "destination_specific",
+                        "detected_destination": detected_destination,
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.9
+                    }
                 }
             }
-        }
+            
+        except Exception as e:
+            print(f"❌ LLM destination query failed: {e}")
+            # Fallback response
+            return {
+                "human_text": f"{detected_destination}, known for its natural beauty and rich culture, is perfect for an unforgettable getaway. Would you like me to help you plan a trip there?",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "ui_actions": [],
+                    "metadata": {
+                        "query_type": "destination_specific",
+                        "detected_destination": detected_destination,
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.7
+                    }
+                }
+            }
+    
+    def _get_destination_context(self, destination: str) -> str:
+        """Get rich context about a destination from mock data"""
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
+            
+            # Find destination in mock data
+            dest_info = None
+            for dest in MOCK_DESTINATIONS:
+                if destination.lower() in dest.get('name', '').lower():
+                    dest_info = dest
+                    break
+            
+            if not dest_info:
+                return f"{destination} is a beautiful destination in India."
+            
+            # Get related activities and hotels
+            related_activities = [a for a in MOCK_ACTIVITIES if destination.lower() in a.get('location', '').lower()]
+            related_hotels = [h for h in MOCK_HOTELS if destination.lower() in h.get('location', '').lower()]
+            
+            context_parts = []
+            context_parts.append(f"Name: {dest_info.get('name')}")
+            context_parts.append(f"Description: {dest_info.get('pitch', '')}")
+            context_parts.append(f"Highlights: {', '.join(dest_info.get('highlights', [])[:3])}")
+            context_parts.append(f"Rating: {dest_info.get('rating')}/5")
+            
+            if related_activities:
+                context_parts.append(f"Popular activities: {', '.join([a.get('title', '') for a in related_activities[:2]])}")
+            
+            return '\n'.join(context_parts)
+            
+        except Exception as e:
+            print(f"❌ Error getting destination context: {e}")
+            return f"{destination} is a popular travel destination in India."
     
     async def _handle_accommodation_query(self, message: str, session_id: str, slots: UserSlots) -> Dict[str, Any]:
         """Handle accommodation-specific queries"""
