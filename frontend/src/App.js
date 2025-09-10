@@ -2632,60 +2632,86 @@ function App() {
                 </div>
               </div>
               
-              {/* Accommodations Section */}
-              <div className="p-6 border-t border-white/30">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Recommended Accommodations</h2>
-                <div className="space-y-4">
+              {/* Professional Accommodations Section */}
+              <div className="p-6 border-t border-slate-200">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2">🏨 Recommended Accommodations</h2>
+                  <p className="text-slate-600">Handpicked stays that match your preferences</p>
+                </div>
+                
+                <div className="space-y-6">
                   {generatedAccommodations.map((hotel, index) => (
                     <motion.div
                       key={hotel.id}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className={`bg-white/80 backdrop-blur-sm rounded-2xl p-4 border transition-all duration-200 ${
+                      className={`card-elevated hover:shadow-xl transition-all duration-300 overflow-hidden ${
                         hotel.highlighted 
-                          ? 'border-blue-300 shadow-lg shadow-blue-100' 
-                          : 'border-white/30 hover:border-gray-200'
+                          ? 'ring-2 ring-blue-200 shadow-blue-100' 
+                          : ''
                       }`}
                     >
-                      <div className="flex gap-4">
-                        <img
-                          src={hotel.image}
-                          alt={hotel.name}
-                          className="w-24 h-24 rounded-xl object-cover"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-bold text-gray-800">{hotel.name}</h3>
-                              <p className="text-sm text-gray-600">{hotel.type}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                <span className="text-sm font-medium">{hotel.rating}</span>
+                      {hotel.highlighted && (
+                        <div className="bg-gradient-primary text-white text-center py-2 text-sm font-semibold">
+                          ⭐ Recommended Choice
+                        </div>
+                      )}
+                      
+                      <div className="p-6">
+                        <div className="flex gap-4">
+                          <div className="relative">
+                            <img
+                              src={hotel.image}
+                              alt={hotel.name}
+                              className="w-32 h-32 rounded-2xl object-cover shadow-md"
+                            />
+                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
+                              <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                              <span className="text-xs font-semibold">{hotel.rating}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h3 className="text-xl font-bold text-slate-800">{hotel.name}</h3>
+                                <p className="text-slate-600 font-medium">{hotel.type}</p>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-2xl font-bold text-green-600">{hotel.price}</div>
+                                <div className="text-xs text-slate-500">per night</div>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-bold text-green-600">{hotel.price}</div>
-                              <div className="text-xs text-gray-500">per night</div>
+                            
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap gap-2">
+                                {hotel.amenities.slice(0, 4).map((amenity, i) => (
+                                  <span key={i} className="chip-secondary text-xs">
+                                    {amenity}
+                                  </span>
+                                ))}
+                              </div>
+                              
+                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <p className="text-blue-800 text-sm font-medium flex items-center gap-2">
+                                  <Heart className="w-4 h-4 text-blue-600" />
+                                  {hotel.match}
+                                </p>
+                              </div>
+                              
+                              <div className="flex gap-3">
+                                <button className="btn-outline flex-1 text-sm py-2">
+                                  View Details
+                                </button>
+                                {hotel.highlighted && (
+                                  <button className="btn-primary flex-1 text-sm py-2">
+                                    Book Now
+                                  </button>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          
-                          <div className="mt-2">
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              {hotel.amenities.slice(0, 3).map((amenity, i) => (
-                                <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                                  {amenity}
-                                </span>
-                              ))}
-                            </div>
-                            <p className="text-sm text-blue-600 font-medium">{hotel.match}</p>
-                          </div>
-                          
-                          {hotel.highlighted && (
-                            <button className="mt-3 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 text-sm font-medium">
-                              Book Now
-                            </button>
-                          )}
                         </div>
                       </div>
                     </motion.div>
