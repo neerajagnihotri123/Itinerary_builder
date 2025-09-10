@@ -279,10 +279,11 @@ const RecommendationCard = ({ item, onAction }) => {
           </div>
         )}
         
-        <div className="flex gap-2">
+        {/* Action Buttons */}
+        <div className="flex gap-3 pt-2 border-t border-slate-100">
           <motion.button
             onClick={() => onAction(item.cta_primary?.action, item)}
-            className="btn-primary flex-1 flex items-center justify-center gap-2"
+            className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -294,18 +295,31 @@ const RecommendationCard = ({ item, onAction }) => {
           {item.category === 'destination' && (
             <motion.button
               onClick={() => onAction('plan_trip', item)}
-              className="btn-primary flex items-center justify-center gap-2"
+              className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Plan Trip
               <Calendar className="w-4 h-4" />
+              Plan Trip
+            </motion.button>
+          )}
+          
+          {/* Show Plan Tour button for tour cards */}
+          {(item.category === 'tour' || item.category === 'activity') && (
+            <motion.button
+              onClick={() => onAction('plan_tour', item)}
+              className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Calendar className="w-4 h-4" />
+              Plan Tour
             </motion.button>
           )}
           
           <motion.button
             onClick={() => onAction(item.cta_secondary?.action, item)}
-            className="btn-outline flex items-center justify-center"
+            className="btn-outline px-4 py-3 flex items-center justify-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
