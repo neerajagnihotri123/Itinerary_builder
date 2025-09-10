@@ -543,93 +543,183 @@ Keep response to 2-3 sentences maximum.
             return f"{destination} is a popular travel destination in India."
     
     async def _handle_accommodation_query(self, message: str, session_id: str, slots: UserSlots) -> Dict[str, Any]:
-        """Handle accommodation-specific queries"""
+        """Handle accommodation-specific queries using LLM with rich context"""
         
-        # Try to extract destination from the message if not already in slots
-        if not slots.destination:
-            # Extract destination from accommodation query (e.g., "hotels in goa")
-            message_lower = message.lower()
-            destinations = [
-                "kerala", "goa", "rajasthan", "himachal", "uttarakhand", "kashmir",
-                "manali", "shimla", "rishikesh", "haridwar", "dharamshala", "mcleodganj",
-                "andaman", "lakshadweep", "mumbai", "delhi", "bangalore", "chennai",
-                "kolkata", "pune", "hyderabad", "jaipur", "udaipur", "jodhpur",
-                "agra", "varanasi", "pushkar", "mount abu", "ooty", "kodaikanal",
-                "munnar", "alleppey", "kochi", "thekkady", "wayanad", "coorg",
-                "hampi", "mysore", "darjeeling", "gangtok", "shillong", "kaziranga"
-            ]
-            
-            # Find destination mentioned in the message
-            detected_destination = None
-            for dest in destinations:
-                if dest in message_lower:
-                    detected_destination = dest.title()
-                    slots.destination = detected_destination
-                    break
-        
-        if not slots.destination:
-            return {
-                "human_text": "I'd be happy to help you find great accommodation! First, could you let me know which destination you're interested in?",
-                "rr_payload": {
-                    "session_id": session_id,
-                    "slots": asdict(slots),
-                    "ui_actions": [
-                        {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
-                        {"label": "Manali", "action": "set_destination", "data": "Manali"},
-                        {"label": "Goa", "action": "set_destination", "data": "Goa"}
-                    ],
-                    "metadata": {
-                        "generated_at": datetime.now(timezone.utc).isoformat(),
-                        "llm_confidence": 0.8,
-                        "query_type": "accommodation_query"
-                    }
-                }
-            }
-        
-        # If we have a destination, get hotel recommendations
         try:
-            print(f"🏨 Getting hotels for destination: {slots.destination}")
-            # Get hotel recommendations using the accommodation agent
-            hotel_recommendations = await self.accommodation_agent.get_hotels_for_destination(
-                slots.destination, slots
-            )
+            # Use LLM to generate accommodation recommendations with context
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            import os
             
-            print(f"🏨 Retrieved {len(hotel_recommendations)} hotel recommendations")
+            # Get accommodation context from mock data and LLM knowledge
+            accommodation_context = self._get_accommodation_context(message, slots)
+            
+            # Create comprehensive context for LLM
+            context = f"""
+User is asking: "{message}"
+
+Provide detailed accommodation recommendations based on:
+{accommodation_context}
+
+Generate a response that:
+1. Acknowledges their accommodation request
+2. Provides 2-3 specific hotel recommendations with details
+3. Includes pricing, ratings, and key amenities
+4. Mentions why each hotel is suitable for their needs
+5. Uses engaging, helpful language
+
+Focus on quality accommodations that match the destination and user preferences.
+"""
+            
+            # Create LLM client for this call
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=session_id,
+                system_message="You are an expert travel consultant specializing in accommodation recommendations. Provide detailed, helpful suggestions based on user needs and destination knowledge."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Generate response
+            user_message = UserMessage(text=context)
+            response = await llm_client.send_message(user_message)
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                ai_text = response.content
+            else:
+                ai_text = str(response)
+            
+            print(f"✅ Generated accommodation response: {len(ai_text)} chars")
+            
+            # Also generate hotel cards from available data
+            hotel_cards = self._generate_hotel_cards_from_context(message, slots)
             
             return {
-                "human_text": f"Here are some great accommodation options in {slots.destination}:",
+                "human_text": ai_text.strip(),
                 "rr_payload": {
                     "session_id": session_id,
-                    "slots": asdict(slots),
-                    "hotels": hotel_recommendations,
-                    "ui_actions": [
-                        {"label": "Book Now", "action": "book_hotel"},
-                        {"label": "See More Options", "action": "more_hotels"},
-                        {"label": "Plan Full Trip", "action": "plan_trip"}
-                    ],
+                    "hotels": hotel_cards,
+                    "ui_actions": [],
                     "metadata": {
-                        "generated_at": datetime.now(timezone.utc).isoformat(),
-                        "llm_confidence": 0.8,
-                        "query_type": "accommodation_query"
-                    }
-                }
-            }
-        except Exception as e:
-            print(f"🏨 Error getting hotels: {e}")
-            return {
-                "human_text": f"I'm looking into accommodation options for {slots.destination}. Let me help you plan a complete trip instead!",
-                "rr_payload": {
-                    "session_id": session_id,
-                    "slots": asdict(slots),
-                    "ui_actions": [
-                        {"label": "Plan Trip", "action": "plan_trip"},
-                        {"label": "Set Dates", "action": "set_dates"}
-                    ],
-                    "metadata": {
-                        "generated_at": datetime.now(timezone.utc).isoformat(),
-                        "llm_confidence": 0.7,
                         "query_type": "accommodation_query",
-                        "error": str(e)
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.9
                     }
                 }
             }
+            
+        except Exception as e:
+            print(f"❌ LLM accommodation query failed: {e}")
+            # Fallback to basic response
+            return {
+                "human_text": "Here are some great accommodation options based on your request:",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "hotels": self._generate_hotel_cards_from_context(message, slots),
+                    "ui_actions": [],
+                    "metadata": {
+                        "query_type": "accommodation_query",
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.7
+                    }
+                }
+            }
+    
+    def _get_accommodation_context(self, message: str, slots: UserSlots) -> str:
+        """Get rich accommodation context from mock data and user query"""
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mock_data import MOCK_HOTELS, MOCK_DESTINATIONS
+            
+            # Extract destination from message or slots
+            destination = slots.destination if slots.destination else self._extract_destination_from_message(message)
+            
+            context_parts = []
+            context_parts.append(f"User Query: {message}")
+            
+            if destination:
+                context_parts.append(f"Destination: {destination}")
+                
+                # Get destination info
+                dest_info = None
+                for dest in MOCK_DESTINATIONS:
+                    if destination.lower() in dest.get('name', '').lower():
+                        dest_info = dest
+                        break
+                
+                if dest_info:
+                    context_parts.append(f"Destination Details: {dest_info.get('pitch', '')}")
+                    context_parts.append(f"Destination Category: {', '.join(dest_info.get('category', []))}")
+                
+                # Get available hotels for this destination
+                relevant_hotels = [h for h in MOCK_HOTELS if destination.lower() in h.get('location', '').lower()]
+                if relevant_hotels:
+                    context_parts.append(f"Available Hotels in {destination}:")
+                    for hotel in relevant_hotels[:3]:
+                        context_parts.append(f"- {hotel.get('name')}: {hotel.get('description', '')} (₹{hotel.get('price_per_night', 0)}/night)")
+            
+            # Add user preferences if available
+            if slots.budget_per_night:
+                context_parts.append(f"Budget: ₹{slots.budget_per_night} per night")
+            if slots.adults or slots.children:
+                context_parts.append(f"Travelers: {slots.adults} adults, {slots.children} children")
+            
+            return '\n'.join(context_parts)
+            
+        except Exception as e:
+            print(f"❌ Error getting accommodation context: {e}")
+            return f"User is looking for accommodations: {message}"
+    
+    def _generate_hotel_cards_from_context(self, message: str, slots: UserSlots) -> list:
+        """Generate hotel cards based on context and available data"""
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mock_data import MOCK_HOTELS
+            
+            # Extract destination
+            destination = slots.destination if slots.destination else self._extract_destination_from_message(message)
+            
+            if not destination:
+                return []
+            
+            # Find relevant hotels
+            relevant_hotels = [h for h in MOCK_HOTELS if destination.lower() in h.get('location', '').lower()]
+            
+            # Convert to card format
+            hotel_cards = []
+            for hotel in relevant_hotels[:3]:  # Limit to 3 hotels
+                hotel_cards.append({
+                    "id": hotel.get("id"),
+                    "name": hotel.get("name"),
+                    "rating": hotel.get("rating", 4.5),
+                    "price_estimate": hotel.get("price_per_night", 5000),
+                    "reason": hotel.get("description", "Great location and amenities"),
+                    "amenities": hotel.get("amenities", []),
+                    "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"
+                })
+            
+            return hotel_cards
+            
+        except Exception as e:
+            print(f"❌ Error generating hotel cards: {e}")
+            return []
+    
+    def _extract_destination_from_message(self, message: str) -> str:
+        """Extract destination from user message"""
+        destinations = [
+            "kerala", "goa", "rajasthan", "himachal", "uttarakhand", "kashmir",
+            "manali", "shimla", "rishikesh", "haridwar", "dharamshala", "mcleodganj",
+            "andaman", "lakshadweep", "mumbai", "delhi", "bangalore", "chennai",
+            "kolkata", "pune", "hyderabad", "jaipur", "udaipur", "jodhpur",
+            "agra", "varanasi", "pushkar", "mount abu", "ooty", "kodaikanal",
+            "munnar", "alleppey", "kochi", "thekkady", "wayanad", "coorg",
+            "hampi", "mysore", "darjeeling", "gangtok", "shillong", "kaziranga"
+        ]
+        
+        message_lower = message.lower()
+        for dest in destinations:
+            if dest in message_lower:
+                return dest.title()
+        return None
