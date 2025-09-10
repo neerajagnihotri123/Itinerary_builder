@@ -121,31 +121,29 @@ Rules:
     async def _generate_with_llm(self, context: str) -> str:
         """Generate itinerary using LLM"""
         try:
-            from emergentintegrations.llm.chat import UserMessage
-            # Create the user message with correct interface
-            user_message = UserMessage(text=context)
+            # Use the same approach as in the main server - create a new LlmChat instance
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            import os
             
-            # Use the LlmChat completion method
-            response = await self.llm_client.completion([user_message])
+            # Create a new LLM client for this specific call
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"planner_{hash(context) % 10000}",
+                system_message="You are an expert travel planner. Generate detailed, realistic travel itineraries in JSON format."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Create and send the message
+            user_message = UserMessage(text=context)
+            response = await llm_client.completion([user_message])
+            
+            print(f"✅ LLM generation successful: {len(response.content) if response.content else 0} characters")
             return response.content
+            
         except Exception as e:
-            print(f"LLM generation error (method 1): {e}")
-            try:
-                # Try direct text method
-                response = await self.llm_client.completion(context)
-                return response.content if hasattr(response, 'content') else str(response)
-            except Exception as e2:
-                print(f"LLM generation error (method 2): {e2}")
-                try:
-                    # Try synchronous method
-                    from emergentintegrations.llm.simple import Simple
-                    simple_llm = Simple()
-                    response = simple_llm.completion(context)
-                    return response
-                except Exception as e3:
-                    print(f"LLM generation error (all methods failed): {e3}")
-                    # Generate a more realistic fallback itinerary based on input
-                    return self._generate_fallback_itinerary(context)
+            print(f"❌ LLM generation failed: {e}")
+            print(f"🔄 Using intelligent fallback for context: {context[:100]}...")
+            # Generate a more realistic fallback itinerary based on input
+            return self._generate_fallback_itinerary(context)
     
     def _generate_fallback_itinerary(self, context: str) -> str:
         """Generate a realistic fallback itinerary"""
