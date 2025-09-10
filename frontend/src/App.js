@@ -35,7 +35,7 @@ import {
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
-console.log('🔍 BACKEND_URL configured as:', BACKEND_URL || 'relative');
+console.log('🔍 BACKEND_URL configured as:', BACKEND_URL || 'RELATIVE URL');
 console.log('🔍 API URL will be:', API);
 
 // Animation variants
