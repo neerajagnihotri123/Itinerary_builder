@@ -135,8 +135,14 @@ Rules:
             user_message = UserMessage(text=context)
             response = await llm_client.send_message(user_message)
             
-            print(f"✅ LLM generation successful: {len(response.content) if response.content else 0} characters")
-            return response.content
+            # Handle different response types
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+            
+            print(f"✅ LLM generation successful: {len(content)} characters")
+            return content
             
         except Exception as e:
             print(f"❌ LLM generation failed: {e}")
