@@ -2090,69 +2090,174 @@ function App() {
   }, [messages, recommendations]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading) {
+      console.log('❌ Cannot send: empty message or loading');
+      return;
+    }
 
+    console.log('🚀 Starting handleSendMessage...');
     console.log('🚀 Sending message:', inputMessage);
     console.log('🔗 API endpoint:', `${API}/chat`);
     console.log('🔗 Full API URL:', `${BACKEND_URL}/api/chat`);
-    console.log('📋 Current trip details:', tripDetails);
 
-    const messageId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const userMessage = {
-      id: messageId,
-      role: 'user',
-      content: inputMessage
-    };
-
-    setMessages(prev => {
-      // Check if message already exists to prevent duplicates
-      if (prev.some(msg => msg.id === messageId)) {
-        console.log('Message already exists, skipping duplicate');
-        return prev;
-      }
-      console.log('Adding user message to state');
-      return [...prev, userMessage];
-    });
-    
     const currentInput = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
-    // Check if user is asking about a specific destination
-    const destinationKeywords = ['explore', 'visit', 'go to', 'about', 'tell me about'];
-    const mentionedDestination = destinations.find(dest => 
-      currentInput.toLowerCase().includes(dest.name.toLowerCase()) ||
-      currentInput.toLowerCase().includes(dest.country.toLowerCase())
-    );
-    
-    if (mentionedDestination && destinationKeywords.some(keyword => currentInput.toLowerCase().includes(keyword))) {
-      setHighlightedDestinations([mentionedDestination.id]);
-      console.log('🎯 Highlighted destination:', mentionedDestination.name);
-    }
+    // Add user message to chat
+    const userMessage = {
+      id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      role: 'user',
+      content: currentInput
+    };
 
-    // Check if user is expressing interest in planning a trip
-    const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
-    const containsTripKeyword = tripKeywords.some(keyword => currentInput.toLowerCase().includes(keyword));
-    
-    if (containsTripKeyword) {
-      setShowTripBar(true);
-      console.log('📋 Trip planning detected, showing trip bar');
-    }
+    console.log('💬 Adding user message:', userMessage);
+    setMessages(prev => [...prev, userMessage]);
 
     try {
-      console.log('📡 Making API call to:', `${API}/chat`);
-      console.log('📡 Making API call with payload:', {
-        message: currentInput,
-        session_id: sessionId,
-        user_profile: userProfile,
-        trip_details: tripDetails
-      });
+      console.log('📡 About to make API call...');
       
-      const response = await axios.post(`${API}/chat`, {
+      const requestPayload = {
         message: currentInput,
         session_id: sessionId,
         user_profile: userProfile,
         trip_details: tripDetails
+      };
+      
+      console.log('📡 Request payload:', requestPayload);
+      
+      const response = await axios.post(`${API}/chat`, requestPayload, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000 // 30 second timeout
+      });
+
+      console.log('✅ API Response received:', response.data);
+
+      // Add assistant response
+      const assistantMessage = {
+        id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        role: 'assistant',
+        content: response.data.chat_text || response.data.message || 'I received your message and I\'m processing it.'
+      };
+
+      console.log('💬 Adding assistant message:', assistantMessage);
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Process UI actions
+      const newRecommendations = [];
+      const newChips = [];
+      const newQuestionChips = [];
+
+      if (response.data.ui_actions && response.data.ui_actions.length > 0) {
+        console.log('🎨 Processing UI actions:', response.data.ui_actions.length);
+        console.log('🔍 Full UI actions data:', response.data.ui_actions);
+        
+        response.data.ui_actions.forEach(action => {
+          try {
+            console.log('🔍 Processing action:', action);
+            if (action.type === 'card_add') {
+              // Check if this is a hotel card or destination card
+              if (action.payload && action.payload.category === 'hotel') {
+                // Handle hotel card - don't need to match with destination data
+                newRecommendations.push(action.payload);
+                console.log('🏨 Hotel card added:', action.payload.title);
+              } else if (action.payload) {
+                // Handle destination card - try to enhance with full destination data
+                const titleParts = action.payload.title ? action.payload.title.split(',') : [''];
+                const fullDestination = destinations.find(d => 
+                  d.name.toLowerCase() === titleParts[0].toLowerCase()
+                );
+                
+                if (fullDestination) {
+                  // Use full destination data instead of payload
+                  const enhancedCard = {
+                    ...action.payload,
+                    ...fullDestination,
+                    title: `${fullDestination.name}, ${fullDestination.country}`
+                  };
+                  newRecommendations.push(enhancedCard);
+                  console.log('📋 Enhanced destination card added:', enhancedCard.title);
+                } else {
+                  newRecommendations.push(action.payload);
+                  console.log('📋 Basic destination card added:', action.payload.title || 'Unknown');
+                }
+              }
+            } else if (action.type === 'prompt') {
+              if (action.payload && action.payload.chips) {
+                newChips.push(...action.payload.chips);
+                console.log('🔸 Added chips:', action.payload.chips);
+              }
+            } else if (action.type === 'question_chip') {
+              // Handle new question chip UI actions
+              if (action.payload) {
+                newQuestionChips.push(action.payload);
+                console.log('❓ Question chip added:', action.payload.question);
+              }
+            }
+          } catch (actionError) {
+            console.error('❌ Error processing action:', actionError, action);
+          }
+        });
+      }
+
+      // Update recommendations
+      if (newRecommendations.length > 0) {
+        console.log('🎴 Adding new recommendations:', newRecommendations.length);
+        setRecommendations(prev => [...prev, ...newRecommendations]);
+      }
+      
+      // Update chips
+      if (newChips.length > 0) {
+        console.log('🔸 Setting chips:', newChips.length);
+        setCurrentChips(newChips);
+      }
+
+      // Set question chips
+      if (newQuestionChips.length > 0) {
+        console.log('❓ Setting question chips:', newQuestionChips.length);
+        setQuestionChips(newQuestionChips);
+      }
+
+      // Update user profile
+      if (response.data.updated_profile) {
+        setUserProfile(response.data.updated_profile);
+      }
+
+      // Check if user is expressing interest in planning a trip
+      const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
+      const containsTripKeyword = tripKeywords.some(keyword => currentInput.toLowerCase().includes(keyword));
+      
+      if (containsTripKeyword) {
+        setShowTripBar(true);
+        console.log('📋 Trip planning detected, showing trip bar');
+      }
+
+    } catch (error) {
+      console.error('❌ Chat API error:', error);
+      console.error('❌ Error details:', error?.response?.data, error?.message);
+      
+      let errorContent = 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.';
+      
+      // If the error is not a network error, try to use the backend response
+      if (error.response && error.response.data && error.response.data.chat_text) {
+        errorContent = error.response.data.chat_text;
+      }
+      
+      const errorMessage = {
+        id: `error_${Date.now()}`,
+        role: 'assistant',
+        content: errorContent
+      };
+      
+      console.log('💬 Adding error message:', errorMessage);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+      console.log('✅ Message sending complete');
+    }
+  };
       });
 
       console.log('✅ API Response received:', response.data);
