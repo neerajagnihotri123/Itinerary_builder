@@ -1533,13 +1533,20 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters 
             {hasAllDetails && (
               <motion.button
                 onClick={onApplyFilters}
-                className="px-4 py-2 bg-gradient-to-r from-green-600 to-orange-600 text-white rounded-lg hover:from-green-700 hover:to-orange-700 transition-colors duration-200 text-sm font-medium"
+                className="btn-primary text-sm font-medium px-4 py-2"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 Apply
               </motion.button>
             )}
+            
+            <button 
+              onClick={() => window.setShowTripBar && window.setShowTripBar(false)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
           </div>
         </div>
       </motion.div>
