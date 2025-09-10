@@ -127,6 +127,58 @@ class AccommodationAgent:
             }
         ]
     
+    async def get_hotels_for_destination(self, destination: str, slots) -> List[Dict[str, Any]]:
+        """
+        Get hotel recommendations for a specific destination
+        Returns: List of hotels with scoring and ranking
+        """
+        if not destination:
+            return []
+        
+        # Normalize destination name for matching
+        destination_lower = destination.lower()
+        
+        # Map destination names to destination IDs
+        destination_mapping = {
+            "andaman": "andaman_islands",
+            "andaman islands": "andaman_islands", 
+            "havelock": "andaman_islands",
+            "manali": "manali_himachal",
+            "himachal": "manali_himachal",
+            "rishikesh": "rishikesh_uttarakhand",
+            "uttarakhand": "rishikesh_uttarakhand",
+            "kerala": "kerala_backwaters",
+            "goa": "goa_india"
+        }
+        
+        # Find matching destination ID
+        destination_id = None
+        for dest_name, dest_id in destination_mapping.items():
+            if dest_name in destination_lower:
+                destination_id = dest_id
+                break
+        
+        if not destination_id:
+            print(f"🏨 No hotels found for destination: {destination}")
+            return []
+        
+        # Filter hotels for this destination
+        destination_hotels = [
+            hotel for hotel in self.mock_hotels 
+            if hotel.get("destination_id") == destination_id
+        ]
+        
+        if not destination_hotels:
+            print(f"🏨 No hotels available for destination_id: {destination_id}")
+            return []
+        
+        print(f"🏨 Found {len(destination_hotels)} hotels for {destination}")
+        
+        # Rank the hotels using existing ranking logic
+        ranked_hotels = await self.rank_hotels(destination_hotels, slots)
+        
+        return ranked_hotels
+
     async def rank_hotels(self, hotels: List[Dict[str, Any]], slots) -> List[Dict[str, Any]]:
         """
         Score and rank hotels based on user preferences
