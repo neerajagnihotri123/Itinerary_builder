@@ -3101,190 +3101,225 @@ function App() {
         {/* Right Panel - Feature Canvas */}
         <div className="w-[52%] flex flex-col bg-gradient-to-br from-white/40 to-white/60 backdrop-blur-xl relative z-10">
           {rightPanelContent === 'itinerary' ? (
-            /* Generated Itinerary Content View */
-            <div className="flex-1 overflow-y-auto">
-              {/* Back Button */}
-              <div className="p-4 border-b border-white/20">
-                <button
-                  onClick={() => setRightPanelContent('default')}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                >
-                  <X className="w-4 h-4" />
-                  Back to Overview
-                </button>
-              </div>
-              
-              {/* Professional Itinerary Section */}
-              <div className="p-6 space-y-6">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-gradient mb-2">Your Personalized Itinerary</h2>
-                  <p className="text-slate-600">Crafted just for you based on your preferences</p>
+            /* Professional Itinerary View - Mindtrip.ai Style */
+            <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
+              {/* Header Section */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-1">Your Trip Itinerary</h1>
+                    <p className="text-slate-600 text-sm">
+                      {generatedItinerary.length} days • {tripDetails.destination || 'Your destination'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setRightPanelContent('default')}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-slate-600" />
+                  </button>
                 </div>
-                
+              </div>
+
+              {/* Itinerary Content */}
+              <div className="p-6">
+                {/* Trip Summary Cards */}
+                <div className="grid grid-cols-3 gap-4 mb-8">
+                  <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Calendar className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Duration</p>
+                        <p className="font-semibold text-slate-900">{generatedItinerary.length} Days</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Destination</p>
+                        <p className="font-semibold text-slate-900">{tripDetails.destination || 'India'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-600">Travelers</p>
+                        <p className="font-semibold text-slate-900">
+                          {(tripDetails.travelers?.adults || 2)} Adults
+                          {(tripDetails.travelers?.children || 0) > 0 && `, ${tripDetails.travelers.children} Kids`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Day-by-Day Itinerary */}
                 <div className="space-y-6">
-                  {generatedItinerary.map((day, index) => (
+                  {generatedItinerary.map((day, dayIndex) => (
                     <motion.div
                       key={day.day}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden"
+                      transition={{ delay: dayIndex * 0.1 }}
+                      className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
                     >
-                      {/* Professional Day Header */}
-                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                      {/* Day Header */}
+                      <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white p-5">
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                {day.day}
-                              </div>
-                              <h3 className="text-2xl font-bold">{day.title}</h3>
-                            </div>
-                            <p className="text-blue-100">Day {day.day} of your journey</p>
+                            <h3 className="text-lg font-semibold">Day {day.day}</h3>
+                            <p className="text-slate-300 text-sm mt-1">
+                              {day.title || `Exploring ${tripDetails.destination}`}
+                            </p>
                           </div>
                           <div className="text-right">
-                            <div className="bg-white/20 rounded-full px-4 py-2">
-                              <span className="text-sm font-semibold">{day.activities.length} activities</span>
-                            </div>
+                            <p className="text-slate-300 text-sm">Activities</p>
+                            <p className="text-white font-semibold">{day.activities?.length || 3}</p>
                           </div>
                         </div>
                       </div>
-                      
-                      {/* Professional Activity Cards */}
-                      <div className="divide-y divide-slate-100">
-                        {day.activities.map((activity, actIndex) => (
-                          <motion.div 
-                            key={actIndex} 
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: (index * 0.1) + (actIndex * 0.05) }}
-                            className="p-6 hover:bg-slate-50 transition-colors duration-200 group"
-                          >
-                            <div className="flex items-start gap-4">
+
+                      {/* Activities List */}
+                      <div className="p-5">
+                        <div className="space-y-4">
+                          {(day.activities || [
+                            {
+                              time: "9:00 AM",
+                              title: "Morning Exploration",
+                              description: `Start your day exploring the best of ${tripDetails.destination}`,
+                              location: tripDetails.destination,
+                              category: "sightseeing"
+                            },
+                            {
+                              time: "1:00 PM",
+                              title: "Local Cuisine Experience",
+                              description: "Enjoy authentic local dishes at a recommended restaurant",
+                              location: tripDetails.destination,
+                              category: "dining"
+                            },
+                            {
+                              time: "4:00 PM",
+                              title: "Cultural Activities",
+                              description: "Immerse yourself in local culture and traditions",
+                              location: tripDetails.destination,
+                              category: "cultural"
+                            }
+                          ]).map((activity, actIndex) => (
+                            <div key={actIndex} className="flex gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                               {/* Time Badge */}
-                              <div className="flex-shrink-0 mt-1">
-                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-bold min-w-[60px] text-center">
-                                  {activity.time}
+                              <div className="flex-shrink-0">
+                                <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 min-w-[80px] text-center">
+                                  <p className="text-sm font-medium text-slate-900">{activity.time}</p>
                                 </div>
                               </div>
                               
                               {/* Activity Content */}
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors duration-200">
-                                  {activity.activity}
-                                </h4>
-                                <div className="flex items-center gap-2 mb-3">
-                                  <MapPin className="w-4 h-4 text-slate-400" />
-                                  <span className="text-slate-600 font-medium">{activity.location}</span>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <h4 className="font-semibold text-slate-900 text-base">{activity.title}</h4>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${{
+                                    'sightseeing': 'bg-blue-100 text-blue-700',
+                                    'dining': 'bg-orange-100 text-orange-700',
+                                    'cultural': 'bg-purple-100 text-purple-700',
+                                    'adventure': 'bg-green-100 text-green-700',
+                                    'shopping': 'bg-pink-100 text-pink-700'
+                                  }[activity.category] || 'bg-gray-100 text-gray-700'}`}>
+                                    {activity.category || 'Activity'}
+                                  </span>
                                 </div>
-                                {activity.notes && (
-                                  <p className="text-slate-600 text-sm leading-relaxed">{activity.notes}</p>
+                                <p className="text-slate-600 text-sm mb-2">{activity.description}</p>
+                                {activity.location && (
+                                  <div className="flex items-center gap-1 text-slate-500 text-xs">
+                                    <MapPin className="w-3 h-3" />
+                                    <span>{activity.location}</span>
+                                  </div>
                                 )}
                               </div>
-                              
-                              {/* Action Buttons */}
-                              <div className="flex-shrink-0 flex flex-col gap-2">
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
-                                  <Eye className="w-4 h-4" />
-                                  Details
-                                </button>
-                                <button className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors duration-200">
-                                  Book
-                                </button>
-                              </div>
                             </div>
-                          </motion.div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     </motion.div>
                   ))}
                 </div>
-              </div>
-              
-              {/* Professional Accommodations Section */}
-              <div className="p-6 border-t border-slate-200">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">🏨 Recommended Accommodations</h2>
-                  <p className="text-slate-600">Handpicked stays that match your preferences</p>
-                </div>
-                
-                <div className="space-y-6">
-                  {generatedAccommodations.map((hotel, index) => (
-                    <motion.div
-                      key={hotel.id}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className={`card-elevated hover:shadow-xl transition-all duration-300 overflow-hidden ${
-                        hotel.highlighted 
-                          ? 'ring-2 ring-blue-200 shadow-blue-100' 
-                          : ''
-                      }`}
-                    >
-                      {hotel.highlighted && (
-                        <div className="bg-gradient-primary text-white text-center py-2 text-sm font-semibold">
-                          ⭐ Recommended Choice
-                        </div>
-                      )}
-                      
-                      <div className="p-6">
-                        <div className="flex gap-4">
-                          <div className="relative">
-                            <img
-                              src={hotel.image}
-                              alt={hotel.name}
-                              className="w-32 h-32 rounded-2xl object-cover shadow-md"
-                            />
-                            <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 flex items-center gap-1">
-                              <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                              <span className="text-xs font-semibold">{hotel.rating}</span>
+
+                {/* Accommodation Section */}
+                {generatedAccommodations && generatedAccommodations.length > 0 && (
+                  <div className="mt-8">
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">Recommended Accommodations</h3>
+                    <div className="grid gap-4">
+                      {generatedAccommodations.map((hotel, index) => (
+                        <motion.div
+                          key={hotel.id || index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 + index * 0.1 }}
+                          className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-semibold text-slate-900 text-lg">{hotel.name}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <div className="flex text-yellow-400">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={`w-4 h-4 ${i < Math.floor(hotel.rating || 4.5) ? 'fill-current' : ''}`} />
+                                  ))}
+                                </div>
+                                <span className="text-sm text-slate-600">{hotel.rating || 4.5}/5</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-slate-900">₹{hotel.price_estimate || 5000}</p>
+                              <p className="text-sm text-slate-600">per night</p>
                             </div>
                           </div>
                           
-                          <div className="flex-1">
-                            <div className="flex items-start justify-between mb-3">
-                              <div>
-                                <h3 className="text-xl font-bold text-slate-800">{hotel.name}</h3>
-                                <p className="text-slate-600 font-medium">{hotel.type}</p>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-2xl font-bold text-green-600">{hotel.price}</div>
-                                <div className="text-xs text-slate-500">per night</div>
-                              </div>
+                          <p className="text-slate-600 text-sm mb-4">{hotel.reason || hotel.description}</p>
+                          
+                          {hotel.amenities && hotel.amenities.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {hotel.amenities.slice(0, 4).map((amenity, i) => (
+                                <span key={i} className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-md">
+                                  {amenity}
+                                </span>
+                              ))}
                             </div>
-                            
-                            <div className="space-y-3">
-                              <div className="flex flex-wrap gap-2">
-                                {hotel.amenities.slice(0, 4).map((amenity, i) => (
-                                  <span key={i} className="chip-secondary text-xs">
-                                    {amenity}
-                                  </span>
-                                ))}
-                              </div>
-                              
-                              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                <p className="text-blue-800 text-sm font-medium flex items-center gap-2">
-                                  <Heart className="w-4 h-4 text-blue-600" />
-                                  {hotel.match}
-                                </p>
-                              </div>
-                              
-                              <div className="flex gap-3">
-                                <button className="btn-outline flex-1 text-sm py-2">
-                                  View Details
-                                </button>
-                                {hotel.highlighted && (
-                                  <button className="btn-primary flex-1 text-sm py-2">
-                                    Book Now
-                                  </button>
-                                )}
-                              </div>
-                            </div>
+                          )}
+                          
+                          <div className="flex gap-3">
+                            <button className="flex-1 bg-slate-900 text-white font-medium py-2 px-4 rounded-lg hover:bg-slate-800 transition-colors">
+                              Book Now
+                            </button>
+                            <button className="px-4 py-2 border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">
+                              View Details
+                            </button>
                           </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="mt-8 flex gap-4">
+                  <button className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200">
+                    Save Itinerary
+                  </button>
+                  <button className="flex-1 border-2 border-slate-300 text-slate-700 font-semibold py-3 px-6 rounded-xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-200">
+                    Modify Plan
+                  </button>
                 </div>
               </div>
             </div>
