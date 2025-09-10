@@ -125,6 +125,8 @@ class DatesAgent:
         
         # Look for specific date patterns
         date_patterns = [
+            r'(december|december|dec)\s+(\d{1,2})[- ]?[-–—]\s?(\d{1,2})',  # December 15-20
+            r'(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})[- ]?[-–—]\s?(\d{1,2})',  # Month DD-DD
             r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})',  # DD/MM/YYYY or DD-MM-YYYY
             r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})',  # YYYY/MM/DD or YYYY-MM-DD
             r'(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})',  # Month DD
@@ -133,10 +135,42 @@ class DatesAgent:
         for pattern in date_patterns:
             matches = re.findall(pattern, message_lower, re.IGNORECASE)
             if matches:
-                # Process the first match found
-                # This is simplified - in production you'd want more robust date parsing
                 try:
-                    # Basic date processing logic here
+                    match = matches[0]
+                    if len(match) == 3 and isinstance(match[1], str) and isinstance(match[2], str):
+                        # Handle month range like "December 15-20"
+                        month_name = match[0].lower()
+                        start_day = int(match[1])
+                        end_day = int(match[2])
+                        
+                        # Map month names to numbers
+                        months = {
+                            'january': 1, 'february': 2, 'march': 3, 'april': 4,
+                            'may': 5, 'june': 6, 'july': 7, 'august': 8,
+                            'september': 9, 'october': 10, 'november': 11, 'december': 12,
+                            'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'jun': 6,
+                            'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+                        }
+                        
+                        if month_name in months:
+                            current_year = datetime.now().year
+                            month_num = months[month_name]
+                            
+                            # If the month has passed this year, assume next year
+                            if month_num < datetime.now().month:
+                                current_year += 1
+                            
+                            start_date = datetime(current_year, month_num, start_day)
+                            end_date = datetime(current_year, month_num, end_day)
+                            
+                            return {
+                                "start_date": start_date.strftime("%Y-%m-%d"),
+                                "end_date": end_date.strftime("%Y-%m-%d"),
+                                "date_type": "fixed",
+                                "clarify": None
+                            }
+                    
+                    # For other patterns, use basic logic
                     today = datetime.now()
                     return {
                         "start_date": today.strftime("%Y-%m-%d"),
@@ -144,7 +178,8 @@ class DatesAgent:
                         "date_type": "fixed",
                         "clarify": None
                     }
-                except:
+                except Exception as e:
+                    print(f"Date parsing error: {e}")
                     pass
         
         # Default case - ask for clarification
