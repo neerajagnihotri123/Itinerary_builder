@@ -252,29 +252,132 @@ class ConversationManager:
         }
     
     async def _handle_general_query(self, message: str, session_id: str) -> Dict[str, Any]:
-        """Handle general queries without specific destination (like 'popular destinations')"""
+        """Handle general travel queries using LLM with comprehensive context"""
         
-        # Use UX agent to provide helpful general travel information
-        ux_result = await self.ux_agent.format_general_response(message)
-        
-        return {
-            "human_text": ux_result.get("human_text", "Here are some popular travel destinations and tips!"),
-            "rr_payload": {
-                "session_id": session_id,
-                "slots": asdict(UserSlots()),  # Empty slots for general queries
-                "ui_actions": ux_result.get("actions", [
-                    {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
-                    {"label": "Manali", "action": "set_destination", "data": "Manali"},
-                    {"label": "Andaman Islands", "action": "set_destination", "data": "Andaman Islands"},
-                    {"label": "Goa", "action": "set_destination", "data": "Goa"}
-                ]),
-                "metadata": {
-                    "generated_at": datetime.now(timezone.utc).isoformat(),
-                    "llm_confidence": 0.9,
-                    "query_type": "general"
+        try:
+            # Use LLM to generate informative response with travel context
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            import os
+            
+            # Get travel context and recommendations
+            travel_context = self._get_general_travel_context(message)
+            
+            # Create comprehensive context for LLM
+            context = f"""
+User is asking: "{message}"
+
+Provide a helpful travel-related response based on:
+{travel_context}
+
+Generate a response that:
+1. Directly addresses their question/request
+2. Provides specific, actionable travel advice
+3. Includes relevant destination or activity suggestions when appropriate
+4. Uses engaging, knowledgeable language
+5. Encourages further exploration or planning
+
+Be informative, friendly, and travel-focused in your response.
+"""
+            
+            # Create LLM client for this call
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=session_id,
+                system_message="You are an expert travel consultant with extensive knowledge of destinations, activities, and travel planning. Provide comprehensive, helpful advice for any travel-related query."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Generate response
+            user_message = UserMessage(text=context)
+            response = await llm_client.send_message(user_message)
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                ai_text = response.content
+            else:
+                ai_text = str(response)
+            
+            print(f"✅ Generated general travel response: {len(ai_text)} chars")
+            
+            return {
+                "human_text": ai_text.strip(),
+                "rr_payload": {
+                    "session_id": session_id,
+                    "ui_actions": [],
+                    "metadata": {
+                        "query_type": "general_query",
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.9
+                    }
                 }
             }
-        }
+            
+        except Exception as e:
+            print(f"❌ LLM general query failed: {e}")
+            # Fallback response
+            return {
+                "human_text": "I'm here to help you plan amazing travel experiences! Whether you're looking for destinations, activities, accommodations, or planning advice, I can assist you. What would you like to explore?",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "ui_actions": [],
+                    "metadata": {
+                        "query_type": "general_query",
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.7
+                    }
+                }
+            }
+    
+    def _get_general_travel_context(self, message: str) -> str:
+        """Get relevant travel context for general queries"""
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
+            
+            context_parts = []
+            context_parts.append(f"User Query: {message}")
+            
+            # Analyze query for keywords and provide relevant context
+            message_lower = message.lower()
+            
+            # Check for destination-related queries
+            destination_keywords = ['destination', 'place', 'where', 'visit', 'travel', 'go']
+            if any(keyword in message_lower for keyword in destination_keywords):
+                popular_destinations = MOCK_DESTINATIONS[:3]
+                context_parts.append("Popular Indian Destinations:")
+                for dest in popular_destinations:
+                    context_parts.append(f"- {dest.get('name')}: {dest.get('pitch', '')}")
+            
+            # Check for activity-related queries
+            activity_keywords = ['activity', 'things to do', 'adventure', 'experience', 'fun']
+            if any(keyword in message_lower for keyword in activity_keywords):
+                popular_activities = MOCK_ACTIVITIES[:3]
+                context_parts.append("Popular Activities:")
+                for activity in popular_activities:
+                    context_parts.append(f"- {activity.get('title')}: {activity.get('description', '')}")
+            
+            # Check for budget/planning queries
+            planning_keywords = ['budget', 'cost', 'price', 'plan', 'itinerary', 'trip']
+            if any(keyword in message_lower for keyword in planning_keywords):
+                context_parts.append("Travel Planning Tips:")
+                context_parts.append("- Budget varies by destination and season")
+                context_parts.append("- Best time to visit depends on weather and activities")
+                context_parts.append("- Book accommodations and transport in advance")
+            
+            # Check for seasonal queries
+            seasonal_keywords = ['weather', 'season', 'time', 'when', 'best time']
+            if any(keyword in message_lower for keyword in seasonal_keywords):
+                context_parts.append("Seasonal Travel Information:")
+                context_parts.append("- Winter (Nov-Feb): Best for Goa, Rajasthan, Kerala backwaters")
+                context_parts.append("- Summer (Mar-May): Best for hill stations like Manali, Shimla")
+                context_parts.append("- Monsoon (Jun-Sep): Best for Kerala, Northeast, Western Ghats")
+            
+            return '\n'.join(context_parts)
+            
+        except Exception as e:
+            print(f"❌ Error getting general travel context: {e}")
+            return f"User is asking about travel: {message}"
     
     async def _generate_slot_prompt(self, slots: UserSlots, missing_slots: List[str]) -> Dict[str, Any]:
         """Generate appropriate prompt for missing slots"""
