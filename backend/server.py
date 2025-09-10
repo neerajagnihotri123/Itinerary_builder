@@ -835,6 +835,85 @@ async def chat_endpoint(request: ChatRequest):
             analytics_tags=["error"]
         )
 
+async def handle_simple_slot_filling(message: str, slots: Dict[str, Any]) -> Dict[str, Any]:
+    """Simple fallback slot filling when multi-agent system fails"""
+    message_lower = message.lower()
+    
+    # Check what's missing
+    if not slots.get("destination"):
+        # Look for destination in message
+        from mock_data import MOCK_DESTINATIONS
+        for dest in MOCK_DESTINATIONS:
+            if dest["name"].lower() in message_lower:
+                return {
+                    "human_text": f"Great choice! {dest['name']} is perfect for adventure. When would you like to travel?",
+                    "rr_payload": {
+                        "session_id": str(uuid.uuid4()),
+                        "slots": {**slots, "destination": dest["name"]},
+                        "ui_actions": [
+                            {"label": "Set Dates", "action": "set_dates"},
+                            {"label": "Flexible Dates", "action": "flexible_dates"}
+                        ],
+                        "metadata": {
+                            "generated_at": datetime.now(timezone.utc).isoformat(),
+                            "llm_confidence": 0.8
+                        }
+                    }
+                }
+        
+        return {
+            "human_text": "Where would you like to travel? I can help you explore amazing destinations in India!",
+            "rr_payload": {
+                "session_id": str(uuid.uuid4()),
+                "slots": slots,
+                "ui_actions": [
+                    {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
+                    {"label": "Manali", "action": "set_destination", "data": "Manali"},
+                    {"label": "Andaman", "action": "set_destination", "data": "Andaman Islands"}
+                ],
+                "metadata": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "llm_confidence": 0.9
+                }
+            }
+        }
+    
+    elif not slots.get("start_date"):
+        dest_name = slots.get("destination", "your chosen destination")
+        return {
+            "human_text": f"Perfect! When would you like to visit {dest_name}?",
+            "rr_payload": {
+                "session_id": str(uuid.uuid4()),
+                "slots": slots,
+                "ui_actions": [
+                    {"label": "This Weekend", "action": "set_dates", "data": "weekend"},
+                    {"label": "Next Month", "action": "set_dates", "data": "next_month"},
+                    {"label": "Choose Dates", "action": "open_calendar"}
+                ],
+                "metadata": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "llm_confidence": 0.9
+                }
+            }
+        }
+    
+    else:
+        return {
+            "human_text": "Great! I have all your details. Let me create a personalized itinerary for you.",
+            "rr_payload": {
+                "session_id": str(uuid.uuid4()),
+                "slots": slots,
+                "ui_actions": [
+                    {"label": "Create Itinerary", "action": "create_itinerary"},
+                    {"label": "Modify Details", "action": "edit_details"}
+                ],
+                "metadata": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "llm_confidence": 0.9
+                }
+            }
+        }
+
 async def generate_contextual_questions(message: str, slots: Dict[str, Any]) -> List[str]:
     """Generate contextual questions based on the current conversation state"""
     message_lower = message.lower()
