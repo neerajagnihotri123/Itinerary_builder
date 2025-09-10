@@ -561,6 +561,17 @@ def get_recommendations_for_query(query: str, query_type: str = "destination"):
     
     return []
 
+def get_destination_data(destination_name: str):
+    """Get destination data by name from MOCK_DESTINATIONS"""
+    destination_name_lower = destination_name.lower()
+    
+    for dest in MOCK_DESTINATIONS:
+        if (dest["name"].lower() == destination_name_lower or 
+            destination_name_lower in dest["name"].lower()):
+            return dest
+    
+    return None
+
 def create_destination_card(destination):
     """Create a destination card UI action"""
     return {
