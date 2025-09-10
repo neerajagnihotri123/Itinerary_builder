@@ -402,11 +402,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Chat message sending functionality"
-    - "Hotel card processing and display"
-  stuck_tasks:
-    - "Hotel card processing and display"
-    - "Chat message sending functionality"
+    - "Complete LLM Chat Integration Testing"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
