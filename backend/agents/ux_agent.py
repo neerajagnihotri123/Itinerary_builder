@@ -133,3 +133,53 @@ class UXAgent:
             return f"staying at {hotels[0].get('name', 'selected hotel')}"
         else:
             return f"{len(hotels)} hotel options"
+    
+    async def format_general_response(self, message: str) -> Dict[str, Any]:
+        """
+        Format response for general queries without specific destination
+        Returns: {"human_text": str, "actions": [...]}
+        """
+        message_lower = message.lower()
+        
+        # Determine response based on query type
+        if "popular destinations" in message_lower or "destinations right now" in message_lower:
+            human_text = "Here are some amazing destinations trending right now! Each offers unique experiences perfect for your next adventure."
+            actions = [
+                {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
+                {"label": "Manali", "action": "set_destination", "data": "Manali"},
+                {"label": "Andaman Islands", "action": "set_destination", "data": "Andaman Islands"},
+                {"label": "Goa", "action": "set_destination", "data": "Goa"}
+            ]
+        
+        elif "weekend getaway" in message_lower:
+            human_text = "Perfect for a weekend escape! These destinations are ideal for 2-3 day trips with great connectivity."
+            actions = [
+                {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
+                {"label": "Mussoorie", "action": "set_destination", "data": "Mussoorie"},
+                {"label": "Agra", "action": "set_destination", "data": "Agra"},
+                {"label": "Jaipur", "action": "set_destination", "data": "Jaipur"}
+            ]
+        
+        elif any(word in message_lower for word in ["recommend", "suggest", "best places"]):
+            human_text = "I'd love to help you discover the perfect destination! Here are some top picks across different experiences."
+            actions = [
+                {"label": "Adventure (Rishikesh)", "action": "set_destination", "data": "Rishikesh"},
+                {"label": "Mountains (Manali)", "action": "set_destination", "data": "Manali"},
+                {"label": "Beaches (Andaman)", "action": "set_destination", "data": "Andaman Islands"},
+                {"label": "Culture (Rajasthan)", "action": "set_destination", "data": "Rajasthan"}
+            ]
+        
+        else:
+            # Default general response
+            human_text = "I'm here to help you plan an amazing trip! Where would you like to explore?"
+            actions = [
+                {"label": "Popular Destinations", "action": "show_popular"},
+                {"label": "Weekend Getaways", "action": "show_weekend"},
+                {"label": "Adventure Trips", "action": "show_adventure"},
+                {"label": "Tell me more", "action": "ask_preferences"}
+            ]
+        
+        return {
+            "human_text": human_text,
+            "actions": actions
+        }
