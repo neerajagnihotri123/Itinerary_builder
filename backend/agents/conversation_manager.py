@@ -61,6 +61,11 @@ class ConversationManager:
             if self._is_destination_discovery_query(message):
                 print("🏞️ Path: Destination discovery query -> Generate destination cards")
                 return await self._handle_destination_discovery(message, session_id)
+                
+            # Check for specific destination queries (e.g., "tell me about kerala")
+            if self._is_destination_specific_query(message):
+                print("🏙️ Path: Destination specific query -> Generate destination card")
+                return await self._handle_destination_specific_query(message, session_id)
             
             # Check for accommodation queries  
             if self._is_accommodation_query(message):
