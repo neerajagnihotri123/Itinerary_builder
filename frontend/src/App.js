@@ -2335,7 +2335,7 @@ function App() {
 
   const handleVoiceInput = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert('Speech recognition is not supported in this browser');
+      window.alert('Speech recognition is not supported in this browser');
       return;
     }
 
