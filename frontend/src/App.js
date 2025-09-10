@@ -2975,7 +2975,11 @@ function App() {
               </div>
               
               <motion.button
-                onClick={handleSendMessage}
+                onClick={() => {
+                  console.log('🔥 BUTTON CLICKED - Direct inline test');
+                  alert('Button works! Now calling handleSendMessage...');
+                  handleSendMessage();
+                }}
                 disabled={!inputMessage.trim() || isLoading}
                 className="btn-primary p-4 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl"
                 whileHover={{ scale: 1.05 }}
