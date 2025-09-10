@@ -1771,9 +1771,9 @@ const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) 
       <div className="w-1/2 bg-gray-100 p-6">
         <div className="h-full">
           <h3 className="text-xl font-bold text-gray-800 mb-4">Explore {destination.name}</h3>
-          <InteractiveMap
+          <InteractiveWorldMap
             destinations={[destination]}
-            onMarkerClick={onMapMarkerClick}
+            onDestinationClick={onMapMarkerClick}
             highlightedDestinations={[destination.id]}
           />
         </div>
