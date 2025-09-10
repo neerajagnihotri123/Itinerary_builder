@@ -809,6 +809,66 @@ async def chat_endpoint(request: ChatRequest):
             analytics_tags=["multi_agent_response"]
         )
         
+    except Exception as e:
+        print(f"Chat endpoint error: {e}")
+        return ChatResponse(
+            chat_text="I apologize, but I encountered an issue. Could you please try rephrasing your request?",
+            ui_actions=[],
+            updated_profile=request.user_profile or {},
+            followup_questions=[],
+            analytics_tags=["error"]
+        )
+
+async def generate_contextual_questions(message: str, slots: Dict[str, Any]) -> List[str]:
+    """Generate contextual questions based on the current conversation state"""
+    message_lower = message.lower()
+    questions = []
+    
+    # Questions based on message content
+    if any(word in message_lower for word in ["accommodation", "hotel", "stay"]):
+        if slots.get("destination"):
+            dest_name = slots["destination"]
+            questions = [
+                f"Best restaurants in {dest_name}",
+                f"Top activities in {dest_name}",
+                f"Transportation to {dest_name}",
+                f"Best time to visit {dest_name}"
+            ]
+        else:
+            questions = [
+                "Budget vs luxury hotels",
+                "Hotel booking tips",
+                "Best areas to stay",
+                "Family-friendly accommodations"
+            ]
+    
+    elif slots.get("destination"):
+        dest_name = slots["destination"]
+        questions = [
+            f"Hotels in {dest_name}",
+            f"Best activities in {dest_name}",
+            f"Food recommendations in {dest_name}",
+            f"Transportation options to {dest_name}"
+        ]
+    
+    elif any(word in message_lower for word in ["plan", "trip", "travel"]):
+        questions = [
+            "Best adventure destinations",
+            "Budget travel tips",
+            "Solo vs group travel",
+            "Best travel season in India"
+        ]
+    
+    else:
+        questions = [
+            "Plan a weekend getaway",
+            "Adventure vs relaxation trips",
+            "Popular destinations right now",
+            "Budget-friendly destinations"
+        ]
+    
+    return questions[:4]  # Return max 4 questions
+        
         # Check if this is a booking/planning request - gather essential info first
         if any(phrase in message_lower for phrase in ["book it", "book", "plan it", "let's plan", "create itinerary"]):
             # Extract any destination mentioned
