@@ -3762,6 +3762,7 @@ function App() {
         isOpen={isDestinationModalOpen}
         onClose={() => setIsDestinationModalOpen(false)}
         onPlanTrip={handlePlanTripFromModal}
+        onViewAllImages={handleViewAllImages}
       />
 
       {/* Sidebar */}
