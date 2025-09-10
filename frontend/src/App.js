@@ -1096,7 +1096,7 @@ const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-white rounded-3xl max-w-md w-full p-6"
+          className="card-premium max-w-md w-full p-6"
           onClick={e => e.stopPropagation()}
         >
           <div className="flex items-center justify-between mb-6">
