@@ -2046,6 +2046,7 @@ function App() {
 
     console.log('🚀 Sending message:', inputMessage);
     console.log('🔗 API endpoint:', `${API}/chat`);
+    console.log('🔗 Full API URL:', `${BACKEND_URL}/api/chat`);
     console.log('📋 Current trip details:', tripDetails);
 
     const messageId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -2092,6 +2093,12 @@ function App() {
 
     try {
       console.log('📡 Making API call to:', `${API}/chat`);
+      console.log('📡 Making API call with payload:', {
+        message: currentInput,
+        session_id: sessionId,
+        user_profile: userProfile,
+        trip_details: tripDetails
+      });
       
       const response = await axios.post(`${API}/chat`, {
         message: currentInput,
