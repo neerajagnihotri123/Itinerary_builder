@@ -3977,6 +3977,7 @@ function App() {
                             // Open activity details in right panel
                             setRightPanelContent('activity');
                             setSelectedActivity(activity);
+                            setCurrentActivityImageIndex(0); // Reset image index
                           }}
                         >
                           <img
