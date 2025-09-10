@@ -1466,7 +1466,7 @@ const DestinationExplorationView = ({ destination, onClose, onMapMarkerClick }) 
   </motion.div>
 );
 // Trip Planning Bar Component - FIXED POSITIONING
-const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters }) => {
+const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters, onClose }) => {
   const [showWhereModal, setShowWhereModal] = useState(false);
   const [showWhenModal, setShowWhenModal] = useState(false);
   const [showTravelersModal, setShowTravelersModal] = useState(false);
