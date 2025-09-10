@@ -453,6 +453,29 @@ class ConversationManager:
     
     async def _handle_accommodation_query(self, message: str, session_id: str, slots: UserSlots) -> Dict[str, Any]:
         """Handle accommodation-specific queries"""
+        
+        # Try to extract destination from the message if not already in slots
+        if not slots.destination:
+            # Extract destination from accommodation query (e.g., "hotels in goa")
+            message_lower = message.lower()
+            destinations = [
+                "kerala", "goa", "rajasthan", "himachal", "uttarakhand", "kashmir",
+                "manali", "shimla", "rishikesh", "haridwar", "dharamshala", "mcleodganj",
+                "andaman", "lakshadweep", "mumbai", "delhi", "bangalore", "chennai",
+                "kolkata", "pune", "hyderabad", "jaipur", "udaipur", "jodhpur",
+                "agra", "varanasi", "pushkar", "mount abu", "ooty", "kodaikanal",
+                "munnar", "alleppey", "kochi", "thekkady", "wayanad", "coorg",
+                "hampi", "mysore", "darjeeling", "gangtok", "shillong", "kaziranga"
+            ]
+            
+            # Find destination mentioned in the message
+            detected_destination = None
+            for dest in destinations:
+                if dest in message_lower:
+                    detected_destination = dest.title()
+                    slots.destination = detected_destination
+                    break
+        
         if not slots.destination:
             return {
                 "human_text": "I'd be happy to help you find great accommodation! First, could you let me know which destination you're interested in?",
@@ -474,10 +497,13 @@ class ConversationManager:
         
         # If we have a destination, get hotel recommendations
         try:
+            print(f"🏨 Getting hotels for destination: {slots.destination}")
             # Get hotel recommendations using the accommodation agent
             hotel_recommendations = await self.accommodation_agent.get_hotels_for_destination(
                 slots.destination, slots
             )
+            
+            print(f"🏨 Retrieved {len(hotel_recommendations)} hotel recommendations")
             
             return {
                 "human_text": f"Here are some great accommodation options in {slots.destination}:",
@@ -498,6 +524,7 @@ class ConversationManager:
                 }
             }
         except Exception as e:
+            print(f"🏨 Error getting hotels: {e}")
             return {
                 "human_text": f"I'm looking into accommodation options for {slots.destination}. Let me help you plan a complete trip instead!",
                 "rr_payload": {
