@@ -4,7 +4,6 @@ Planner Agent - Generates day-by-day itineraries using retrieved facts
 import json
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
-from emergentintegrations.llm.chat import UserMessage
 
 class PlannerAgent:
     """Generates detailed itineraries using grounding facts"""
