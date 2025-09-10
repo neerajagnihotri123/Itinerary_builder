@@ -212,7 +212,7 @@ const RecommendationCard = ({ item, onAction }) => {
           
           <motion.button
             onClick={() => onAction(item.cta_secondary?.action, item)}
-            className="px-4 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 flex items-center justify-center"
+            className="btn-outline flex items-center justify-center"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
