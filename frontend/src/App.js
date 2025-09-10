@@ -584,7 +584,7 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
 };
 
 const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip, onViewAllImages }) => {
-  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('overview');
   
   if (!isOpen || !destination) return null;
