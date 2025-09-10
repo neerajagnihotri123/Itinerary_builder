@@ -760,15 +760,22 @@ async def chat_endpoint(request: ChatRequest):
             }
         
         # Process message through conversation manager with fallback
+        print(f"🤖 Attempting to use conversation manager with slots: {current_slots}")
         try:
+            print("🔄 Calling conversation_manager.process_message...")
             result = await conversation_manager.process_message(
                 message=request.message,
                 session_id=request.session_id or str(uuid.uuid4()),
                 current_slots=current_slots
             )
+            print(f"✅ Conversation manager succeeded with result: {result.get('human_text', 'No text')}")
         except Exception as e:
-            print(f"Conversation manager error: {e}")
+            print(f"❌ Conversation manager error: {e}")
+            print(f"📚 Error type: {type(e)}")
+            import traceback
+            print(f"🔍 Full traceback: {traceback.format_exc()}")
             # Fallback to simple slot-based response
+            print("🔄 Using fallback slot filling...")
             result = await handle_simple_slot_filling(request.message, current_slots)
         
         # Convert to ChatResponse format
