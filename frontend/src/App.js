@@ -189,7 +189,7 @@ const RecommendationCard = ({ item, onAction }) => {
         <div className="flex gap-2">
           <motion.button
             onClick={() => onAction(item.cta_primary?.action, item)}
-            className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center gap-2"
+            className="btn-primary flex-1 flex items-center justify-center gap-2"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
