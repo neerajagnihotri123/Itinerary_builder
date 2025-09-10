@@ -877,15 +877,38 @@ async def handle_simple_slot_filling(message: str, slots: Dict[str, Any]) -> Dic
                     }
                 }
         
+        # Check if this is a general query that deserves a helpful response
+        if any(phrase in message_lower for phrase in [
+            "popular destinations", "recommend", "suggest", "weekend getaway", 
+            "best places", "destinations right now"
+        ]):
+            return {
+                "human_text": "Here are some amazing destinations perfect for your next adventure! Each offers unique experiences - from mountain adventures to beach paradises.",
+                "rr_payload": {
+                    "session_id": str(uuid.uuid4()),
+                    "slots": slots,
+                    "ui_actions": [
+                        {"label": "🏔️ Rishikesh - Adventure & Spirituality", "action": "set_destination", "data": "Rishikesh"},
+                        {"label": "🏖️ Andaman - Pristine Beaches", "action": "set_destination", "data": "Andaman Islands"},
+                        {"label": "🌴 Goa - Beach Vibes & Culture", "action": "set_destination", "data": "Goa"},
+                        {"label": "❄️ Manali - Snow & Mountains", "action": "set_destination", "data": "Manali"}
+                    ],
+                    "metadata": {
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.9
+                    }
+                }
+            }
+        
         return {
-            "human_text": "Where would you like to travel? I can help you explore amazing destinations in India!",
+            "human_text": "I'd love to help you plan an amazing trip! Which destination interests you most?",
             "rr_payload": {
                 "session_id": str(uuid.uuid4()),
                 "slots": slots,
                 "ui_actions": [
-                    {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
-                    {"label": "Manali", "action": "set_destination", "data": "Manali"},
-                    {"label": "Andaman", "action": "set_destination", "data": "Andaman Islands"}
+                    {"label": "🏔️ Mountain Adventures", "action": "set_destination", "data": "Rishikesh"},
+                    {"label": "🏖️ Beach Paradise", "action": "set_destination", "data": "Andaman Islands"},
+                    {"label": "🌴 Tropical Getaway", "action": "set_destination", "data": "Goa"}
                 ],
                 "metadata": {
                     "generated_at": datetime.now(timezone.utc).isoformat(),
