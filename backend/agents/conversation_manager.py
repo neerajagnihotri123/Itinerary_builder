@@ -230,6 +230,31 @@ class ConversationManager:
             }
         }
     
+    async def _handle_general_query(self, message: str, session_id: str) -> Dict[str, Any]:
+        """Handle general queries without specific destination (like 'popular destinations')"""
+        
+        # Use UX agent to provide helpful general travel information
+        ux_result = await self.ux_agent.format_general_response(message)
+        
+        return {
+            "human_text": ux_result.get("human_text", "Here are some popular travel destinations and tips!"),
+            "rr_payload": {
+                "session_id": session_id,
+                "slots": asdict(UserSlots()),  # Empty slots for general queries
+                "ui_actions": ux_result.get("actions", [
+                    {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
+                    {"label": "Manali", "action": "set_destination", "data": "Manali"},
+                    {"label": "Andaman Islands", "action": "set_destination", "data": "Andaman Islands"},
+                    {"label": "Goa", "action": "set_destination", "data": "Goa"}
+                ]),
+                "metadata": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "llm_confidence": 0.9,
+                    "query_type": "general"
+                }
+            }
+        }
+    
     async def _generate_slot_prompt(self, slots: UserSlots, missing_slots: List[str]) -> Dict[str, Any]:
         """Generate appropriate prompt for missing slots"""
         
