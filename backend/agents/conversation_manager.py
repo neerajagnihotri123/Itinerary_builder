@@ -181,7 +181,10 @@ class ConversationManager:
         retrieval_candidates = await self.retrieval_agent.get_facts(slots)
         
         # Step 2: Generate itinerary
+        print(f"🎯 Calling planner agent with slots: {asdict(slots)}")
+        print(f"📊 Retrieved {len(retrieval_candidates)} candidates")
         planner_result = await self.planner_agent.generate_itinerary(slots, retrieval_candidates)
+        print(f"📋 Planner generated: {len(planner_result.get('itinerary', []))} days, {len(planner_result.get('hotel_recommendations', []))} hotels")
         
         # Step 3: Rank accommodations
         hotel_recommendations = await self.accommodation_agent.rank_hotels(
