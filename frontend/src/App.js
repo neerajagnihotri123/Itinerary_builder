@@ -204,40 +204,78 @@ const RecommendationCard = ({ item, onAction }) => {
         )}
       </div>
       
-      <div className="p-6">
-        <p className="text-gray-600 mb-3 leading-relaxed">{item.pitch}</p>
+      <div className="p-6 space-y-4">
+        {/* Description */}
+        <p className="text-slate-600 leading-relaxed text-sm">{item.pitch}</p>
         
+        {/* Why Match Section */}
         {item.why_match && (
-          <div className="bg-blue-50 rounded-lg p-3 mb-4">
-            <p className="text-blue-700 text-sm font-medium">
-              <Heart className="w-4 h-4 inline mr-2" />
-              {item.why_match}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-blue-800 text-sm font-medium flex items-start gap-3">
+              <Heart className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <span>{item.why_match}</span>
             </p>
           </div>
         )}
         
+        {/* Highlights */}
         {item.highlights && (
-          <div className="mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Highlights</h4>
-            <div className="flex flex-wrap gap-2">
-              {item.highlights.slice(0, 3).map((highlight, index) => (
-                <span
+          <div>
+            <h4 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+              <Star className="w-4 h-4 text-orange-500" />
+              Top Highlights
+            </h4>
+            <div className="grid grid-cols-2 gap-2">
+              {item.highlights.slice(0, 4).map((highlight, index) => (
+                <div
                   key={index}
-                  className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm"
+                  className="chip-secondary flex items-center gap-2 text-xs p-2"
                 >
-                  {highlight}
-                </span>
+                  <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <span className="truncate">{highlight}</span>
+                </div>
               ))}
             </div>
           </div>
         )}
         
+        {/* Pricing */}
         {item.price_estimate && (
-          <div className="flex items-center gap-2 mb-4 text-green-600">
-            <DollarSign className="w-4 h-4" />
-            <span className="font-semibold">
-              ${item.price_estimate.min} - ${item.price_estimate.max} / night
-            </span>
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-green-700">
+                <DollarSign className="w-5 h-5" />
+                <span className="font-bold text-lg">
+                  ${item.price_estimate.min} - ${item.price_estimate.max}
+                </span>
+              </div>
+              <span className="text-green-600 text-sm font-medium">per night</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Amenities for Hotels */}
+        {item.amenities && (
+          <div>
+            <h4 className="font-semibold text-slate-800 mb-2 flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-500" />
+              Amenities
+            </h4>
+            <div className="flex flex-wrap gap-1">
+              {item.amenities.slice(0, 3).map((amenity, index) => (
+                <span
+                  key={index}
+                  className="chip-primary text-xs"
+                >
+                  {amenity}
+                </span>
+              ))}
+              {item.amenities.length > 3 && (
+                <span className="chip-primary text-xs">
+                  +{item.amenities.length - 3} more
+                </span>
+              )}
+            </div>
           </div>
         )}
         
