@@ -165,9 +165,9 @@ backend:
 frontend:
   - task: "Chat message sending functionality"
     implemented: true
-    working: true
+    working: false
     file: "App.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -180,6 +180,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Chat messaging works correctly when sidebar overlay is closed. Messages send successfully, AI responses received, conversation flow maintained."
+      - working: false
+        agent: "testing"
+        comment: "❌ CONVERSATION LOOP CONFIRMED: Backend API testing reveals exact issue from review request. While backend correctly processes 'tell me about kerala' (generates destination cards) and 'hotels on goa' (generates 4 hotel cards), the conversation loop exists: User: 'kerala' → Bot: 'When would you like to travel?' → User: 'next month 20' → Bot: 'Which destination are you referring to?' Backend ConversationManager fails to maintain session context, causing slot-filling loop where it forgets previously mentioned destinations. Frontend handleSendMessage function exists with proper logging but may not execute due to React initialization issues. Root cause: Backend session context management broken."
 
   - task: "Hotel card processing and display"
     implemented: true
