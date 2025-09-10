@@ -2045,6 +2045,8 @@ function App() {
     if (!inputMessage.trim() || isLoading) return;
 
     console.log('🚀 Sending message:', inputMessage);
+    console.log('🔗 API endpoint:', `${API}/chat`);
+    console.log('📋 Current trip details:', tripDetails);
 
     const messageId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const userMessage = {
