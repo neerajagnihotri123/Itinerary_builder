@@ -2423,25 +2423,44 @@ function App() {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-3"
                 >
-                  <p className="text-sm font-medium text-gray-600">You might want to ask:</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-slate-600">💡 You might want to ask:</p>
+                    <button 
+                      onClick={() => setQuestionChips([])}
+                      className="text-slate-400 hover:text-slate-600 p-1 rounded-md hover:bg-slate-100 transition-colors duration-200"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
                     <AnimatePresence>
                       {questionChips.map((questionChip, index) => (
-                        <motion.button
+                        <motion.div
                           key={`question_${questionChip.id}_${index}`}
-                          initial={{ opacity: 0, scale: 0.95 }}
+                          initial={{ opacity: 0, scale: 0.9 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                          onClick={() => handleQuestionChipClick(questionChip)}
-                          className="bg-gradient-to-r from-green-50 to-orange-50 border border-green-200 text-gray-700 px-4 py-3 rounded-xl text-sm font-medium hover:from-green-100 hover:to-orange-100 hover:border-green-300 transition-all duration-200 text-left shadow-sm"
-                          whileHover={{ scale: 1.02, y: -2 }}
-                          whileTap={{ scale: 0.98 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          className="relative group"
                         >
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-600">❓</span>
-                            <span className="flex-1">{questionChip.question}</span>
-                          </div>
-                        </motion.button>
+                          <motion.button
+                            onClick={() => handleQuestionChipClick(questionChip)}
+                            className="card-elevated px-3 py-2 text-xs font-medium text-slate-700 hover:text-blue-700 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-full transition-all duration-200 flex items-center gap-2 group-hover:shadow-md"
+                            whileHover={{ scale: 1.05, y: -1 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <span className="text-blue-500">🤔</span>
+                            <span className="max-w-[200px] truncate">{questionChip.question}</span>
+                          </motion.button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setQuestionChips(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-slate-400 hover:bg-slate-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </motion.div>
                       ))}
                     </AnimatePresence>
                   </div>
