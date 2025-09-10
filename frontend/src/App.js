@@ -32,10 +32,11 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
-console.log('🔍 BACKEND_URL configured as:', BACKEND_URL);
+console.log('🔍 BACKEND_URL configured as:', BACKEND_URL || 'relative URL');
+console.log('🔍 API URL will be:', API);
 
 // Animation variants
 const cardVariants = {
