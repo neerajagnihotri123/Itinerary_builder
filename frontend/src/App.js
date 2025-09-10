@@ -2127,40 +2127,49 @@ function App() {
         console.log('🔍 Full UI actions data:', response.data.ui_actions);
         
         response.data.ui_actions.forEach(action => {
-          console.log('🔍 Processing action:', action);
-          if (action.type === 'card_add') {
-            // Check if this is a hotel card or destination card
-            if (action.payload.category === 'hotel') {
-              // Handle hotel card - don't need to match with destination data
-              newRecommendations.push(action.payload);
-              console.log('🏨 Hotel card added:', action.payload.title);
-            } else {
-              // Handle destination card - try to enhance with full destination data
-              const fullDestination = destinations.find(d => 
-                d.name.toLowerCase() === action.payload.title.split(',')[0].toLowerCase()
-              );
-              
-              if (fullDestination) {
-                // Use full destination data instead of payload
-                const enhancedCard = {
-                  ...action.payload,
-                  ...fullDestination,
-                  title: `${fullDestination.name}, ${fullDestination.country}`
-                };
-                newRecommendations.push(enhancedCard);
-                console.log('📋 Enhanced destination card added:', enhancedCard.title);
-              } else {
+          try {
+            console.log('🔍 Processing action:', action);
+            if (action.type === 'card_add') {
+              // Check if this is a hotel card or destination card
+              if (action.payload && action.payload.category === 'hotel') {
+                // Handle hotel card - don't need to match with destination data
                 newRecommendations.push(action.payload);
-                console.log('📋 Basic destination card added:', action.payload.title);
+                console.log('🏨 Hotel card added:', action.payload.title);
+              } else if (action.payload) {
+                // Handle destination card - try to enhance with full destination data
+                const titleParts = action.payload.title ? action.payload.title.split(',') : [''];
+                const fullDestination = destinations.find(d => 
+                  d.name.toLowerCase() === titleParts[0].toLowerCase()
+                );
+                
+                if (fullDestination) {
+                  // Use full destination data instead of payload
+                  const enhancedCard = {
+                    ...action.payload,
+                    ...fullDestination,
+                    title: `${fullDestination.name}, ${fullDestination.country}`
+                  };
+                  newRecommendations.push(enhancedCard);
+                  console.log('📋 Enhanced destination card added:', enhancedCard.title);
+                } else {
+                  newRecommendations.push(action.payload);
+                  console.log('📋 Basic destination card added:', action.payload.title || 'Unknown');
+                }
+              }
+            } else if (action.type === 'prompt') {
+              if (action.payload && action.payload.chips) {
+                newChips.push(...action.payload.chips);
+                console.log('🔸 Added chips:', action.payload.chips);
+              }
+            } else if (action.type === 'question_chip') {
+              // Handle new question chip UI actions
+              if (action.payload) {
+                newQuestionChips.push(action.payload);
+                console.log('❓ Question chip added:', action.payload.question);
               }
             }
-          } else if (action.type === 'prompt') {
-            newChips.push(...action.payload.chips);
-            console.log('🔸 Added chips:', action.payload.chips);
-          } else if (action.type === 'question_chip') {
-            // Handle new question chip UI actions
-            newQuestionChips.push(action.payload);
-            console.log('❓ Question chip added:', action.payload.question);
+          } catch (actionError) {
+            console.error('❌ Error processing action:', actionError, action);
           }
         });
       } else {
