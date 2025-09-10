@@ -183,3 +183,60 @@ class UXAgent:
             "human_text": human_text,
             "actions": actions
         }
+    
+    async def format_destination_specific_response(self, message: str, destination: str) -> Dict[str, Any]:
+        """
+        Format response for specific destination queries (e.g., "tell me about Kerala")
+        Returns: {"human_text": str, "actions": [...]}
+        """
+        message_lower = message.lower()
+        
+        # Create destination-specific responses
+        destination_info = {
+            "kerala": {
+                "text": "Kerala, 'God's Own Country', offers serene backwaters, lush hill stations, pristine beaches, and rich cultural heritage. Perfect for nature lovers and those seeking tranquility!",
+                "highlights": ["Backwaters", "Hill Stations", "Beaches", "Ayurveda"]
+            },
+            "goa": {
+                "text": "Goa combines stunning beaches, vibrant nightlife, Portuguese heritage, and delicious cuisine. Ideal for beach lovers, party enthusiasts, and culture seekers!",
+                "highlights": ["Beaches", "Nightlife", "Heritage", "Cuisine"]
+            },
+            "rajasthan": {
+                "text": "Rajasthan showcases magnificent palaces, desert landscapes, colorful culture, and royal heritage. Perfect for history buffs and cultural enthusiasts!",
+                "highlights": ["Palaces", "Desert", "Culture", "Heritage"]
+            },
+            "manali": {
+                "text": "Manali offers snow-capped mountains, adventure sports, apple orchards, and cool climate. Great for adventure seekers and mountain lovers!",
+                "highlights": ["Mountains", "Adventure", "Nature", "Climate"]
+            },
+            "rishikesh": {
+                "text": "Rishikesh, the 'Yoga Capital of the World', features river rafting, spiritual experiences, adventure sports, and scenic beauty. Perfect for adventure and spirituality!",
+                "highlights": ["Yoga", "Rafting", "Spirituality", "Adventure"]
+            }
+        }
+        
+        # Get destination info or create generic response
+        dest_key = destination.lower()
+        if dest_key in destination_info:
+            info = destination_info[dest_key]
+            human_text = info["text"]
+            highlights = info["highlights"]
+        else:
+            human_text = f"{destination} is a wonderful destination with unique experiences waiting for you! Let me help you plan an amazing trip there."
+            highlights = ["Explore", "Discover", "Experience", "Adventure"]
+        
+        # Create contextual actions
+        actions = [
+            {"label": f"Plan Trip to {destination}", "action": "set_destination", "data": destination},
+            {"label": "See Hotels", "action": "show_hotels", "data": destination},
+            {"label": "Get Itinerary", "action": "plan_itinerary", "data": destination}
+        ]
+        
+        # Add highlight-based actions
+        if len(highlights) > 0:
+            actions.append({"label": f"More about {highlights[0]}", "action": "explore_theme", "data": {"destination": destination, "theme": highlights[0]}})
+        
+        return {
+            "human_text": human_text,
+            "actions": actions[:4]  # Limit to 4 actions
+        }
