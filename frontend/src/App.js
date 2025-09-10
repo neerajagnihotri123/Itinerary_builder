@@ -1107,7 +1107,8 @@ const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => {
       </motion.div>
     )}
   </AnimatePresence>
-);
+  );
+};
 
 const TravelersModal = ({ isOpen, onClose, onSelect, currentTravelers }) => {
   const [adults, setAdults] = useState(1);
