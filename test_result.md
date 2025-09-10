@@ -397,7 +397,8 @@ metadata:
 test_plan:
   current_focus:
     - "Enhanced trip planning forms with LLM integration"
-    - "Plan Trip button on destination cards"
+    - "Swipeable image galleries in modals"
+    - "LLM agent response quality"
   stuck_tasks:
     - "Enhanced trip planning forms with LLM integration"
   test_all: false
