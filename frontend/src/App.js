@@ -107,8 +107,8 @@ const Avatar = () => (
 );
 
 const RecommendationCard = ({ item, onAction }) => {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   
   // Mock multiple images for demonstration
   const images = item.images || [item.hero_image, item.hero_image, item.hero_image];
