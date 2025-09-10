@@ -2976,8 +2976,10 @@ function App() {
               
               <motion.button
                 onClick={() => {
-                  console.log('🔥 BUTTON CLICKED - Direct inline test');
-                  alert('Button works! Now calling handleSendMessage...');
+                  console.log('🔥 BUTTON CLICKED!');
+                  console.log('🔥 Input message:', inputMessage);
+                  console.log('🔥 Is loading:', isLoading);
+                  console.log('🔥 Button disabled?', !inputMessage.trim() || isLoading);
                   handleSendMessage();
                 }}
                 disabled={!inputMessage.trim() || isLoading}
