@@ -402,6 +402,55 @@ class ConversationManager:
             }
         }
     
+    async def _handle_destination_specific_query(self, message: str, session_id: str) -> Dict[str, Any]:
+        """Handle queries about specific destinations (e.g., 'tell me about Kerala')"""
+        
+        # Extract the destination from the message
+        message_lower = message.lower()
+        destinations = [
+            "kerala", "goa", "rajasthan", "himachal", "uttarakhand", "kashmir",
+            "manali", "shimla", "rishikesh", "haridwar", "dharamshala", "mcleodganj",
+            "andaman", "lakshadweep", "mumbai", "delhi", "bangalore", "chennai",
+            "kolkata", "pune", "hyderabad", "jaipur", "udaipur", "jodhpur",
+            "agra", "varanasi", "pushkar", "mount abu", "ooty", "kodaikanal",
+            "munnar", "alleppey", "kochi", "thekkady", "wayanad", "coorg",
+            "hampi", "mysore", "darjeeling", "gangtok", "shillong", "kaziranga"
+        ]
+        
+        # Find the destination mentioned in the message
+        detected_destination = None
+        for dest in destinations:
+            if dest in message_lower:
+                detected_destination = dest.title()
+                break
+        
+        if not detected_destination:
+            # Fallback if no specific destination detected
+            detected_destination = "this destination"
+        
+        # Use UX agent to provide specific destination information
+        ux_result = await self.ux_agent.format_destination_specific_response(message, detected_destination)
+        
+        return {
+            "human_text": ux_result.get("human_text", f"Here's what makes {detected_destination} special!"),
+            "rr_payload": {
+                "session_id": session_id,
+                "slots": asdict(UserSlots(destination=detected_destination if detected_destination != "this destination" else None)),
+                "ui_actions": ux_result.get("actions", [
+                    {"label": f"Plan Trip to {detected_destination}", "action": "set_destination", "data": detected_destination},
+                    {"label": "See Hotels", "action": "show_hotels", "data": detected_destination},
+                    {"label": "Get Itinerary", "action": "plan_itinerary", "data": detected_destination},
+                    {"label": "More Destinations", "action": "show_destinations"}
+                ]),
+                "metadata": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "llm_confidence": 0.8,
+                    "query_type": "destination_specific",
+                    "detected_destination": detected_destination
+                }
+            }
+        }
+    
     async def _handle_accommodation_query(self, message: str, session_id: str, slots: UserSlots) -> Dict[str, Any]:
         """Handle accommodation-specific queries"""
         if not slots.destination:
