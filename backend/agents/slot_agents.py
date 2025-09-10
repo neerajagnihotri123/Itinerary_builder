@@ -86,7 +86,7 @@ class DestinationAgent:
             ).with_model("openai", "gpt-4o-mini")
             
             user_message = UserMessage(text=prompt)
-            response = await llm_client.completion([user_message])
+            response = await llm_client.send_message(user_message)
             result = json.loads(response.content)
             return result
         except Exception as e:
