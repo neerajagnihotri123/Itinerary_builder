@@ -2943,50 +2943,70 @@ function App() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="card-premium p-6 hover:shadow-lg transition-all duration-300"
+                      className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden"
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
-                            {day.day}
-                          </div>
+                      {/* Professional Day Header */}
+                      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+                        <div className="flex items-center justify-between">
                           <div>
-                            <h3 className="text-xl font-bold text-slate-800">{day.title}</h3>
-                            <p className="text-sm text-slate-500">Day {day.day} of your journey</p>
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {day.day}
+                              </div>
+                              <h3 className="text-2xl font-bold">{day.title}</h3>
+                            </div>
+                            <p className="text-blue-100">Day {day.day} of your journey</p>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="chip-primary">{day.activities.length} activities</span>
+                          <div className="text-right">
+                            <div className="bg-white/20 rounded-full px-4 py-2">
+                              <span className="text-sm font-semibold">{day.activities.length} activities</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
-                      <div className="space-y-3">
+                      {/* Professional Activity Cards */}
+                      <div className="divide-y divide-slate-100">
                         {day.activities.map((activity, actIndex) => (
                           <motion.div 
                             key={actIndex} 
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: (index * 0.1) + (actIndex * 0.05) }}
-                            className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200 group"
+                            className="p-6 hover:bg-slate-50 transition-colors duration-200 group"
                           >
-                            <div className="flex-shrink-0">
-                              <div className="w-16 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
-                                <span className="text-sm font-semibold text-blue-600">{activity.time}</span>
+                            <div className="flex items-start gap-4">
+                              {/* Time Badge */}
+                              <div className="flex-shrink-0 mt-1">
+                                <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-2 rounded-lg text-sm font-bold min-w-[60px] text-center">
+                                  {activity.time}
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-slate-800 group-hover:text-blue-700 transition-colors duration-200">
-                                {activity.activity}
-                              </h4>
-                              <div className="flex items-center gap-2 mt-1">
-                                <MapPin className="w-4 h-4 text-slate-400" />
-                                <span className="text-sm text-slate-600">{activity.location}</span>
+                              
+                              {/* Activity Content */}
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors duration-200">
+                                  {activity.activity}
+                                </h4>
+                                <div className="flex items-center gap-2 mb-3">
+                                  <MapPin className="w-4 h-4 text-slate-400" />
+                                  <span className="text-slate-600 font-medium">{activity.location}</span>
+                                </div>
+                                {activity.notes && (
+                                  <p className="text-slate-600 text-sm leading-relaxed">{activity.notes}</p>
+                                )}
                               </div>
-                            </div>
-                            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                              <button className="btn-outline text-xs px-3 py-1">
-                                Details
-                              </button>
+                              
+                              {/* Action Buttons */}
+                              <div className="flex-shrink-0 flex flex-col gap-2">
+                                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2">
+                                  <Eye className="w-4 h-4" />
+                                  Details
+                                </button>
+                                <button className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors duration-200">
+                                  Book
+                                </button>
+                              </div>
                             </div>
                           </motion.div>
                         ))}
