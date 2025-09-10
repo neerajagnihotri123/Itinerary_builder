@@ -75,11 +75,22 @@ class DestinationAgent:
         """
         
         try:
-            from emergentintegrations.llm.chat import UserMessage
-            response = await self.llm_client.chat([UserMessage(content=prompt)])
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            import os
+            
+            # Create a new LLM client
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"destination_{hash(message) % 1000}",
+                system_message="You are a travel destination expert. Extract destination information from user messages."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            user_message = UserMessage(text=prompt)
+            response = await llm_client.completion([user_message])
             result = json.loads(response.content)
             return result
-        except:
+        except Exception as e:
+            print(f"Destination extraction LLM error: {e}")
             return {
                 "destination_name": None,
                 "canonical_place_id": None,
