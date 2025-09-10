@@ -431,9 +431,13 @@ const WorldMap = ({ destinations, onDestinationClick }) => (
 );
 
 const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const [activeTab, setActiveTab] = useState('overview');
   
   if (!isOpen || !destination) return null;
+
+  // Mock multiple images for gallery
+  const images = destination.images || [destination.hero_image, destination.hero_image, destination.hero_image];
   
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Eye },
