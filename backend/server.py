@@ -804,16 +804,73 @@ async def chat_endpoint(request: ChatRequest):
         # Convert rr_payload ui_actions to consistent format
         ui_actions = []
         
-        # Handle ui_actions from rr_payload  
-        for action in rr_payload.get("ui_actions", []):
-            if isinstance(action, dict) and "action" in action:
-                # Convert button-style actions to card format for compatibility
-                ui_actions.append({
-                    "type": "prompt",
-                    "payload": {
-                        "chips": [{"label": action["label"], "value": action["action"]}]
-                    }
-                })
+        # Check if this is a destination-specific or discovery query to generate destination cards
+        query_type = rr_payload.get("metadata", {}).get("query_type")
+        print(f"🎨 Query type detected: {query_type}")
+        
+        if query_type in ["destination_specific", "destination_discovery"]:
+            # Generate destination cards for destination queries
+            detected_destination = rr_payload.get("metadata", {}).get("detected_destination")
+            
+            if query_type == "destination_specific" and detected_destination:
+                # Generate a single destination card for specific queries like "tell me about kerala"
+                destination_data = get_destination_data(detected_destination)
+                if destination_data:
+                    ui_actions.append({
+                        "type": "card_add",
+                        "payload": {
+                            "id": destination_data.get("id"),
+                            "title": f"{destination_data.get('name')}, {destination_data.get('country')}",
+                            "category": "destination",
+                            "hero_image": destination_data.get("hero_image"),
+                            "pitch": destination_data.get("description"),
+                            "why_match": destination_data.get("why_match"),
+                            "weather": destination_data.get("weather"),
+                            "highlights": destination_data.get("highlights"),
+                            "coordinates": destination_data.get("coordinates"),
+                            "cta_primary": {"label": "Explore", "action": "explore"},
+                            "cta_secondary": {"label": "Plan Trip", "action": "plan_trip"},
+                            "motion": {"enter_ms": 260, "stagger_ms": 80}
+                        }
+                    })
+                    print(f"🏞️ Generated destination card for: {detected_destination}")
+            
+            elif query_type == "destination_discovery":
+                # Generate multiple destination cards for discovery queries like "popular destinations"
+                popular_destinations = ["Kerala", "Goa", "Rajasthan", "Manali", "Rishikesh", "Andaman Islands"]
+                for dest_name in popular_destinations:
+                    destination_data = get_destination_data(dest_name)
+                    if destination_data:
+                        ui_actions.append({
+                            "type": "card_add",
+                            "payload": {
+                                "id": destination_data.get("id"),
+                                "title": f"{destination_data.get('name')}, {destination_data.get('country')}",
+                                "category": "destination",
+                                "hero_image": destination_data.get("hero_image"),
+                                "pitch": destination_data.get("description"),
+                                "why_match": destination_data.get("why_match"),
+                                "weather": destination_data.get("weather"),
+                                "highlights": destination_data.get("highlights"),
+                                "coordinates": destination_data.get("coordinates"),
+                                "cta_primary": {"label": "Explore", "action": "explore"},
+                                "cta_secondary": {"label": "Plan Trip", "action": "plan_trip"},
+                                "motion": {"enter_ms": 260, "stagger_ms": 80}
+                            }
+                        })
+                print(f"🌍 Generated {len(popular_destinations)} destination cards for discovery")
+        
+        # Handle ui_actions from rr_payload for non-destination queries
+        elif rr_payload.get("ui_actions"):
+            for action in rr_payload.get("ui_actions", []):
+                if isinstance(action, dict) and "action" in action:
+                    # Convert button-style actions to chip format for compatibility
+                    ui_actions.append({
+                        "type": "prompt",
+                        "payload": {
+                            "chips": [{"label": action["label"], "value": action["action"]}]
+                        }
+                    })
         
         # Add hotel cards if itinerary contains hotels
         if rr_payload.get("hotels"):
