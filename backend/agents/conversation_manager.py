@@ -1,7 +1,6 @@
 """
 Conversation Manager - Main orchestrator for the multi-agent travel system
 """
-import json
 import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
