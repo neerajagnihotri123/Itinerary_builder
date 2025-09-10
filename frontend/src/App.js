@@ -2124,8 +2124,10 @@ function App() {
 
       if (response.data.ui_actions && response.data.ui_actions.length > 0) {
         console.log('🎨 Processing UI actions:', response.data.ui_actions.length);
+        console.log('🔍 Full UI actions data:', response.data.ui_actions);
         
         response.data.ui_actions.forEach(action => {
+          console.log('🔍 Processing action:', action);
           if (action.type === 'card_add') {
             // Check if this is a hotel card or destination card
             if (action.payload.category === 'hotel') {
