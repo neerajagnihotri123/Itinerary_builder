@@ -384,10 +384,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Hotel card processing and display"
     - "Chat message sending functionality"
+    - "Hotel card processing and display"
   stuck_tasks:
     - "Hotel card processing and display"
+    - "Chat message sending functionality"
   test_all: false
   test_priority: "high_first"
 
