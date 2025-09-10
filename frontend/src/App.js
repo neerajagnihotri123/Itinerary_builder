@@ -388,47 +388,195 @@ const Chip = ({ chip, onClick }) => (
   </motion.button>
 );
 
-const WorldMap = ({ destinations, onDestinationClick }) => (
-  <div className="relative w-full h-80 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20" />
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="text-center">
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl"
-        >
-          <MapPin className="w-8 h-8 text-white" />
-        </motion.div>
-        <h3 className="text-xl font-bold text-gray-800 mb-2">Discover Destinations</h3>
-        <p className="text-gray-600">
-          Start chatting to see personalized recommendations on the map
-        </p>
-      </div>
-    </div>
-    
-    {destinations.map((dest, index) => (
-      <motion.div
-        key={dest.id}
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: index * 0.1, duration: 0.3 }}
-        className="absolute cursor-pointer"
-        style={{
-          left: `${20 + index * 15}%`,
-          top: `${30 + (index % 2) * 20}%`
-        }}
-        onClick={() => onDestinationClick(dest)}
-        whileHover={{ scale: 1.2 }}
-      >
-        <div className="w-8 h-8 bg-red-500 rounded-full border-2 border-white shadow-lg flex items-center justify-center">
-          <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+// Professional Interactive Map Component using Leaflet
+const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDestinations = [] }) => {
+  const [map, setMap] = React.useState(null);
+  const [isLoaded, setIsLoaded] = React.useState(false);
+
+  // Import Leaflet CSS dynamically
+  React.useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+    link.crossOrigin = '';
+    document.head.appendChild(link);
+
+    // Load Leaflet JavaScript
+    if (!window.L) {
+      const script = document.createElement('script');
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+      script.crossOrigin = '';
+      script.onload = () => setIsLoaded(true);
+      document.head.appendChild(script);
+    } else {
+      setIsLoaded(true);
+    }
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
+
+  // Destination coordinates mapping for Indian destinations
+  const destinationCoords = {
+    'Rishikesh': [30.0869, 78.2676],
+    'Manali': [32.2396, 77.1887],
+    'Andaman Islands': [11.7401, 92.6586],
+    'Kerala': [10.8505, 76.2711],
+    'Rajasthan': [27.0238, 74.2179],
+    'Pondicherry': [11.9416, 79.8083],
+    'Goa': [15.2993, 74.1240],
+    'Kashmir': [34.0837, 74.7973],
+    'Ladakh': [34.1526, 77.5771],
+    'Himachal Pradesh': [31.1048, 77.1734]
+  };
+
+  React.useEffect(() => {
+    if (!isLoaded || map) return;
+
+    const mapInstance = window.L.map('world-map', {
+      center: [20.5937, 78.9629], // Center of India
+      zoom: 5,
+      minZoom: 2,
+      maxZoom: 18,
+      zoomControl: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      touchZoom: true,
+      boxZoom: true,
+      keyboard: true,
+      dragging: true
+    });
+
+    // Add beautiful tile layer
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(mapInstance);
+
+    // Add custom markers for destinations
+    destinations.forEach(dest => {
+      const coords = destinationCoords[dest.name] || [
+        20 + (Math.random() - 0.5) * 30, // Random lat around India
+        78 + (Math.random() - 0.5) * 20  // Random lng around India
+      ];
+
+      const isHighlighted = highlightedDestinations.includes(dest.id);
+      
+      // Create custom icon
+      const customIcon = window.L.divIcon({
+        className: 'custom-marker',
+        html: `
+          <div class="relative">
+            <div class="w-8 h-8 ${isHighlighted ? 'bg-orange-500 ring-4 ring-orange-200' : 'bg-blue-500 hover:bg-blue-600'} 
+                     rounded-full flex items-center justify-center shadow-lg cursor-pointer transition-all duration-200 
+                     hover:scale-110 hover:shadow-xl">
+              <div class="w-3 h-3 bg-white rounded-full"></div>
+            </div>
+            <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 
+                        bg-white px-2 py-1 rounded-md shadow-md text-xs font-medium 
+                        whitespace-nowrap ${isHighlighted ? 'block' : 'hidden hover:block'}">
+              ${dest.name}
+            </div>
+          </div>
+        `,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+      });
+
+      const marker = window.L.marker(coords, { icon: customIcon }).addTo(mapInstance);
+      
+      marker.on('click', () => {
+        onDestinationClick(dest);
+      });
+
+      // Add popup with destination info
+      marker.bindPopup(`
+        <div class="text-center p-2">
+          <img src="${dest.hero_image}" alt="${dest.name}" class="w-24 h-16 object-cover rounded-lg mb-2 mx-auto">
+          <h3 class="font-bold text-sm">${dest.name}</h3>
+          <p class="text-xs text-gray-600 mb-2">${dest.country}</p>
+          <button onclick="window.openDestinationModal('${dest.id}')" 
+                  class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">
+            Explore
+          </button>
         </div>
-      </motion.div>
-    ))}
-  </div>
-);
+      `);
+    });
+
+    // Add zoom controls with custom styling
+    mapInstance.zoomControl.setPosition('bottomright');
+
+    setMap(mapInstance);
+
+    // Cleanup function
+    return () => {
+      if (mapInstance) {
+        mapInstance.remove();
+      }
+    };
+  }, [isLoaded, destinations, onDestinationClick, highlightedDestinations]);
+
+  if (!isLoaded) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading interactive map...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-lg">
+      <div id="world-map" className="w-full h-full"></div>
+      
+      {/* Map Controls Overlay */}
+      <div className="absolute top-4 left-4 glass-morphism rounded-lg p-3">
+        <div className="flex items-center gap-2 text-sm text-gray-700">
+          <Navigation className="w-4 h-4" />
+          <span>Drag to explore • Scroll to zoom</span>
+        </div>
+      </div>
+
+      {/* Custom CSS for map markers */}
+      <style jsx>{`
+        .custom-marker {
+          background: none !important;
+          border: none !important;
+        }
+        .leaflet-popup-content-wrapper {
+          border-radius: 12px !important;
+        }
+        .leaflet-popup-tip {
+          background: white !important;
+        }
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+          border-radius: 8px !important;
+        }
+        .leaflet-control-zoom a {
+          border-radius: 8px !important;
+          background: rgba(255,255,255,0.95) !important;
+          backdrop-filter: blur(10px) !important;
+          border: 1px solid rgba(255,255,255,0.2) !important;
+          color: #374151 !important;
+          font-weight: 600 !important;
+          transition: all 0.2s ease !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background: rgba(255,255,255,1) !important;
+          transform: scale(1.05) !important;
+        }
+      `}</style>
+    </div>
+  );
+};
 
 const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
