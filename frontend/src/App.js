@@ -2090,172 +2090,92 @@ function App() {
   }, [messages, recommendations]);
 
   const handleSendMessage = async () => {
+    console.log('🚀 handleSendMessage called!');
+    
     if (!inputMessage.trim() || isLoading) {
       console.log('❌ Cannot send: empty message or loading');
       return;
     }
 
-    console.log('🚀 Starting handleSendMessage...');
-    console.log('🚀 Sending message:', inputMessage);
-    console.log('🔗 API endpoint:', `${API}/chat`);
-    console.log('🔗 Full API URL:', `${BACKEND_URL}/api/chat`);
+    console.log('🔥 Message to send:', inputMessage);
+    console.log('🔥 API URL:', `${BACKEND_URL}/api/chat`);
 
     const currentInput = inputMessage;
     setInputMessage('');
     setIsLoading(true);
 
-    // Add user message to chat
+    // Add user message immediately
     const userMessage = {
       id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       role: 'user',
       content: currentInput
     };
 
-    console.log('💬 Adding user message:', userMessage);
     setMessages(prev => [...prev, userMessage]);
 
     try {
-      console.log('📡 About to make API call...');
+      console.log('📡 Making API call...');
       
-      const requestPayload = {
-        message: currentInput,
-        session_id: sessionId,
-        user_profile: userProfile,
-        trip_details: tripDetails
-      };
-      
-      console.log('📡 Request payload:', requestPayload);
-      
-      const response = await axios.post(`${API}/chat`, requestPayload, {
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
+        method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        timeout: 30000 // 30 second timeout
+        body: JSON.stringify({
+          message: currentInput,
+          session_id: sessionId,
+          user_profile: userProfile,
+          trip_details: tripDetails
+        })
       });
 
-      console.log('✅ API Response received:', response.data);
+      console.log('✅ Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Response data:', data);
 
       // Add assistant response
       const assistantMessage = {
         id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         role: 'assistant',
-        content: response.data.chat_text || response.data.message || 'I received your message and I\'m processing it.'
+        content: data.chat_text || 'I received your message!'
       };
 
-      console.log('💬 Adding assistant message:', assistantMessage);
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Process UI actions
-      const newRecommendations = [];
-      const newChips = [];
-      const newQuestionChips = [];
-
-      if (response.data.ui_actions && response.data.ui_actions.length > 0) {
-        console.log('🎨 Processing UI actions:', response.data.ui_actions.length);
-        console.log('🔍 Full UI actions data:', response.data.ui_actions);
+      // Process UI actions for cards
+      if (data.ui_actions && data.ui_actions.length > 0) {
+        console.log('🎨 Processing UI actions:', data.ui_actions.length);
         
-        response.data.ui_actions.forEach(action => {
-          try {
-            console.log('🔍 Processing action:', action);
-            if (action.type === 'card_add') {
-              // Check if this is a hotel card or destination card
-              if (action.payload && action.payload.category === 'hotel') {
-                // Handle hotel card - don't need to match with destination data
-                newRecommendations.push(action.payload);
-                console.log('🏨 Hotel card added:', action.payload.title);
-              } else if (action.payload) {
-                // Handle destination card - try to enhance with full destination data
-                const titleParts = action.payload.title ? action.payload.title.split(',') : [''];
-                const fullDestination = destinations.find(d => 
-                  d.name.toLowerCase() === titleParts[0].toLowerCase()
-                );
-                
-                if (fullDestination) {
-                  // Use full destination data instead of payload
-                  const enhancedCard = {
-                    ...action.payload,
-                    ...fullDestination,
-                    title: `${fullDestination.name}, ${fullDestination.country}`
-                  };
-                  newRecommendations.push(enhancedCard);
-                  console.log('📋 Enhanced destination card added:', enhancedCard.title);
-                } else {
-                  newRecommendations.push(action.payload);
-                  console.log('📋 Basic destination card added:', action.payload.title || 'Unknown');
-                }
-              }
-            } else if (action.type === 'prompt') {
-              if (action.payload && action.payload.chips) {
-                newChips.push(...action.payload.chips);
-                console.log('🔸 Added chips:', action.payload.chips);
-              }
-            } else if (action.type === 'question_chip') {
-              // Handle new question chip UI actions
-              if (action.payload) {
-                newQuestionChips.push(action.payload);
-                console.log('❓ Question chip added:', action.payload.question);
-              }
-            }
-          } catch (actionError) {
-            console.error('❌ Error processing action:', actionError, action);
+        const newRecommendations = [];
+        data.ui_actions.forEach(action => {
+          if (action.type === 'card_add' && action.payload) {
+            newRecommendations.push(action.payload);
+            console.log('🎴 Added card:', action.payload.title);
           }
         });
-      }
 
-      // Update recommendations
-      if (newRecommendations.length > 0) {
-        console.log('🎴 Adding new recommendations:', newRecommendations.length);
-        setRecommendations(prev => [...prev, ...newRecommendations]);
-      }
-      
-      // Update chips
-      if (newChips.length > 0) {
-        console.log('🔸 Setting chips:', newChips.length);
-        setCurrentChips(newChips);
-      }
-
-      // Set question chips
-      if (newQuestionChips.length > 0) {
-        console.log('❓ Setting question chips:', newQuestionChips.length);
-        setQuestionChips(newQuestionChips);
-      }
-
-      // Update user profile
-      if (response.data.updated_profile) {
-        setUserProfile(response.data.updated_profile);
-      }
-
-      // Check if user is expressing interest in planning a trip
-      const tripKeywords = ['plan', 'trip', 'travel', 'visit', 'go to', 'vacation', 'holiday'];
-      const containsTripKeyword = tripKeywords.some(keyword => currentInput.toLowerCase().includes(keyword));
-      
-      if (containsTripKeyword) {
-        setShowTripBar(true);
-        console.log('📋 Trip planning detected, showing trip bar');
+        if (newRecommendations.length > 0) {
+          setRecommendations(prev => [...prev, ...newRecommendations]);
+        }
       }
 
     } catch (error) {
-      console.error('❌ Chat API error:', error);
-      console.error('❌ Error details:', error?.response?.data, error?.message);
-      
-      let errorContent = 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.';
-      
-      // If the error is not a network error, try to use the backend response
-      if (error.response && error.response.data && error.response.data.chat_text) {
-        errorContent = error.response.data.chat_text;
-      }
+      console.error('❌ API Error:', error);
       
       const errorMessage = {
         id: `error_${Date.now()}`,
         role: 'assistant',
-        content: errorContent
+        content: `Sorry, I'm having trouble connecting. Error: ${error.message}`
       };
       
-      console.log('💬 Adding error message:', errorMessage);
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
-      console.log('✅ Message sending complete');
     }
   };
 
