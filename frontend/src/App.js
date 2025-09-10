@@ -2565,32 +2565,66 @@ function App() {
                 </button>
               </div>
               
-              {/* Itinerary Section */}
-              <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Your Personalized Itinerary</h2>
-                <div className="space-y-4">
+              {/* Professional Itinerary Section */}
+              <div className="p-6 space-y-6">
+                <div className="text-center mb-8">
+                  <h2 className="text-3xl font-bold text-gradient mb-2">Your Personalized Itinerary</h2>
+                  <p className="text-slate-600">Crafted just for you based on your preferences</p>
+                </div>
+                
+                <div className="space-y-6">
                   {generatedItinerary.map((day, index) => (
                     <motion.div
                       key={day.day}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 border border-white/30"
+                      className="card-premium p-6 hover:shadow-lg transition-all duration-300"
                     >
-                      <h3 className="text-lg font-bold text-gray-800 mb-3">
-                        Day {day.day}: {day.title}
-                      </h3>
-                      <div className="space-y-2">
-                        {day.activities.map((activity, actIndex) => (
-                          <div key={actIndex} className="flex items-start gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                            <div className="w-16 text-sm font-medium text-blue-600 shrink-0">
-                              {activity.time}
-                            </div>
-                            <div className="flex-1">
-                              <div className="font-medium text-gray-800">{activity.activity}</div>
-                              <div className="text-sm text-gray-600">{activity.location}</div>
-                            </div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            {day.day}
                           </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-slate-800">{day.title}</h3>
+                            <p className="text-sm text-slate-500">Day {day.day} of your journey</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="chip-primary">{day.activities.length} activities</span>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {day.activities.map((activity, actIndex) => (
+                          <motion.div 
+                            key={actIndex} 
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: (index * 0.1) + (actIndex * 0.05) }}
+                            className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200 group"
+                          >
+                            <div className="flex-shrink-0">
+                              <div className="w-16 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center">
+                                <span className="text-sm font-semibold text-blue-600">{activity.time}</span>
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-semibold text-slate-800 group-hover:text-blue-700 transition-colors duration-200">
+                                {activity.activity}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <MapPin className="w-4 h-4 text-slate-400" />
+                                <span className="text-sm text-slate-600">{activity.location}</span>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                              <button className="btn-outline text-xs px-3 py-1">
+                                Details
+                              </button>
+                            </div>
+                          </motion.div>
                         ))}
                       </div>
                     </motion.div>
