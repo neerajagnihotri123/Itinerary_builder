@@ -870,7 +870,8 @@ async def generate_contextual_questions(message: str, slots: Dict[str, Any]) -> 
     return questions[:4]  # Return max 4 questions
 
 # Other API endpoints
-        if any(phrase in message_lower for phrase in ["book it", "book", "plan it", "let's plan", "create itinerary"]):
+@api_router.get("/destinations")
+async def get_destinations():
             # Extract any destination mentioned
             destination_name = None
             if destination_mentioned:
