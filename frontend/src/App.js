@@ -1272,8 +1272,8 @@ const WhereModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
 );
 
 const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => {
-  const [checkIn, setCheckIn] = React.useState('');
-  const [checkOut, setCheckOut] = React.useState('');
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
 
   const handleDateSelection = () => {
     if (checkIn && checkOut) {
