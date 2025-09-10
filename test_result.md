@@ -368,13 +368,16 @@ frontend:
     implemented: true
     working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "main"
         comment: "Need to ensure LLM agents generate proper intelligent responses instead of mocked data for itinerary generation based on user inputs."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUE: LLM agents are working but not generating expected destination/hotel cards. The ConversationManager prioritizes slot-filling over content generation. When users ask 'tell me about kerala' or 'show me hotels in goa', system asks for dates instead of showing cards. Multi-agent system (ConversationManager, SlotAgents, PlannerAgent) is functional but designed for trip planning flow, not content discovery. Only generates prompt/question_chip actions, never card_add actions with destination/hotel categories. This breaks the core review requirement of generating destination cards for destination queries and hotel cards for accommodation requests."
 
 metadata:
   created_by: "main_agent"
