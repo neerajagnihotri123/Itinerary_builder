@@ -737,10 +737,11 @@ async def root():
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
-        # Initialize the Conversation Manager
+        # Initialize the Conversation Manager  
         chat_client = LlmChat(
             api_key=emergent_key,
-            session_id=request.session_id or str(uuid.uuid4())
+            session_id=request.session_id or str(uuid.uuid4()),
+            system_message="You are a helpful travel assistant that provides personalized travel recommendations."
         ).with_model("openai", "gpt-4o-mini")
         
         conversation_manager = ConversationManager(chat_client)
