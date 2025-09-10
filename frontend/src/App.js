@@ -3360,8 +3360,12 @@ function App() {
                 </div>
                 
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-orange-600 to-green-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-orange-700 hover:to-green-700 transition-all duration-200">
-                    Book Now - {selectedActivity.price}
+                  <button 
+                    onClick={() => handlePlanTour(selectedActivity)}
+                    className="flex-1 bg-gradient-to-r from-orange-600 to-green-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-orange-700 hover:to-green-700 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Calendar className="w-5 h-5" />
+                    Plan Activity - {selectedActivity.price}
                   </button>
                   <button className="px-6 py-3 border-2 border-orange-200 text-orange-700 font-semibold rounded-xl hover:border-orange-300 hover:bg-orange-50 transition-all duration-200">
                     Save Activity
