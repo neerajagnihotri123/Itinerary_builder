@@ -870,3 +870,34 @@ async def generate_contextual_questions(message: str, slots: Dict[str, Any]) -> 
     return questions[:4]  # Return max 4 questions
 
 # Other API endpoints
+@api_router.get("/destinations")
+async def get_destinations():
+    """Get all available destinations"""
+    from mock_data import MOCK_DESTINATIONS
+    return {"destinations": MOCK_DESTINATIONS}
+
+@api_router.get("/tours")
+async def get_tours():
+    """Get all available tours"""
+    from mock_data import MOCK_TOURS
+    return {"tours": MOCK_TOURS}
+
+@api_router.get("/activities")  
+async def get_activities():
+    """Get all available activities"""
+    from mock_data import MOCK_ACTIVITIES
+    return {"activities": MOCK_ACTIVITIES}
+
+@api_router.get("/hotels/{destination_id}")
+async def get_hotels_by_destination(destination_id: str):
+    """Get hotels for a specific destination"""
+    from mock_data import MOCK_HOTELS
+    hotels = [hotel for hotel in MOCK_HOTELS if hotel.get("destination_id") == destination_id]
+    return {"hotels": hotels}
+
+# Include the API router in the main app
+app.include_router(api_router)
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)
