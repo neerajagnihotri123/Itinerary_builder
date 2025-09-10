@@ -580,7 +580,7 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
   );
 };
 
-const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
+const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip, onViewAllImages }) => {
   const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -621,9 +621,10 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
   const images = getDestinationImages(destination);
   
   const handleViewAllImages = () => {
-    // Set right panel to show all images
-    setRightPanelContent('gallery');
-    setSelectedDestination(destination);
+    // Call parent function to show images in right panel
+    if (onViewAllImages) {
+      onViewAllImages(destination, images);
+    }
     onClose();
   };
   
