@@ -2233,10 +2233,19 @@ function App() {
 
     } catch (error) {
       console.error('❌ Chat API error:', error);
+      console.error('❌ Error details:', error.response?.data, error.message);
+      
+      let errorContent = 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.';
+      
+      // If the error is not a network error, try to use the backend response
+      if (error.response && error.response.data && error.response.data.chat_text) {
+        errorContent = error.response.data.chat_text;
+      }
+      
       const errorMessage = {
         id: Date.now().toString() + '_error',
         role: 'assistant',
-        content: 'I apologize, but I\'m having trouble connecting right now. Please try again in a moment.'
+        content: errorContent
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
