@@ -686,8 +686,10 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
             </div>
           )}
         </div>
-      </motion.div>
-    </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
