@@ -47,8 +47,7 @@ class ConversationManager:
     
     async def process_message(self, message: str, session_id: str, current_slots: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Main processing method that orchestrates all agents
-        Returns both human_text and rr_payload
+        LLM-driven conversation processing - natural, free-flowing responses
         """
         try:
             print(f"🤖 ConversationManager processing: '{message}'")
@@ -57,52 +56,236 @@ class ConversationManager:
             slots = UserSlots(**current_slots) if current_slots else UserSlots()
             print(f"📋 Current slots: {asdict(slots)}")
             
-            # Check for destination discovery queries first
-            if self._is_destination_discovery_query(message):
-                print("🏞️ Path: Destination discovery query -> Generate destination cards")
-                return await self._handle_destination_discovery(message, session_id)
-                
-            # Check for specific destination queries (e.g., "tell me about kerala")
-            if self._is_destination_specific_query(message):
-                print("🏙️ Path: Destination specific query -> Generate destination card")
-                return await self._handle_destination_specific_query(message, session_id)
+            # Use LLM to understand intent and generate natural response
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            import os
             
-            # Check for accommodation queries  
-            if self._is_accommodation_query(message):
-                print("🏨 Path: Accommodation query -> Generate hotel cards")
-                return await self._handle_accommodation_query(message, session_id, slots)
+            # Build comprehensive context for LLM
+            context = await self._build_smart_context(message, slots, session_id)
             
-            # Determine which slots need filling/updating for trip planning
-            missing_slots = self._identify_missing_slots(message, slots)
-            print(f"❓ Missing slots: {missing_slots}")
+            # Create LLM client with travel expertise
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=session_id,
+                system_message="""You are an expert travel consultant AI assistant. Provide helpful, engaging travel advice for any query about destinations, hotels, activities, or travel planning.
+
+Guidelines:
+- Give natural, conversational responses (2-3 sentences)
+- Include specific details when available
+- Be encouraging and helpful
+- Don't ask for additional information unless absolutely necessary
+- Focus on being informative rather than asking follow-up questions"""
+            ).with_model("openai", "gpt-4o-mini")
             
-            # If we have missing critical slots, handle slot filling first
-            if missing_slots:
-                print(f"📝 Path: Missing slots {missing_slots} -> Handle slot filling")
-                return await self._handle_slot_filling(message, slots, missing_slots)
+            # Generate LLM response
+            user_message = UserMessage(text=context)
+            llm_response = await llm_client.send_message(user_message)
             
-            # If all slots are filled, proceed with planning
-            # But for general queries without destination, provide helpful response
-            if not slots.destination:
-                print("🎯 Path: General query without destination -> Generate helpful response")
-                return await self._handle_general_query(message, session_id)
+            # Handle different response types
+            if hasattr(llm_response, 'content'):
+                ai_text = llm_response.content
+            else:
+                ai_text = str(llm_response)
             
-            print("🎯 Path: Complete slots -> Generate full response")
-            return await self._handle_planning(message, slots, session_id)
+            print(f"✅ Generated LLM response: {len(ai_text)} chars")
             
-        except Exception as e:
+            # Generate appropriate UI elements based on query
+            ui_actions = await self._generate_smart_ui_actions(message, ai_text)
+            hotels = await self._generate_smart_hotel_cards(message, slots)
+            
             return {
-                "human_text": "I apologize, but I encountered an issue. Could you please try rephrasing your request?",
+                "human_text": ai_text.strip(),
                 "rr_payload": {
                     "session_id": session_id,
-                    "slots": asdict(slots),
-                    "error": str(e),
+                    "hotels": hotels,
+                    "ui_actions": ui_actions,
                     "metadata": {
+                        "query_type": self._classify_intent(message),
                         "generated_at": datetime.now(timezone.utc).isoformat(),
-                        "llm_confidence": 0.1
+                        "llm_confidence": 0.95
                     }
                 }
             }
+            
+        except Exception as e:
+            print(f"❌ LLM conversation failed: {e}")
+            return {
+                "human_text": "I'm here to help you discover amazing travel experiences! Tell me what you're looking for - destinations, hotels, activities, or travel advice.",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "hotels": [],
+                    "ui_actions": [
+                        {"label": "🌍 Explore Destinations", "action": "destinations"},
+                        {"label": "🏨 Find Hotels", "action": "hotels"},
+                        {"label": "🎯 Plan Trip", "action": "plan"}
+                    ],
+                    "metadata": {
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.7
+                    }
+                }
+            }
+    
+    async def _build_smart_context(self, message: str, slots: UserSlots, session_id: str) -> str:
+        """Build intelligent context for LLM based on user query"""
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_ACTIVITIES
+            
+            context_parts = []
+            context_parts.append(f"User Query: '{message}'")
+            
+            # Add user context if available
+            if slots.destination:
+                context_parts.append(f"User is interested in: {slots.destination}")
+            
+            # Smart content matching - not rigid word matching
+            message_words = message.lower().split()
+            relevant_content = []
+            
+            # Check destinations (flexible matching)
+            for dest in MOCK_DESTINATIONS:
+                dest_name_words = dest.get('name', '').lower().split()
+                dest_categories = [cat.lower() for cat in dest.get('category', [])]
+                
+                # Flexible matching logic
+                name_match = any(word in dest_name_words for word in message_words)
+                reverse_match = any(word in message_words for word in dest_name_words)
+                category_match = any(cat_word in message.lower() for cat in dest_categories for cat_word in cat.split())
+                
+                if name_match or reverse_match or category_match:
+                    relevant_content.append(f"Destination: {dest.get('name')} - {dest.get('pitch', '')} (Rating: {dest.get('rating', 4.5)}/5)")
+            
+            # Check hotels (flexible matching)
+            for hotel in MOCK_HOTELS:
+                hotel_location_words = hotel.get('location', '').lower().split()
+                location_match = any(word in hotel_location_words for word in message_words)
+                reverse_location_match = any(word in message_words for word in hotel_location_words)
+                
+                if location_match or reverse_location_match or 'hotel' in message.lower():
+                    relevant_content.append(f"Hotel: {hotel.get('name')} in {hotel.get('location')} - ₹{hotel.get('price_per_night', 5000)}/night (Rating: {hotel.get('rating', 4.5)}/5)")
+            
+            # Check activities (flexible matching)
+            for activity in MOCK_ACTIVITIES:
+                activity_words = activity.get('title', '').lower().split()
+                activity_location_words = activity.get('location', '').lower().split()
+                
+                activity_match = any(word in activity_words for word in message_words)
+                location_match = any(word in activity_location_words for word in message_words)
+                
+                if activity_match or location_match:
+                    relevant_content.append(f"Activity: {activity.get('title')} in {activity.get('location')} - {activity.get('description', '')}")
+            
+            # Add relevant content to context
+            if relevant_content:
+                context_parts.append("Relevant Travel Information:")
+                for content in relevant_content[:5]:  # Top 5 matches
+                    context_parts.append(f"- {content}")
+            
+            return '\n'.join(context_parts)
+            
+        except Exception as e:
+            print(f"❌ Error building context: {e}")
+            return f"User is asking: '{message}'"
+    
+    def _classify_intent(self, message: str) -> str:
+        """Classify user intent for metadata"""
+        message_lower = message.lower()
+        
+        # Hotel-related intents
+        if any(word in message_lower for word in ['hotel', 'stay', 'accommodation', 'resort', 'lodge', 'booking']):
+            return "hotel_inquiry"
+        
+        # Activity-related intents  
+        elif any(word in message_lower for word in ['activity', 'adventure', 'things to do', 'experience', 'attractions', 'sightseeing']):
+            return "activity_inquiry"
+        
+        # Destination-related intents
+        elif any(word in message_lower for word in ['destination', 'place', 'visit', 'go to', 'beach', 'mountain', 'city']):
+            return "destination_inquiry"
+        
+        # Planning-related intents
+        elif any(word in message_lower for word in ['plan', 'trip', 'itinerary', 'travel', 'vacation']):
+            return "planning_inquiry"
+        
+        else:
+            return "general_inquiry"
+    
+    async def _generate_smart_ui_actions(self, message: str, ai_response: str) -> list:
+        """Generate contextually appropriate UI actions"""
+        intent = self._classify_intent(message)
+        
+        if intent == "destination_inquiry":
+            return [
+                {"label": "🏖️ Beach Destinations", "action": "beaches"},
+                {"label": "🏔️ Mountain Getaways", "action": "mountains"},
+                {"label": "🏛️ Cultural Sites", "action": "cultural"},
+                {"label": "🌴 Plan Trip", "action": "plan_trip"}
+            ]
+        elif intent == "hotel_inquiry":
+            return [
+                {"label": "🏨 Luxury Hotels", "action": "luxury_hotels"},
+                {"label": "💰 Budget-Friendly", "action": "budget_hotels"},
+                {"label": "⭐ Top Rated", "action": "top_rated"},
+                {"label": "🔍 More Options", "action": "more_hotels"}
+            ]
+        elif intent == "activity_inquiry":
+            return [
+                {"label": "🏄‍♂️ Adventure Sports", "action": "adventure"},
+                {"label": "🎭 Cultural Experiences", "action": "cultural_activities"},
+                {"label": "🌅 Sightseeing Tours", "action": "sightseeing"},
+                {"label": "📅 Book Now", "action": "book_activity"}
+            ]
+        else:
+            return [
+                {"label": "🗺️ Explore Places", "action": "explore_destinations"},
+                {"label": "🏨 Find Hotels", "action": "find_hotels"},
+                {"label": "🎯 Plan Custom Trip", "action": "custom_planning"}
+            ]
+    
+    async def _generate_smart_hotel_cards(self, message: str, slots: UserSlots) -> list:
+        """Generate hotel cards when relevant"""
+        if not self._classify_intent(message) == "hotel_inquiry":
+            return []
+        
+        try:
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+            from mock_data import MOCK_HOTELS
+            
+            # Smart hotel matching
+            message_words = message.lower().split()
+            relevant_hotels = []
+            
+            for hotel in MOCK_HOTELS:
+                hotel_location_words = hotel.get('location', '').lower().split()
+                location_match = any(word in hotel_location_words for word in message_words)
+                reverse_match = any(word in message_words for word in hotel_location_words)
+                
+                if location_match or reverse_match:
+                    relevant_hotels.append(hotel)
+            
+            # Convert to cards
+            hotel_cards = []
+            for hotel in relevant_hotels[:3]:  # Top 3
+                hotel_cards.append({
+                    "id": hotel.get("id"),
+                    "name": hotel.get("name"),
+                    "rating": hotel.get("rating", 4.5),
+                    "price_estimate": hotel.get("price_per_night", 5000),
+                    "reason": hotel.get("description", "Excellent choice for your stay"),
+                    "amenities": hotel.get("amenities", []),
+                    "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"
+                })
+            
+            return hotel_cards
+            
+        except Exception as e:
+            print(f"❌ Error generating hotel cards: {e}")
+            return []
     
     def _identify_missing_slots(self, message: str, slots: UserSlots) -> List[str]:
         """Identify which required slots are missing"""
