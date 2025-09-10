@@ -506,7 +506,8 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
           </button>
         </div>
       `);
-    });
+      });
+    }
 
     // Add zoom controls with custom styling
     mapInstance.zoomControl.setPosition('bottomright');
