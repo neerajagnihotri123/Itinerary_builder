@@ -339,6 +339,33 @@ class ConversationManager:
         ]
         return any(keyword in message_lower for keyword in destination_keywords)
     
+    def _is_destination_specific_query(self, message: str) -> bool:
+        """Check if the message is asking about a specific destination"""
+        message_lower = message.lower()
+        
+        # Common patterns for destination-specific queries
+        specific_patterns = [
+            "tell me about", "what about", "about", "information about",
+            "details about", "know about", "learn about", "explore"
+        ]
+        
+        # Common destination names in India (can be expanded)
+        destinations = [
+            "kerala", "goa", "rajasthan", "himachal", "uttarakhand", "kashmir",
+            "manali", "shimla", "rishikesh", "haridwar", "dharamshala", "mcleodganj",
+            "andaman", "lakshadweep", "mumbai", "delhi", "bangalore", "chennai",
+            "kolkata", "pune", "hyderabad", "jaipur", "udaipur", "jodhpur",
+            "agra", "varanasi", "pushkar", "mount abu", "ooty", "kodaikanal",
+            "munnar", "alleppey", "kochi", "thekkady", "wayanad", "coorg",
+            "hampi", "mysore", "darjeeling", "gangtok", "shillong", "kaziranga"
+        ]
+        
+        # Check if message contains both a specific pattern and a destination
+        has_pattern = any(pattern in message_lower for pattern in specific_patterns)
+        has_destination = any(dest in message_lower for dest in destinations)
+        
+        return has_pattern and has_destination
+    
     def _is_accommodation_query(self, message: str) -> bool:
         """Check if the message is specifically asking about hotels/accommodation"""
         message_lower = message.lower()
