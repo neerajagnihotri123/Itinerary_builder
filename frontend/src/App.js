@@ -28,6 +28,7 @@ import {
   Eye,
   Utensils,
   Cloud,
+  Shield
   Shield,
   ArrowLeft
 } from 'lucide-react';
