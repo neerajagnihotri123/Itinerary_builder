@@ -3400,13 +3400,96 @@ function App() {
               
               {/* Activity Details */}
               <div className="p-6">
-                <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
-                  <img
-                    src={selectedActivity.image}
-                    alt={selectedActivity.name}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                {/* Image Gallery */}
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6 group">
+                  {(() => {
+                    // Enhanced gallery with multiple images per activity
+                    const getActivityImages = (activity) => {
+                      const baseImages = [
+                        activity.image,
+                        `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop`,
+                        `https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=400&fit=crop`,
+                        `https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=400&fit=crop`,
+                        `https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&h=400&fit=crop`,
+                        `https://images.unsplash.com/photo-1464822759844-d150baec0494?w=800&h=400&fit=crop`,
+                      ];
+                      
+                      // Add activity-specific images
+                      if (activity.name.toLowerCase().includes('paragliding')) {
+                        baseImages.push(
+                          `https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=800&h=400&fit=crop`,
+                          `https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=400&fit=crop`
+                        );
+                      } else if (activity.name.toLowerCase().includes('scuba')) {
+                        baseImages.push(
+                          `https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=800&h=400&fit=crop`,
+                          `https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=400&fit=crop`
+                        );
+                      } else if (activity.name.toLowerCase().includes('bungee')) {
+                        baseImages.push(
+                          `https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=400&fit=crop`,
+                          `https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop`
+                        );
+                      }
+                      
+                      return baseImages.filter(img => img).slice(0, 8);
+                    };
+                    
+                    const images = getActivityImages(selectedActivity);
+                    const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+                    
+                    return (
+                      <>
+                        <img
+                          src={images[currentImageIndex]}
+                          alt={selectedActivity.name}
+                          className="w-full h-full object-cover transition-all duration-500"
+                        />
+                        
+                        {/* Navigation Arrows */}
+                        {images.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
+                              className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors duration-200"
+                            >
+                              <ArrowLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setCurrentImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
+                              className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors duration-200"
+                            >
+                              <ArrowLeft className="w-4 h-4 rotate-180" />
+                            </button>
+                          </>
+                        )}
+                        
+                        {/* Image Dots */}
+                        {images.length > 1 && (
+                          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                            {images.map((_, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setCurrentImageIndex(index)}
+                                className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                                  index === currentImageIndex ? 'bg-white scale-125' : 'bg-white/60 hover:bg-white/80'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* View All Button */}
+                        <button
+                          onClick={() => handleViewAllImages(selectedActivity, images)}
+                          className="absolute bottom-4 right-4 glass-morphism rounded-lg px-3 py-2 text-white text-sm font-medium hover:bg-white/20 transition-all duration-200 flex items-center gap-2"
+                        >
+                          <Image className="w-4 h-4" />
+                          View All ({images.length})
+                        </button>
+                      </>
+                    );
+                  })()}
                   
                   {/* Price Badge */}
                   <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
