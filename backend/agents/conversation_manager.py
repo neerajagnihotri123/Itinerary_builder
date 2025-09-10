@@ -322,3 +322,115 @@ class ConversationManager:
                     }
                 }
             }
+    
+    def _is_destination_discovery_query(self, message: str) -> bool:
+        """Check if the message is asking for destination discovery/recommendations"""
+        message_lower = message.lower()
+        destination_keywords = [
+            "popular destinations", "recommend destinations", "suggest places", 
+            "where to go", "best places to visit", "travel destinations",
+            "weekend getaway", "holiday destinations", "vacation spots",
+            "places to travel", "destinations to visit", "travel ideas"
+        ]
+        return any(keyword in message_lower for keyword in destination_keywords)
+    
+    def _is_accommodation_query(self, message: str) -> bool:
+        """Check if the message is specifically asking about hotels/accommodation"""
+        message_lower = message.lower()
+        accommodation_keywords = [
+            "hotels", "accommodation", "stay", "resort", "lodge",
+            "where to stay", "book hotel", "hotel booking", "places to stay",
+            "best hotels", "hotel recommendations", "accommodation options"
+        ]
+        return any(keyword in message_lower for keyword in accommodation_keywords)
+    
+    async def _handle_destination_discovery(self, message: str, session_id: str) -> Dict[str, Any]:
+        """Handle destination discovery queries by showing popular destinations"""
+        # Use UX agent to provide destination recommendations
+        ux_result = await self.ux_agent.format_general_response(message)
+        
+        return {
+            "human_text": ux_result.get("human_text", "Here are some amazing destinations you might love!"),
+            "rr_payload": {
+                "session_id": session_id,
+                "slots": asdict(UserSlots()),
+                "ui_actions": ux_result.get("actions", [
+                    {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
+                    {"label": "Manali", "action": "set_destination", "data": "Manali"},
+                    {"label": "Andaman Islands", "action": "set_destination", "data": "Andaman Islands"},
+                    {"label": "Goa", "action": "set_destination", "data": "Goa"},
+                    {"label": "Kerala", "action": "set_destination", "data": "Kerala"},
+                    {"label": "Rajasthan", "action": "set_destination", "data": "Rajasthan"}
+                ]),
+                "metadata": {
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "llm_confidence": 0.9,
+                    "query_type": "destination_discovery"
+                }
+            }
+        }
+    
+    async def _handle_accommodation_query(self, message: str, session_id: str, slots: UserSlots) -> Dict[str, Any]:
+        """Handle accommodation-specific queries"""
+        if not slots.destination:
+            return {
+                "human_text": "I'd be happy to help you find great accommodation! First, could you let me know which destination you're interested in?",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "slots": asdict(slots),
+                    "ui_actions": [
+                        {"label": "Rishikesh", "action": "set_destination", "data": "Rishikesh"},
+                        {"label": "Manali", "action": "set_destination", "data": "Manali"},
+                        {"label": "Goa", "action": "set_destination", "data": "Goa"}
+                    ],
+                    "metadata": {
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.8,
+                        "query_type": "accommodation_query"
+                    }
+                }
+            }
+        
+        # If we have a destination, get hotel recommendations
+        try:
+            # Get hotel recommendations using the accommodation agent
+            hotel_recommendations = await self.accommodation_agent.get_hotels_for_destination(
+                slots.destination, slots
+            )
+            
+            return {
+                "human_text": f"Here are some great accommodation options in {slots.destination}:",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "slots": asdict(slots),
+                    "hotels": hotel_recommendations,
+                    "ui_actions": [
+                        {"label": "Book Now", "action": "book_hotel"},
+                        {"label": "See More Options", "action": "more_hotels"},
+                        {"label": "Plan Full Trip", "action": "plan_trip"}
+                    ],
+                    "metadata": {
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.8,
+                        "query_type": "accommodation_query"
+                    }
+                }
+            }
+        except Exception as e:
+            return {
+                "human_text": f"I'm looking into accommodation options for {slots.destination}. Let me help you plan a complete trip instead!",
+                "rr_payload": {
+                    "session_id": session_id,
+                    "slots": asdict(slots),
+                    "ui_actions": [
+                        {"label": "Plan Trip", "action": "plan_trip"},
+                        {"label": "Set Dates", "action": "set_dates"}
+                    ],
+                    "metadata": {
+                        "generated_at": datetime.now(timezone.utc).isoformat(),
+                        "llm_confidence": 0.7,
+                        "query_type": "accommodation_query",
+                        "error": str(e)
+                    }
+                }
+            }
