@@ -2457,7 +2457,7 @@ function App() {
     return days;
   };
 
-  const generateAccommodations = (tripDetails, preferences, destination) => {
+  const generateMockAccommodations = (tripDetails, preferences, destination) => {
     // Generate accommodations based on destination and preferences
     const accommodationTypes = preferences.accommodation || ['luxury_hotels'];
     const isLuxury = accommodationTypes.includes('luxury_hotels');
