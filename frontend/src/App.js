@@ -3260,8 +3260,12 @@ function App() {
                 </div>
                 
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200">
-                    Book Now - {selectedTour.price}
+                  <button 
+                    onClick={() => handlePlanTour(selectedTour)}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <Calendar className="w-5 h-5" />
+                    Plan Tour - {selectedTour.price}
                   </button>
                   <button className="px-6 py-3 border-2 border-green-200 text-green-700 font-semibold rounded-xl hover:border-green-300 hover:bg-green-50 transition-all duration-200">
                     Save Tour
