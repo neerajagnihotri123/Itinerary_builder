@@ -860,6 +860,29 @@ async def chat_endpoint(request: ChatRequest):
                         })
                 print(f"🌍 Generated {len(popular_destinations)} destination cards for discovery")
         
+        elif query_type == "accommodation_query":
+            # Generate hotel cards for accommodation queries
+            print("🏨 Generating hotel cards for accommodation query")
+            # Add hotel cards if rr_payload contains hotels from the agent
+            if rr_payload.get("hotels"):
+                for hotel in rr_payload.get("hotels", []):
+                    ui_actions.append({
+                        "type": "card_add",
+                        "payload": {
+                            "id": hotel.get("id"),
+                            "title": hotel.get("name"),
+                            "category": "hotel",
+                            "rating": hotel.get("rating"),
+                            "price_estimate": {"min": hotel.get("price_estimate", 0), "max": hotel.get("price_estimate", 0)},
+                            "pitch": hotel.get("reason", ""),
+                            "amenities": hotel.get("amenities", []),
+                            "hero_image": hotel.get("image", "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"),
+                            "cta_primary": {"label": "Book Now", "action": "book"},
+                            "cta_secondary": {"label": "Details", "action": "details"}
+                        }
+                    })
+                print(f"🏨 Generated {len(rr_payload.get('hotels', []))} hotel cards for accommodation query")
+        
         # Handle ui_actions from rr_payload for non-destination queries
         elif rr_payload.get("ui_actions"):
             for action in rr_payload.get("ui_actions", []):
