@@ -2497,7 +2497,7 @@ function App() {
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder="Ask about destinations, hotels, activities..."
-                  className="w-full p-4 pr-12 bg-white/90 backdrop-blur-sm border border-white/30 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent placeholder-gray-500 text-gray-800"
+                  className="input-professional w-full pr-12"
                 />
                 <button 
                   onClick={handleVoiceInput}
