@@ -3494,6 +3494,59 @@ function App() {
                 </div>
               </div>
             </div>
+          ) : rightPanelContent === 'gallery' && selectedMapDestination ? (
+            /* Image Gallery View */
+            <div className="flex-1 overflow-y-auto">
+              {/* Back Button */}
+              <div className="p-4 border-b border-white/20">
+                <button
+                  onClick={() => setRightPanelContent('default')}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="font-medium">Back to Map</span>
+                </button>
+              </div>
+              
+              {/* Gallery Header */}
+              <div className="p-6 border-b border-white/20">
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  {selectedMapDestination.name} Gallery
+                </h2>
+                <p className="text-gray-600">
+                  {selectedMapDestination.galleryImages?.length || 0} Images
+                </p>
+              </div>
+              
+              {/* Image Grid */}
+              <div className="p-6">
+                <div className="grid grid-cols-2 gap-4">
+                  {selectedMapDestination.galleryImages?.map((image, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="relative aspect-video rounded-xl overflow-hidden group cursor-pointer"
+                      onClick={() => {
+                        // Open full-screen image view (you can implement this later)
+                        console.log('Opening image:', index);
+                      }}
+                    >
+                      <img
+                        src={image}
+                        alt={`${selectedMapDestination.name} ${index + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+                      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {index + 1} of {selectedMapDestination.galleryImages?.length}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
           ) : (
             /* Default Canvas View */
             <>
