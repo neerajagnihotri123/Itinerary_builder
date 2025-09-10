@@ -1287,7 +1287,7 @@ const UploadPopup = ({ isOpen, onClose, onFileUpload, onLinkSubmit }) => (
             </div>
             <button
               onClick={() => {
-                const link = prompt('Enter a link to process:');
+                const link = window.prompt('Enter a link to process:');
                 if (link) onLinkSubmit(link);
                 onClose();
               }}
