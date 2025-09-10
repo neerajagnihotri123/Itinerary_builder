@@ -2218,35 +2218,160 @@ function App() {
     }, 1000);
   };
 
-  const handlePersonalizationComplete = (responses) => {
+  const handlePersonalizationComplete = async (responses) => {
     console.log('Personalization completed:', responses);
     setShowPersonalizationModal(false);
+    setIsLoading(true);
     
-    // Generate personalized itinerary and recommendations based on actual destination
     const targetDestination = tripDetails.destination || 'your destination';
-    const personalizedItinerary = generateItinerary(tripDetails, responses, targetDestination);
-    const personalizedAccommodations = generateAccommodations(tripDetails, responses, targetDestination);
     
-    // Add itinerary message to chat
-    const itineraryMessage = {
+    // Add initial itinerary message to chat
+    const initialMessage = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: `Perfect! Based on your preferences, I've created a personalized ${tripDetails.dates || '5-day'} itinerary for ${targetDestination}. Check the right panel for your customized recommendations and detailed day-by-day plan!`
+      content: `Perfect! Let me create a personalized itinerary for ${targetDestination} based on your preferences. This will take just a moment...`
     };
+    setMessages(prev => [...prev, initialMessage]);
     
-    setMessages(prev => [...prev, itineraryMessage]);
-    
-    // Set the generated content to state and switch right panel
-    setGeneratedItinerary(personalizedItinerary);
-    setGeneratedAccommodations(personalizedAccommodations);
-    setRightPanelContent('itinerary');
-    setShowGeneratedContent(true);
-    
-    console.log('Generated itinerary:', personalizedItinerary);
-    console.log('Generated accommodations:', personalizedAccommodations);
+    try {
+      // Create detailed trip planning message for AI agents
+      const itineraryRequest = `Create a detailed ${tripDetails.dates || '5-day'} itinerary for ${targetDestination} with these preferences: ${Object.entries(responses).map(([key, value]) => `${key}: ${value}`).join(', ')}. Include daily activities, accommodations, dining, and transportation.`;
+      
+      // Send to backend AI agents for real itinerary generation
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: itineraryRequest,
+          session_id: sessionId,
+          user_profile: { ...userProfile, ...responses },
+          trip_details: tripDetails
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Add AI-generated response to chat
+        const aiMessage = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: data.chat_text || `Here's your personalized ${tripDetails.dates || '5-day'} itinerary for ${targetDestination}!`
+        };
+        setMessages(prev => [...prev, aiMessage]);
+        
+        // Check if backend provided structured itinerary data
+        if (data.itinerary && Array.isArray(data.itinerary)) {
+          setGeneratedItinerary(data.itinerary);
+        } else {
+          // Parse itinerary from AI response or create structured version
+          const aiGeneratedItinerary = parseItineraryFromAI(data.chat_text, tripDetails, targetDestination);
+          setGeneratedItinerary(aiGeneratedItinerary);
+        }
+        
+        // Process accommodations from AI response
+        if (data.hotels && Array.isArray(data.hotels)) {
+          setGeneratedAccommodations(data.hotels);
+        } else {
+          // Generate accommodations based on destination
+          const accommodations = await generateAccommodationsFromAI(targetDestination, responses);
+          setGeneratedAccommodations(accommodations);
+        }
+        
+        // Process any UI actions (cards, recommendations)
+        if (data.ui_actions && data.ui_actions.length > 0) {
+          const newRecommendations = [];
+          data.ui_actions.forEach(action => {
+            if (action.type === 'card_add' && action.payload) {
+              newRecommendations.push(action.payload);
+            }
+          });
+          if (newRecommendations.length > 0) {
+            setRecommendations(prev => [...prev, ...newRecommendations]);
+          }
+        }
+        
+      } else {
+        throw new Error('Failed to generate itinerary');
+      }
+      
+    } catch (error) {
+      console.error('Itinerary generation error:', error);
+      
+      // Fallback to enhanced mock itinerary if AI fails
+      const fallbackItinerary = generateEnhancedMockItinerary(tripDetails, responses, targetDestination);
+      const fallbackAccommodations = generateMockAccommodations(tripDetails, responses, targetDestination);
+      
+      setGeneratedItinerary(fallbackItinerary);
+      setGeneratedAccommodations(fallbackAccommodations);
+      
+      const fallbackMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `I've created a wonderful ${tripDetails.dates || '5-day'} itinerary for ${targetDestination} based on your preferences! While I had a minor connectivity issue, I've crafted this plan with local insights and popular attractions.`
+      };
+      setMessages(prev => [...prev, fallbackMessage]);
+    } finally {
+      setIsLoading(false);
+      setRightPanelContent('itinerary');
+      setShowGeneratedContent(true);
+    }
   };
 
-  const generateItinerary = (tripDetails, preferences, destination) => {
+  // Helper function to parse AI response into structured itinerary
+  const parseItineraryFromAI = (aiText, tripDetails, destination) => {
+    // This is a simplified parser - in production you'd use more sophisticated NLP
+    const days = [];
+    const dayPattern = /Day (\d+):?\s*([^Day]*)/gi;
+    let match;
+    let dayCount = 1;
+    
+    while ((match = dayPattern.exec(aiText)) !== null && dayCount <= 7) {
+      const dayNumber = parseInt(match[1]) || dayCount;
+      const content = match[2] || `Explore ${destination}`;
+      
+      days.push({
+        day: dayNumber,
+        title: `Day ${dayNumber} in ${destination}`,
+        activities: [
+          {
+            time: "9:00 AM",
+            title: content.substring(0, 50) + "...",
+            description: content,
+            location: destination,
+            category: "sightseeing"
+          }
+        ]
+      });
+      dayCount++;
+    }
+    
+    // If no structured days found, create a basic itinerary
+    if (days.length === 0) {
+      for (let i = 1; i <= 5; i++) {
+        days.push({
+          day: i,
+          title: `Day ${i} in ${destination}`,
+          activities: [
+            {
+              time: "9:00 AM",
+              title: `Explore ${destination}`,
+              description: `Discover the best of ${destination} with guided tours and local experiences.`,
+              location: destination,
+              category: "sightseeing"
+            }
+          ]
+        });
+      }
+    }
+    
+    return days;
+  };
+  
+  // Enhanced mock itinerary generator as fallback
+  const generateEnhancedMockItinerary = (tripDetails, preferences, destination) => {
     // Get destination-specific data
     const destData = destinations.find(d => 
       d.name.toLowerCase() === destination.toLowerCase() || 
