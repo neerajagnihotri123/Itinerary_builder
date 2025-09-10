@@ -63,6 +63,10 @@ class ConversationManager:
                 return await self._handle_slot_filling(message, slots, missing_slots)
             
             # If all slots are filled, proceed with planning
+            # But for general queries without destination, provide helpful response
+            if not slots.destination:
+                return await self._handle_general_query(message, session_id)
+            
             return await self._handle_planning(message, slots, session_id)
             
         except Exception as e:
