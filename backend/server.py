@@ -749,6 +749,30 @@ async def generate_personalized_hotels(destination, request, user_profile):
 - Many hotels offer pickup from nearest airport/station
 - Ask about {destination['category'][0] if destination['category'] else 'activity'} packages"""
 
+# Global session storage for conversation context
+SESSION_STORE = {}
+
+def get_session_context(session_id: str) -> dict:
+    """Get conversation context for a session"""
+    return SESSION_STORE.get(session_id, {})
+
+def update_session_context(session_id: str, context: dict):
+    """Update conversation context for a session"""
+    if session_id not in SESSION_STORE:
+        SESSION_STORE[session_id] = {}
+    SESSION_STORE[session_id].update(context)
+    print(f"📝 Updated session {session_id} context: {SESSION_STORE[session_id]}")
+
+def extract_destination_from_message(message: str) -> str:
+    """Extract destination from user message"""
+    message_lower = message.lower()
+    destinations = ["kerala", "goa", "rajasthan", "manali", "rishikesh", "andaman", "kashmir", "himachal", "tamil nadu", "karnataka", "mumbai", "delhi", "bangalore", "pune", "hyderabad"]
+    
+    for dest in destinations:
+        if dest in message_lower:
+            return dest.title()
+    return None
+
 # API Routes
 @api_router.get("/")
 async def root():
