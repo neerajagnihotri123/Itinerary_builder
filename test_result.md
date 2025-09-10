@@ -185,7 +185,7 @@ frontend:
     implemented: true
     working: false
     file: "App.js"
-    stuck_count: 1
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
@@ -195,6 +195,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ ACCOMMODATION FILTERING FAILED: Tested exact scenario 'i want to go to andaman' then 'more on accommodations'. Found 8 cards total: 1 hotel card, 5 destination cards, 2 unknown. Hotel cards are appearing (The Himalayan with $8000-$15000/night, 4.7 rating) but mixed with destination cards. The filtering logic is not working correctly - when user asks for accommodations, ONLY hotel cards should appear, not destination cards."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL FRONTEND ISSUE IDENTIFIED: Comprehensive testing of 'hotels on goa' scenario reveals the ROOT CAUSE. Backend API working perfectly (confirmed via curl test - generates 4 hotel cards: The Leela Goa 4.9★ ₹18000/night, Taj Exotica Goa 4.8★ ₹12000/night + question chips). However, frontend handleSendMessage function is NOT sending any API requests when send button is clicked. Network monitoring shows 0 API requests made. This explains why user sees 'When would you like to travel?' instead of hotel cards - the message never reaches the backend. Frontend chat functionality is completely broken."
 
   - task: "Question chip UI implementation"
     implemented: true
