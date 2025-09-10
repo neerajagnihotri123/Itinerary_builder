@@ -51,21 +51,38 @@ class ConversationManager:
         Returns both human_text and rr_payload
         """
         try:
+            print(f"🤖 ConversationManager processing: '{message}'")
+            
             # Convert current_slots to UserSlots object
             slots = UserSlots(**current_slots) if current_slots else UserSlots()
+            print(f"📋 Current slots: {asdict(slots)}")
             
-            # Determine which slots need filling/updating
+            # Check for destination discovery queries first
+            if self._is_destination_discovery_query(message):
+                print("🏞️ Path: Destination discovery query -> Generate destination cards")
+                return await self._handle_destination_discovery(message, session_id)
+            
+            # Check for accommodation queries  
+            if self._is_accommodation_query(message):
+                print("🏨 Path: Accommodation query -> Generate hotel cards")
+                return await self._handle_accommodation_query(message, session_id, slots)
+            
+            # Determine which slots need filling/updating for trip planning
             missing_slots = self._identify_missing_slots(message, slots)
+            print(f"❓ Missing slots: {missing_slots}")
             
             # If we have missing critical slots, handle slot filling first
             if missing_slots:
+                print(f"📝 Path: Missing slots {missing_slots} -> Handle slot filling")
                 return await self._handle_slot_filling(message, slots, missing_slots)
             
             # If all slots are filled, proceed with planning
             # But for general queries without destination, provide helpful response
             if not slots.destination:
+                print("🎯 Path: General query without destination -> Generate helpful response")
                 return await self._handle_general_query(message, session_id)
             
+            print("🎯 Path: Complete slots -> Generate full response")
             return await self._handle_planning(message, slots, session_id)
             
         except Exception as e:
