@@ -2659,14 +2659,54 @@ function App() {
                         </div>
                         
                         <div className="space-y-4">
-                          <h2 className="text-3xl font-bold text-gray-800">
-                            Dreaming of a getaway?
+                          <h2 className="text-3xl font-bold text-gradient">
+                            Ready for your next adventure?
                           </h2>
-                          <p className="text-lg text-gray-600 leading-relaxed mt-4">
-                            Tell me your travel wishlist and I'll guide you.
+                          <p className="text-lg text-slate-600 leading-relaxed mt-4">
+                            I'm your personal travel concierge, ready to craft the perfect Indian getaway just for you.
                             <br />
-                            Ask anything about your upcoming travels!
+                            <span className="text-blue-600 font-medium">Tell me where you'd like to explore!</span>
                           </p>
+                          
+                          {/* Quick start suggestions */}
+                          <div className="grid grid-cols-2 gap-3 mt-6">
+                            <button 
+                              onClick={() => {
+                                setInputMessage("Plan a trip to Rishikesh");
+                                setTimeout(() => handleSendMessage(), 100);
+                              }}
+                              className="btn-outline text-sm py-2 px-3 hover:bg-blue-50"
+                            >
+                              🏔️ Mountain Adventure
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setInputMessage("Beach destinations in India");
+                                setTimeout(() => handleSendMessage(), 100);
+                              }}
+                              className="btn-outline text-sm py-2 px-3 hover:bg-blue-50"
+                            >
+                              🏖️ Beach Paradise
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setInputMessage("Cultural heritage tours");
+                                setTimeout(() => handleSendMessage(), 100);
+                              }}
+                              className="btn-outline text-sm py-2 px-3 hover:bg-blue-50"
+                            >
+                              🏛️ Cultural Journey
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setInputMessage("Weekend getaway ideas");
+                                setTimeout(() => handleSendMessage(), 100);
+                              }}
+                              className="btn-outline text-sm py-2 px-3 hover:bg-blue-50"
+                            >
+                              ⚡ Quick Escape
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </motion.div>
