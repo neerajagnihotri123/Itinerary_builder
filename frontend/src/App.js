@@ -464,22 +464,58 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
             className="card-premium max-w-5xl w-full max-h-[95vh] overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-        {/* Header with Hero Image */}
-        <div className="relative h-64">
-          <img
-            src={destination.hero_image}
-            alt={destination.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          
-          {/* Close Button */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors duration-200"
-          >
-            <X className="w-5 h-5 text-gray-700" />
-          </button>
+            {/* Enhanced Hero Image Gallery Section */}
+            <div className="relative h-96 overflow-hidden">
+              <motion.img
+                key={currentImageIndex}
+                src={images[currentImageIndex]}
+                alt={destination.name}
+                className="w-full h-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              />
+              
+              {/* Image Navigation */}
+              {images.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 glass-morphism rounded-full p-3 hover:bg-white/30 transition-all duration-200"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-white" />
+                  </button>
+                  <button
+                    onClick={() => setCurrentImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 glass-morphism rounded-full p-3 hover:bg-white/30 transition-all duration-200"
+                  >
+                    <ChevronRight className="w-5 h-5 text-white" />
+                  </button>
+                  
+                  {/* Image Dots */}
+                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+                    {images.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                          index === currentImageIndex ? 'bg-white scale-125' : 'bg-white/60 hover:bg-white/80'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              
+              {/* Close Button */}
+              <button
+                onClick={onClose}
+                className="absolute top-6 right-6 glass-morphism rounded-full p-3 hover:bg-white/20 transition-all duration-200 group"
+              >
+                <X className="w-6 h-6 text-white group-hover:scale-110 transition-transform duration-200" />
+              </button>
           
           {/* Destination Info Overlay */}
           <div className="absolute bottom-6 left-6 right-6 text-white">
