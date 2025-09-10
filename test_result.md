@@ -107,9 +107,9 @@ user_problem_statement: "Fix accommodation card display issue - when user asks f
 backend:
   - task: "Chat API endpoint functionality"
     implemented: true
-    working: true
+    working: false
     file: "server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
@@ -122,6 +122,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ VERIFIED: Chat API endpoint working perfectly. All 39 API tests run with 84.6% success rate. Core chat functionality, session handling, and AI integration all working correctly."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL FAILURE: Chat API endpoint not meeting review requirements. Tested specific messages from review request: 'tell me about kerala' (should generate destination cards) - FAILED, only asks for dates. 'plan a trip to manali' (should trigger trip planning) - FAILED, asks generic questions. 'i want accommodations in goa' (should generate hotel cards only) - FAILED, asks for dates. API returns 200 but generates wrong UI actions (prompt/question_chip instead of card_add). ConversationManager working but prioritizes slot-filling over content generation. Success rate 80% but 0/3 review-specific scenarios passed."
 
   - task: "Accommodation card generation and filtering"
     implemented: true
