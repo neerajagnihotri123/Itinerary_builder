@@ -2080,6 +2080,9 @@ function App() {
   const [selectedMapDestination, setSelectedMapDestination] = useState(null);
   const [selectedTour, setSelectedTour] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [currentTourImageIndex, setCurrentTourImageIndex] = useState(0);
+  const [currentActivityImageIndex, setCurrentActivityImageIndex] = useState(0);
+  const [currentDestinationImageIndex, setCurrentDestinationImageIndex] = useState(0);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
