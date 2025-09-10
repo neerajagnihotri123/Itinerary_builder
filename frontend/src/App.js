@@ -2609,6 +2609,17 @@ function App() {
     }
   };
 
+  const handleViewAllImages = (destination, images) => {
+    console.log('🖼️ Viewing all images for:', destination.name);
+    setRightPanelContent('gallery');
+    setSelectedMapDestination(destination);
+    // Store images in the destination object for right panel access
+    setSelectedMapDestination({
+      ...destination,
+      galleryImages: images
+    });
+  };
+
   const handlePlanTripFromModal = async (destinationName) => {
     console.log('🗓️ Planning trip for:', destinationName);
     
