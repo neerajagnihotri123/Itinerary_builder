@@ -15,12 +15,16 @@ class DestinationAgent:
             'rishikesh': {'canonical_place_id': 'rishikesh_india', 'full_name': 'Rishikesh, Uttarakhand'},
             'manali': {'canonical_place_id': 'manali_india', 'full_name': 'Manali, Himachal Pradesh'},
             'andaman': {'canonical_place_id': 'andaman_islands', 'full_name': 'Andaman Islands'},
+            'andaman islands': {'canonical_place_id': 'andaman_islands', 'full_name': 'Andaman Islands'},
             'kerala': {'canonical_place_id': 'kerala_india', 'full_name': 'Kerala, India'},
             'rajasthan': {'canonical_place_id': 'rajasthan_india', 'full_name': 'Rajasthan, India'},
             'pondicherry': {'canonical_place_id': 'pondicherry_india', 'full_name': 'Pondicherry, India'},
+            'puducherry': {'canonical_place_id': 'pondicherry_india', 'full_name': 'Pondicherry, India'},
             'goa': {'canonical_place_id': 'goa_india', 'full_name': 'Goa, India'},
             'kashmir': {'canonical_place_id': 'kashmir_india', 'full_name': 'Kashmir, India'},
-            'ladakh': {'canonical_place_id': 'ladakh_india', 'full_name': 'Ladakh, India'}
+            'ladakh': {'canonical_place_id': 'ladakh_india', 'full_name': 'Ladakh, India'},
+            'himachal': {'canonical_place_id': 'manali_india', 'full_name': 'Manali, Himachal Pradesh'},
+            'uttarakhand': {'canonical_place_id': 'rishikesh_india', 'full_name': 'Rishikesh, Uttarakhand'}
         }
     
     async def extract_destination(self, message: str) -> Dict[str, Any]:
