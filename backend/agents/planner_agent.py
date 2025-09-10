@@ -141,7 +141,111 @@ Rules:
     def _generate_fallback_itinerary(self, context: str) -> str:
         """Generate a realistic fallback itinerary"""
         # Extract information from context
-        if "Rishikesh" in context:
+        if "Andaman" in context:
+            return '''
+            {
+              "itinerary": [
+                {
+                  "day": 1,
+                  "date": "2024-12-20",
+                  "activities": [
+                    {
+                      "time": "10:00",
+                      "type": "arrival",
+                      "id": "arrival",
+                      "title": "Arrival at Port Blair",
+                      "notes": "Airport pickup and check into beachfront resort"
+                    },
+                    {
+                      "time": "15:00",
+                      "type": "poi",
+                      "id": "cellular_jail",
+                      "title": "Cellular Jail National Memorial",
+                      "notes": "Historic colonial prison with light and sound show"
+                    },
+                    {
+                      "time": "17:30",
+                      "type": "activity",
+                      "id": "corbyn_beach",
+                      "title": "Corbyn's Cove Beach",
+                      "notes": "Relax on pristine white sand beach with coconut palms"
+                    }
+                  ]
+                },
+                {
+                  "day": 2,
+                  "date": "2024-12-21",
+                  "activities": [
+                    {
+                      "time": "08:00",
+                      "type": "activity",
+                      "id": "havelock_ferry",
+                      "title": "Ferry to Havelock Island",
+                      "notes": "Scenic boat ride through turquoise waters"
+                    },
+                    {
+                      "time": "11:30",
+                      "type": "poi",
+                      "id": "radhanagar_beach",
+                      "title": "Radhanagar Beach",
+                      "notes": "Asia's best beach with crystal clear waters and sunset views"
+                    },
+                    {
+                      "time": "14:30",
+                      "type": "activity",
+                      "id": "scuba_diving",
+                      "title": "Scuba Diving at Elephant Beach",
+                      "notes": "Explore vibrant coral reefs and tropical marine life"
+                    }
+                  ]
+                },
+                {
+                  "day": 3,
+                  "date": "2024-12-22",
+                  "activities": [
+                    {
+                      "time": "09:00",
+                      "type": "activity",
+                      "id": "neil_island",
+                      "title": "Neil Island Exploration",
+                      "notes": "Visit Bharatpur Beach and Natural Bridge rock formation"
+                    },
+                    {
+                      "time": "14:00",
+                      "type": "activity",
+                      "id": "snorkeling",
+                      "title": "Snorkeling at Laxmanpur Beach",
+                      "notes": "Discover colorful coral gardens and exotic fish"
+                    },
+                    {
+                      "time": "17:00",
+                      "type": "poi",
+                      "id": "sunset_point",
+                      "title": "Sunset at Laxmanpur Beach",
+                      "notes": "Spectacular sunset views over the Bay of Bengal"
+                    }
+                  ]
+                }
+              ],
+              "hotel_recommendations": [
+                {
+                  "id": "havelock_resort",
+                  "name": "Barefoot at Havelock",
+                  "price_estimate": 8500,
+                  "rating": 4.7,
+                  "reason": "Eco-luxury resort on pristine beach with water sports facilities"
+                }
+              ],
+              "followups": [
+                {
+                  "type": "clarify",
+                  "slot": "preferences",
+                  "question": "Would you like to add more water sports or explore other islands?"
+                }
+              ]
+            }
+            '''
+        elif "Rishikesh" in context:
             return '''
             {
               "itinerary": [
@@ -154,7 +258,7 @@ Rules:
                       "type": "arrival",
                       "id": "arrival",
                       "title": "Arrival in Rishikesh",
-                      "notes": "Check into hotel and freshen up"
+                      "notes": "Check into riverside hotel and freshen up"
                     },
                     {
                       "time": "15:00",
@@ -185,44 +289,10 @@ Rules:
                     },
                     {
                       "time": "14:00",
-                      "type": "meal",
-                      "id": "lunch",
-                      "title": "Local Lunch",
-                      "notes": "Traditional Garhwali cuisine"
-                    },
-                    {
-                      "time": "16:00",
                       "type": "activity",
                       "id": "bungee_jumping",
                       "title": "Bungee Jumping",
-                      "notes": "Adventure sport at Jumpin Heights"
-                    }
-                  ]
-                },
-                {
-                  "day": 3,
-                  "date": "2024-12-22",
-                  "activities": [
-                    {
-                      "time": "08:00",
-                      "type": "activity",
-                      "id": "yoga_session",
-                      "title": "Morning Yoga Session",
-                      "notes": "Yoga and meditation by the Ganges"
-                    },
-                    {
-                      "time": "11:00",
-                      "type": "poi",
-                      "id": "beatles_ashram",
-                      "title": "Beatles Ashram Visit",
-                      "notes": "Historic ashram with beautiful graffiti art"
-                    },
-                    {
-                      "time": "15:00",
-                      "type": "activity",
-                      "id": "temple_visit",
-                      "title": "Temple Hopping",
-                      "notes": "Visit famous temples like Neelkanth Mahadev"
+                      "notes": "India's highest bungee jump at Jumpin Heights"
                     }
                   ]
                 }
@@ -236,13 +306,71 @@ Rules:
                   "reason": "Perfect riverside location with spiritual ambiance and adventure sports access"
                 }
               ],
-              "followups": [
+              "followups": []
+            }
+            '''
+        elif "Goa" in context:
+            return '''
+            {
+              "itinerary": [
                 {
-                  "type": "clarify",
-                  "slot": "preferences",
-                  "question": "Would you like to add more adventure activities or spiritual experiences?"
+                  "day": 1,
+                  "date": "2024-12-20",
+                  "activities": [
+                    {
+                      "time": "11:00",
+                      "type": "arrival",
+                      "id": "arrival",
+                      "title": "Arrival in Goa",
+                      "notes": "Airport pickup and check into beach resort"
+                    },
+                    {
+                      "time": "16:00",
+                      "type": "poi",
+                      "id": "baga_beach",
+                      "title": "Baga Beach",
+                      "notes": "Famous beach with water sports and beach shacks"
+                    },
+                    {
+                      "time": "19:00",
+                      "type": "activity",
+                      "id": "sunset_cruise",
+                      "title": "Sunset Cruise on Mandovi River",
+                      "notes": "Romantic boat ride with dinner and live music"
+                    }
+                  ]
+                },
+                {
+                  "day": 2,
+                  "date": "2024-12-21",
+                  "activities": [
+                    {
+                      "time": "09:30",
+                      "type": "poi",
+                      "id": "old_goa",
+                      "title": "Old Goa Churches",
+                      "notes": "UNESCO World Heritage sites and Portuguese architecture"
+                    },
+                    {
+                      "time": "14:30",
+                      "type": "activity",
+                      "id": "spice_plantation",
+                      "title": "Spice Plantation Tour",
+                      "notes": "Traditional Goan lunch and spice garden exploration"
+                    }
+                  ]
                 }
-              ]
+              ],
+              "hotel_recommendations": [
+                {
+                  "id": "goa_beach_resort",
+                  "name": "Taj Holiday Village Resort & Spa",
+                  "price_estimate": 7500,
+                  "rating": 4.6,
+                  "reason": "Beachfront luxury resort with authentic Goan experience"
+                }
+              ],
+              "followups": []
             }
             '''
         
