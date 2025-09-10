@@ -586,8 +586,46 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip }) => {
   
   if (!isOpen || !destination) return null;
 
-  // Mock multiple images for gallery
-  const images = destination.images || [destination.hero_image, destination.hero_image, destination.hero_image];
+  // Enhanced gallery with multiple images per destination
+  const getDestinationImages = (destination) => {
+    const baseImages = [
+      destination.hero_image,
+      `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop`, // Landscape
+      `https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=400&fit=crop`, // Nature
+      `https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=400&fit=crop`, // Forest
+      `https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&h=400&fit=crop`, // Adventure
+      `https://images.unsplash.com/photo-1464822759844-d150baec0494?w=800&h=400&fit=crop`, // Mountains
+    ];
+    
+    // Add destination-specific images
+    if (destination.name.toLowerCase().includes('kerala')) {
+      baseImages.push(
+        `https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&h=400&fit=crop`, // Backwaters
+        `https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop`  // Houseboat
+      );
+    } else if (destination.name.toLowerCase().includes('goa')) {
+      baseImages.push(
+        `https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=800&h=400&fit=crop`, // Beach
+        `https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=400&fit=crop`  // Resort
+      );
+    } else if (destination.name.toLowerCase().includes('rajasthan')) {
+      baseImages.push(
+        `https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=400&fit=crop`, // Desert
+        `https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=400&fit=crop`  // Palace
+      );
+    }
+    
+    return baseImages.filter(img => img).slice(0, 8); // Limit to 8 images
+  };
+  
+  const images = getDestinationImages(destination);
+  
+  const handleViewAllImages = () => {
+    // Set right panel to show all images
+    setRightPanelContent('gallery');
+    setSelectedDestination(destination);
+    onClose();
+  };
   
   const tabs = [
     { id: 'overview', label: 'Overview', icon: Eye },
