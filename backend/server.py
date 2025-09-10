@@ -759,12 +759,17 @@ async def chat_endpoint(request: ChatRequest):
                 "currency": "INR"
             }
         
-        # Process message through conversation manager
-        result = await conversation_manager.process_message(
-            message=request.message,
-            session_id=request.session_id or str(uuid.uuid4()),
-            current_slots=current_slots
-        )
+        # Process message through conversation manager with fallback
+        try:
+            result = await conversation_manager.process_message(
+                message=request.message,
+                session_id=request.session_id or str(uuid.uuid4()),
+                current_slots=current_slots
+            )
+        except Exception as e:
+            print(f"Conversation manager error: {e}")
+            # Fallback to simple slot-based response
+            result = await handle_simple_slot_filling(request.message, current_slots)
         
         # Convert to ChatResponse format
         rr_payload = result.get("rr_payload", {})
