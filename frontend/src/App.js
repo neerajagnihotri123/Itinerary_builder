@@ -2975,12 +2975,45 @@ function App() {
               </div>
               
               <motion.button
-                onClick={() => {
-                  console.log('🔥 BUTTON CLICKED!');
-                  console.log('🔥 Input message:', inputMessage);
-                  console.log('🔥 Is loading:', isLoading);
-                  console.log('🔥 Button disabled?', !inputMessage.trim() || isLoading);
-                  handleSendMessage();
+                onClick={async () => {
+                  console.log('🔥 DIRECT BUTTON TEST - Starting...');
+                  
+                  const message = document.querySelector('input[placeholder*="Ask about destinations"]').value;
+                  console.log('🔥 Message from input:', message);
+                  
+                  if (!message.trim()) {
+                    console.log('❌ No message to send');
+                    return;
+                  }
+
+                  try {
+                    console.log('🔥 Making direct fetch call...');
+                    const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/chat`, {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        message: message,
+                        session_id: `session_${Date.now()}`,
+                        user_profile: {},
+                        trip_details: {}
+                      })
+                    });
+                    
+                    console.log('🔥 Response status:', response.status);
+                    const data = await response.json();
+                    console.log('🔥 Response data:', data);
+                    
+                    // Clear input
+                    document.querySelector('input[placeholder*="Ask about destinations"]').value = '';
+                    
+                    alert('SUCCESS! Got response: ' + data.chat_text);
+                    
+                  } catch (error) {
+                    console.error('❌ Fetch error:', error);
+                    alert('ERROR: ' + error.message);
+                  }
                 }}
                 disabled={!inputMessage.trim() || isLoading}
                 className="btn-primary p-4 disabled:opacity-50 disabled:cursor-not-allowed rounded-2xl"
