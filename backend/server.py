@@ -769,12 +769,22 @@ async def chat_endpoint(request: ChatRequest):
         # Convert to ChatResponse format
         rr_payload = result.get("rr_payload", {})
         
-        # Extract UI actions from rr_payload
-        ui_actions = rr_payload.get("ui_actions", [])
+        # Convert rr_payload ui_actions to consistent format
+        ui_actions = []
         
-        # Add backward compatibility UI actions based on rr_payload content
-        if rr_payload.get("itinerary"):
-            # Add destination and hotel cards as UI actions for backward compatibility
+        # Handle ui_actions from rr_payload  
+        for action in rr_payload.get("ui_actions", []):
+            if isinstance(action, dict) and "action" in action:
+                # Convert button-style actions to card format for compatibility
+                ui_actions.append({
+                    "type": "prompt",
+                    "payload": {
+                        "chips": [{"label": action["label"], "value": action["action"]}]
+                    }
+                })
+        
+        # Add hotel cards if itinerary contains hotels
+        if rr_payload.get("hotels"):
             for hotel in rr_payload.get("hotels", []):
                 ui_actions.append({
                     "type": "card_add",
