@@ -341,7 +341,7 @@ class ConversationManager:
     
     def _is_destination_specific_query(self, message: str) -> bool:
         """Check if the message is asking about a specific destination"""
-        message_lower = message.lower()
+        message_lower = message.lower().strip()
         
         # Common patterns for destination-specific queries
         specific_patterns = [
@@ -364,7 +364,11 @@ class ConversationManager:
         has_pattern = any(pattern in message_lower for pattern in specific_patterns)
         has_destination = any(dest in message_lower for dest in destinations)
         
-        return has_pattern and has_destination
+        # NEW: Also treat single destination names as destination-specific queries
+        # This handles cases like user just saying "kerala" to learn about Kerala
+        is_single_destination = message_lower in destinations
+        
+        return (has_pattern and has_destination) or is_single_destination
     
     def _is_accommodation_query(self, message: str) -> bool:
         """Check if the message is specifically asking about hotels/accommodation"""
