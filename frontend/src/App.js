@@ -2429,8 +2429,11 @@ function App() {
   const handlePlanTour = async (tourItem) => {
     console.log('🎭 Planning tour for:', tourItem.name || tourItem.title);
     
+    // Close right panel and show chat interface
+    setRightPanelContent('default');
+    
     // Create a plan tour message
-    const planTourMessage = `Plan a tour for ${tourItem.name || tourItem.title}`;
+    const planTourMessage = `I want to plan ${tourItem.name || tourItem.title} in ${tourItem.location}`;
     
     // Add user message to chat immediately
     const userMessage = {
@@ -2440,31 +2443,56 @@ function App() {
     };
     setMessages(prev => [...prev, userMessage]);
     
-    // Show trip planning bar immediately
+    // Show trip planning bar for personalization
     setShowTripBar(true);
     
     // Send to backend for processing
     try {
       setIsLoading(true);
-      const response = await axios.post(`${API}/chat`, {
-        message: planTourMessage,
-        session_id: sessionId,
-        user_profile: userProfile,
-        trip_details: { ...tripDetails, tour: tourItem.name || tourItem.title }
+      const response = await fetch(`${BACKEND_URL}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: planTourMessage,
+          session_id: sessionId,
+          user_profile: userProfile,
+          trip_details: { 
+            ...tripDetails, 
+            tour: tourItem.name || tourItem.title,
+            location: tourItem.location,
+            duration: tourItem.duration,
+            price: tourItem.price
+          }
+        })
       });
       
-      // Add assistant response
-      const assistantMessage = {
-        id: `assistant_${Date.now()}`,
-        role: 'assistant',
-        content: response.data.chat_text || `Great! Let's plan your ${tourItem.name || tourItem.title} experience. I'll need a few details to create the perfect itinerary.`
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-      
-      // Process any UI actions
-      if (response.data.ui_actions && response.data.ui_actions.length > 0) {
-        console.log('UI actions from plan tour:', response.data.ui_actions);
-        // Process UI actions here if needed
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Add assistant response
+        const assistantMessage = {
+          id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          role: 'assistant',
+          content: data.chat_text || `Great choice! I'll help you plan ${tourItem.name}. Let me gather some details to create the perfect itinerary for you.`
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        
+        // Process any UI actions
+        if (data.ui_actions && data.ui_actions.length > 0) {
+          const newRecommendations = [];
+          data.ui_actions.forEach(action => {
+            if (action.type === 'card_add' && action.payload) {
+              newRecommendations.push(action.payload);
+            }
+          });
+          if (newRecommendations.length > 0) {
+            setRecommendations(prev => [...prev, ...newRecommendations]);
+          }
+        }
+      } else {
+        throw new Error('Failed to get response from server');
       }
       
     } catch (error) {
@@ -2472,7 +2500,7 @@ function App() {
       const errorMessage = {
         id: `error_${Date.now()}`,
         role: 'assistant',
-        content: "I'd love to help you plan this tour! Let's gather some details to create the perfect experience for you."
+        content: `I'd love to help you plan ${tourItem.name}! Let's start by gathering some details about your preferences.`
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
