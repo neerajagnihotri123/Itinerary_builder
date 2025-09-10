@@ -2303,6 +2303,7 @@ function App() {
             onUpdateTrip={setTripDetails}
             isVisible={showTripBar}
             onApplyFilters={handleApplyFilters}
+            onClose={() => setShowTripBar(false)}
           />
 
           {/* Chat Messages */}
