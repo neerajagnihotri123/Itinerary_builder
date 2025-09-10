@@ -393,8 +393,8 @@ const Chip = ({ chip, onClick }) => (
 
 // Professional Interactive Map Component using Leaflet
 const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDestinations = [] }) => {
-  const [map, setMap] = React.useState(null);
-  const [isLoaded, setIsLoaded] = React.useState(false);
+  const [map, setMap] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Import Leaflet CSS dynamically
   React.useEffect(() => {
