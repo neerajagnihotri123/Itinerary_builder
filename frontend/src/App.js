@@ -457,7 +457,8 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
     }).addTo(mapInstance);
 
     // Add custom markers for destinations
-    destinations.forEach(dest => {
+    if (destinations && destinations.length > 0) {
+      destinations.forEach(dest => {
       const coords = destinationCoords[dest.name] || [
         20 + (Math.random() - 0.5) * 30, // Random lat around India
         78 + (Math.random() - 0.5) * 20  // Random lng around India
