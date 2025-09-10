@@ -919,7 +919,18 @@ const WhereModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
   </AnimatePresence>
 );
 
-const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => (
+const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => {
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+
+  const handleDateSelection = () => {
+    if (checkIn && checkOut) {
+      const dateRange = `${new Date(checkIn).toLocaleDateString()} - ${new Date(checkOut).toLocaleDateString()}`;
+      onSelect(dateRange);
+    }
+  };
+
+  return (
   <AnimatePresence>
     {isOpen && (
       <motion.div
