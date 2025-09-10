@@ -3595,12 +3595,11 @@ function App() {
                     };
                     
                     const images = getActivityImages(selectedActivity);
-                    const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
                     
                     return (
                       <>
                         <img
-                          src={images[currentImageIndex]}
+                          src={images[currentActivityImageIndex]}
                           alt={selectedActivity.name}
                           className="w-full h-full object-cover transition-all duration-500"
                         />
@@ -3609,13 +3608,13 @@ function App() {
                         {images.length > 1 && (
                           <>
                             <button
-                              onClick={() => setCurrentImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
+                              onClick={() => setCurrentActivityImageIndex(prev => prev === 0 ? images.length - 1 : prev - 1)}
                               className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors duration-200"
                             >
                               <ArrowLeft className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => setCurrentImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
+                              onClick={() => setCurrentActivityImageIndex(prev => prev === images.length - 1 ? 0 : prev + 1)}
                               className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors duration-200"
                             >
                               <ArrowLeft className="w-4 h-4 rotate-180" />
@@ -3629,9 +3628,9 @@ function App() {
                             {images.map((_, index) => (
                               <button
                                 key={index}
-                                onClick={() => setCurrentImageIndex(index)}
+                                onClick={() => setCurrentActivityImageIndex(index)}
                                 className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                                  index === currentImageIndex ? 'bg-white scale-125' : 'bg-white/60 hover:bg-white/80'
+                                  index === currentActivityImageIndex ? 'bg-white scale-125' : 'bg-white/60 hover:bg-white/80'
                                 }`}
                               />
                             ))}
