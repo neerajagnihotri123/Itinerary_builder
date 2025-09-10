@@ -3294,9 +3294,9 @@ function App() {
                   <p className="text-gray-600">Click on any location to explore</p>
                 </div>
                 <div className="h-80">
-                  <InteractiveMap
+                  <InteractiveWorldMap
                     destinations={destinations}
-                    onMarkerClick={handleMapMarkerClick}
+                    onDestinationClick={handleMapMarkerClick}
                     highlightedDestinations={highlightedDestinations}
                   />
                 </div>
