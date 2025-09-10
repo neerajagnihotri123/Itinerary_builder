@@ -375,11 +375,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Enhanced trip planning forms with LLM integration"
-    - "Swipeable image galleries in modals"
-    - "LLM agent response quality"
+    - "Hotel card processing and display"
+    - "Chat message sending functionality"
   stuck_tasks:
-    - "Enhanced trip planning forms with LLM integration"
+    - "Hotel card processing and display"
   test_all: false
   test_priority: "high_first"
 
