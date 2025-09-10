@@ -133,7 +133,7 @@ Rules:
             
             # Create and send the message
             user_message = UserMessage(text=context)
-            response = await llm_client.completion([user_message])
+            response = await llm_client.send_message(user_message)
             
             print(f"✅ LLM generation successful: {len(response.content) if response.content else 0} characters")
             return response.content
