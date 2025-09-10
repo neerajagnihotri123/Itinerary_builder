@@ -326,16 +326,55 @@ frontend:
         comment: "✅ FULLY FUNCTIONAL: After fixing sidebar z-index, destination cards are fully clickable, explore buttons work, map markers are interactive, and right panel displays destination details correctly."
 
   - task: "Plan Trip button on destination cards"
+    implemented: true
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ MISSING FUNCTIONALITY: Plan Trip buttons not found on destination cards during testing. Searched for 'Plan Trip' buttons after sending destination queries but found 0 buttons. This is a critical missing feature from the review request - destination cards should have Plan Trip buttons that trigger trip planning flow when clicked."
+      - working: false
+        agent: "main"
+        comment: "Plan Trip buttons exist in code (line 294-305 in App.js for cards, line 680-694 for modal) but may not be visible. Need to investigate visibility and ensure proper triggering of trip planning forms."
+
+  - task: "Enhanced trip planning forms with LLM integration"
     implemented: false
     working: false
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
-        agent: "testing"
-        comment: "❌ MISSING FUNCTIONALITY: Plan Trip buttons not found on destination cards during testing. Searched for 'Plan Trip' buttons after sending destination queries but found 0 buttons. This is a critical missing feature from the review request - destination cards should have Plan Trip buttons that trigger trip planning flow when clicked."
+        agent: "main"
+        comment: "Need to implement enhanced personalized forms that trigger when user asks to go to destinations. Forms should collect dates, destination, budget, travelers and trigger LLM agents for itinerary generation."
+
+  - task: "Swipeable image galleries in modals"
+    implemented: false
+    working: false
+    file: "App.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Need to add swipeable image galleries to destination modals, tour modals, and activities modals, with 'View All' option that displays all images in the right panel."
+
+  - task: "LLM agent response quality"
+    implemented: true
+    working: false
+    file: "server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "main"
+        comment: "Need to ensure LLM agents generate proper intelligent responses instead of mocked data for itinerary generation based on user inputs."
 
 metadata:
   created_by: "main_agent"
