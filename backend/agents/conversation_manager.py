@@ -82,6 +82,14 @@ class ConversationManager:
     def _identify_missing_slots(self, message: str, slots: UserSlots) -> List[str]:
         """Identify which required slots are missing"""
         missing = []
+        message_lower = message.lower()
+        
+        # Don't force slot filling for general queries
+        if any(phrase in message_lower for phrase in [
+            "popular destinations", "recommend", "suggest", "what are", "show me", 
+            "weekend getaway", "plan a trip", "best places", "destinations right now"
+        ]):
+            return []  # Skip slot filling for general queries
         
         if not slots.destination:
             missing.append("destination")
