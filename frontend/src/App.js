@@ -1044,7 +1044,7 @@ const PersonalizationModal = ({ isOpen, onClose, onComplete }) => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl z-[110]"
+            className="card-premium max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl z-[110]"
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
