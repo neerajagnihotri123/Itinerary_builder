@@ -87,7 +87,14 @@ class DestinationAgent:
             
             user_message = UserMessage(text=prompt)
             response = await llm_client.send_message(user_message)
-            result = json.loads(response.content)
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+                
+            result = json.loads(content)
             return result
         except Exception as e:
             print(f"Destination extraction LLM error: {e}")
