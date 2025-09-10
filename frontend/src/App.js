@@ -1612,6 +1612,7 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters,
     </>
   );
 };
+
 function App() {
   const [messages, setMessages] = useState([
     {
