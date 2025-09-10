@@ -4,7 +4,10 @@ Retrieval Agent - Fetches and returns facts (POIs, hotels, activities)
 import json
 from datetime import datetime, timezone
 from typing import List, Dict, Any
-from ..mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
 
 class RetrievalAgent:
     """Handles fact retrieval and grounding for planning"""
