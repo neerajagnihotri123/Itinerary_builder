@@ -390,10 +390,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Hotel card processing and display"
-    - "Plan Trip button on destination cards"
+    - "LLM agent response quality"
+    - "Chat API endpoint functionality"
   stuck_tasks:
-    - "Hotel card processing and display"
+    - "LLM agent response quality"
+    - "Chat API endpoint functionality"
   test_all: false
   test_priority: "high_first"
 
