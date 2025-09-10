@@ -989,8 +989,9 @@ const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => {
           </div>
           
           <button 
-            onClick={() => onSelect('Selected dates')}
-            className="w-full mt-6 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 rounded-xl hover:from-green-700 hover:to-orange-700"
+            onClick={handleDateSelection}
+            disabled={!checkIn || !checkOut}
+            className="btn-primary w-full mt-6 py-3 disabled:opacity-50"
           >
             Confirm Dates
           </button>
