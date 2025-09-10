@@ -122,21 +122,30 @@ Rules:
         """Generate itinerary using LLM"""
         try:
             from emergentintegrations.llm.chat import UserMessage
-            # Use the correct LlmChat interface - it should be async and return completion
-            messages = [UserMessage(content=context)]
-            response = await self.llm_client.chat_async(messages)
+            # Create the user message with correct interface
+            user_message = UserMessage(text=context)
+            
+            # Use the LlmChat completion method
+            response = await self.llm_client.completion([user_message])
             return response.content
         except Exception as e:
-            print(f"LLM generation error (trying alternative method): {e}")
+            print(f"LLM generation error (method 1): {e}")
             try:
-                # Try alternative method
-                from emergentintegrations.llm.chat import UserMessage
-                response = self.llm_client.chat([UserMessage(content=context)])
-                return response.content
+                # Try direct text method
+                response = await self.llm_client.completion(context)
+                return response.content if hasattr(response, 'content') else str(response)
             except Exception as e2:
-                print(f"LLM generation error (all methods failed): {e2}")
-                # Generate a more realistic fallback itinerary based on input
-                return self._generate_fallback_itinerary(context)
+                print(f"LLM generation error (method 2): {e2}")
+                try:
+                    # Try synchronous method
+                    from emergentintegrations.llm.simple import Simple
+                    simple_llm = Simple()
+                    response = simple_llm.completion(context)
+                    return response
+                except Exception as e3:
+                    print(f"LLM generation error (all methods failed): {e3}")
+                    # Generate a more realistic fallback itinerary based on input
+                    return self._generate_fallback_itinerary(context)
     
     def _generate_fallback_itinerary(self, context: str) -> str:
         """Generate a realistic fallback itinerary"""
