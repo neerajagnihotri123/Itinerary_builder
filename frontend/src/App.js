@@ -1542,7 +1542,7 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters,
             )}
             
             <button 
-              onClick={() => window.setShowTripBar && window.setShowTripBar(false)}
+              onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
             >
               <X className="w-4 h-4 text-gray-500" />
