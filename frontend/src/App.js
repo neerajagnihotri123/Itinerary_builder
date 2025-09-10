@@ -104,7 +104,11 @@ const Avatar = () => (
 );
 
 const RecommendationCard = ({ item, onAction }) => {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, setIsHovered] = React.useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+  
+  // Mock multiple images for demonstration
+  const images = item.images || [item.hero_image, item.hero_image, item.hero_image];
   
   return (
     <motion.div
@@ -113,38 +117,89 @@ const RecommendationCard = ({ item, onAction }) => {
       animate="visible"
       exit="exit"
       layout
-      className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 overflow-hidden mb-4 cursor-pointer"
+      className="card-premium overflow-hidden mb-6 cursor-pointer group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       whileHover={{ 
-        y: -6, 
-        boxShadow: '0 20px 40px rgba(0,0,0,0.15)' 
+        y: -8, 
+        boxShadow: '0 25px 50px rgba(0,0,0,0.15)' 
       }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.3 }}
     >
-      <div className="relative h-48 overflow-hidden">
+      <div className="relative h-56 overflow-hidden">
+        {/* Image Gallery */}
         <motion.img
-          src={item.hero_image}
+          src={images[currentImageIndex]}
           alt={item.title}
           className="w-full h-full object-cover"
-          animate={{ scale: isHovered ? 1.05 : 1 }}
-          transition={{ duration: 0.3 }}
+          animate={{ scale: isHovered ? 1.08 : 1 }}
+          transition={{ duration: 0.4 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-4 left-4 text-white">
-          <h3 className="text-xl font-bold mb-1">{item.title}</h3>
+        
+        {/* Image Navigation Dots */}
+        {images.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentImageIndex(index);
+                }}
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                  index === currentImageIndex ? 'bg-white scale-125' : 'bg-white/60 hover:bg-white/80'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+        
+        {/* View All Photos Button */}
+        {images.length > 1 && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onAction('view_photos', item);
+            }}
+            className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-2"
+          >
+            <Image className="w-3 h-3" />
+            View All ({images.length})
+          </button>
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        
+        {/* Content Overlay */}
+        <div className="absolute bottom-4 left-4 right-4 text-white">
+          <h3 className="text-xl font-bold mb-2 text-shadow">{item.title}</h3>
           {item.weather && (
-            <div className="flex items-center gap-2 text-sm">
-              <span>{item.weather.temp}</span>
-              <span>•</span>
-              <span>{item.weather.condition}</span>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-full px-2 py-1">
+                <Cloud className="w-3 h-3" />
+                <span>{item.weather.temp}</span>
+              </div>
+              <div className="flex items-center gap-1 bg-black/30 backdrop-blur-sm rounded-full px-2 py-1">
+                <span>{item.weather.condition}</span>
+              </div>
             </div>
           )}
         </div>
+        
+        {/* Rating Badge */}
         {item.rating && (
-          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1">
+          <div className="absolute top-4 right-4 glass-morphism rounded-full px-3 py-2 flex items-center gap-1">
             <Star className="w-4 h-4 text-yellow-500 fill-current" />
-            <span className="text-sm font-semibold">{item.rating}</span>
+            <span className="text-sm font-bold text-slate-800">{item.rating}</span>
+          </div>
+        )}
+        
+        {/* Category Badge */}
+        {item.category && (
+          <div className="absolute top-16 right-4">
+            <span className="chip-primary text-xs">
+              {item.category === 'destination' ? '🗺️ Destination' : '🏨 Hotel'}
+            </span>
           </div>
         )}
       </div>
