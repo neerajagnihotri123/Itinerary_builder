@@ -781,37 +781,96 @@ async def root():
 @api_router.post("/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
     try:
+        session_id = request.session_id or str(uuid.uuid4())
+        
+        # Get existing session context
+        session_context = get_session_context(session_id)
+        print(f"🔍 Retrieved session context for {session_id}: {session_context}")
+        
+        # Extract destination from current message if mentioned
+        mentioned_destination = extract_destination_from_message(request.message)
+        if mentioned_destination:
+            session_context['destination'] = mentioned_destination
+            print(f"🎯 Detected destination in message: {mentioned_destination}")
+        
+        # Build current slots from session context and request
+        current_slots = {
+            "destination": session_context.get('destination'),
+            "start_date": session_context.get('start_date'),
+            "end_date": session_context.get('end_date'),
+            "adults": session_context.get('adults', 2),
+            "children": session_context.get('children', 0),
+            "budget_per_night": session_context.get('budget_per_night'),
+            "currency": "INR"
+        }
+        
+        # Override with request trip_details if provided
+        if request.trip_details:
+            if request.trip_details.get('destination'):
+                current_slots['destination'] = request.trip_details.get('destination')
+            if request.trip_details.get('dates'):
+                dates = request.trip_details.get('dates')
+                if isinstance(dates, dict):
+                    current_slots['start_date'] = dates.get('start_date')
+                    current_slots['end_date'] = dates.get('end_date')
+            if request.trip_details.get('travelers'):
+                travelers = request.trip_details.get('travelers')
+                if isinstance(travelers, dict):
+                    current_slots['adults'] = travelers.get('adults', 2)
+                    current_slots['children'] = travelers.get('children', 0)
+            if request.trip_details.get('budget'):
+                budget = request.trip_details.get('budget')
+                if isinstance(budget, dict):
+                    current_slots['budget_per_night'] = budget.get('per_night')
+        
+        print(f"🎯 Final slots for processing: {current_slots}")
+        
         # Initialize the Conversation Manager  
         chat_client = LlmChat(
             api_key=emergent_key,
-            session_id=request.session_id or str(uuid.uuid4()),
+            session_id=session_id,
             system_message="You are a helpful travel assistant that provides personalized travel recommendations."
         ).with_model("openai", "gpt-4o-mini")
         
         conversation_manager = ConversationManager(chat_client)
         
-        # Extract current slots from request
-        current_slots = {}
-        if request.trip_details:
-            current_slots = {
-                "destination": request.trip_details.get('destination'),
-                "start_date": request.trip_details.get('dates', {}).get('start_date') if isinstance(request.trip_details.get('dates'), dict) else None,
-                "end_date": request.trip_details.get('dates', {}).get('end_date') if isinstance(request.trip_details.get('dates'), dict) else None,
-                "adults": request.trip_details.get('travelers', {}).get('adults', 2) if isinstance(request.trip_details.get('travelers'), dict) else 2,
-                "children": request.trip_details.get('travelers', {}).get('children', 0) if isinstance(request.trip_details.get('travelers'), dict) else 0,
-                "budget_per_night": request.trip_details.get('budget', {}).get('per_night') if isinstance(request.trip_details.get('budget'), dict) else None,
-                "currency": "INR"
-            }
-        
         # Process message through conversation manager with fallback
-        print(f"🤖 Attempting to use conversation manager with slots: {current_slots}")
+        print(f"🤖 Processing message with conversation manager...")
         try:
-            print("🔄 Calling conversation_manager.process_message...")
             result = await conversation_manager.process_message(
                 message=request.message,
-                session_id=request.session_id or str(uuid.uuid4()),
+                session_id=session_id,
                 current_slots=current_slots
             )
+            
+            # Update session context with new information
+            if result.get('updated_slots'):
+                update_session_context(session_id, result['updated_slots'])
+            else:
+                # Update with current slots that were used
+                filtered_slots = {k: v for k, v in current_slots.items() if v is not None}
+                if filtered_slots:
+                    update_session_context(session_id, filtered_slots)
+            
+            print(f"✅ Conversation manager result: {result.get('chat_text', 'No text')[:100]}...")
+            rr_payload = result
+        except Exception as conv_error:
+            print(f"❌ Conversation manager error: {conv_error}")
+            print(f"📋 Falling back to simple response...")
+            
+            # Simple fallback based on current slots
+            if current_slots.get('destination'):
+                rr_payload = {
+                    "chat_text": f"Great! I see you're interested in {current_slots['destination']}. Let me show you some options.",
+                    "ui_actions": [],
+                    "metadata": {"query_type": "destination_specific", "detected_destination": current_slots['destination']}
+                }
+            else:
+                rr_payload = {
+                    "chat_text": "I'd be happy to help you plan your trip! Could you tell me which destination you're interested in?",
+                    "ui_actions": [],
+                    "metadata": {"query_type": "general"}
+                }
             print(f"✅ Conversation manager succeeded with result: {result.get('human_text', 'No text')}")
         except Exception as e:
             print(f"❌ Conversation manager error: {e}")
