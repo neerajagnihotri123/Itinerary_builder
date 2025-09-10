@@ -396,11 +396,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "LLM agent response quality"
-    - "Chat API endpoint functionality"
+    - "Enhanced trip planning forms with LLM integration"
+    - "Plan Trip button on destination cards"
   stuck_tasks:
-    - "LLM agent response quality"
-    - "Chat API endpoint functionality"
+    - "Enhanced trip planning forms with LLM integration"
   test_all: false
   test_priority: "high_first"
 
