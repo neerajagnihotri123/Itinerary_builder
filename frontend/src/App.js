@@ -2104,7 +2104,7 @@ function App() {
       const assistantMessage = {
         id: assistantMessageId,
         role: 'assistant',
-        content: response.data.chat_text
+        content: response.data.chat_text || response.data.message || 'I received your message and I\'m processing it.'
       };
 
       setMessages(prev => {
