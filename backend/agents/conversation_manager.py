@@ -460,24 +460,28 @@ class ConversationManager:
             })
         return cards
     
-    def _convert_ux_actions_to_ui_actions(self, ux_actions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _convert_ux_actions_to_ui_actions(self, ux_actions: List[Dict]) -> List[Dict[str, Any]]:
         """Convert UX agent actions to UI actions format"""
         ui_actions = []
-        
         for action in ux_actions:
-            if action.get('type') == 'button':
+            if action.get('action') == 'set_destination':
                 ui_actions.append({
                     "type": "question_chip",
                     "payload": {
-                        "id": f"ux_{hash(action.get('label', '')) % 1000}",
-                        "question": action.get('label', ''),
-                        "category": action.get('category', 'general')
+                        "id": f"dest_{hash(action.get('data', '')) % 1000}",
+                        "question": action.get('label', 'Explore'),
+                        "category": "destination"
                     }
                 })
             else:
-                # Pass through other action types
-                ui_actions.append(action)
-        
+                ui_actions.append({
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"action_{hash(action.get('label', '')) % 1000}",
+                        "question": action.get('label', 'Learn More'),
+                        "category": "general"
+                    }
+                })
         return ui_actions
 
     async def _build_smart_context(self, message: str, slots: UserSlots, session_id: str) -> str:
