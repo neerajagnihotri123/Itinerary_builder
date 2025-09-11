@@ -32,18 +32,19 @@ class AccommodationAgent:
     
     async def get_hotels_for_destination(self, destination: str, slots) -> List[Dict[str, Any]]:
         """
-        Get hotel recommendations with comprehensive scoring and ranking
+        Get hotel recommendations with comprehensive scoring and ranking - Pure LLM approach
         Returns: List of scored and ranked hotels with availability info
         """
         if not destination:
             return []
         
-        print(f"🏨 Getting hotels for {destination}")
+        print(f"🏨 Getting hotels for {destination} using LLM-first approach")
         
-        # Step 1: Get raw hotel data (LLM + fallback)
-        raw_hotels = await self._fetch_hotel_data(destination, slots)
+        # Step 1: Get hotel data using LLM primarily
+        raw_hotels = await self._fetch_hotel_data_llm_first(destination, slots)
         
         if not raw_hotels:
+            print(f"❌ No hotels found for {destination}")
             return []
         
         # Step 2: Check availability for all hotels
@@ -58,30 +59,28 @@ class AccommodationAgent:
         print(f"✅ Returning {len(final_hotels)} scored and ranked hotels")
         return final_hotels
     
-    async def _fetch_hotel_data(self, destination: str, slots) -> List[Dict[str, Any]]:
-        """Fetch hotel data from LLM and fallback sources"""
+    async def _fetch_hotel_data_llm_first(self, destination: str, slots) -> List[Dict[str, Any]]:
+        """Fetch hotel data using LLM as primary source"""
         hotels = []
         
         try:
-            # Try LLM generation first
+            # Try LLM generation first - this is the primary method now
             llm_hotels = await self._generate_hotels_with_llm(destination, slots)
             if llm_hotels:
                 hotels.extend(llm_hotels)
+                print(f"✅ LLM generated {len(llm_hotels)} hotels for {destination}")
+            else:
+                print(f"⚠️ LLM generated 0 hotels for {destination}")
         except Exception as e:
             print(f"❌ LLM hotel generation failed: {e}")
         
-        # Always add fallback hotels for diversity
-        fallback_hotels = await self._get_fallback_hotels(destination, slots)
-        hotels.extend(fallback_hotels)
+        # Only use fallback if LLM completely fails
+        if not hotels:
+            print(f"🔄 Using fallback hotels for {destination}")
+            fallback_hotels = await self._get_fallback_hotels(destination, slots)
+            hotels.extend(fallback_hotels)
         
-        # Remove duplicates by name
-        unique_hotels = {}
-        for hotel in hotels:
-            hotel_key = hotel.get('name', '').lower().replace(' ', '')
-            if hotel_key not in unique_hotels:
-                unique_hotels[hotel_key] = hotel
-        
-        return list(unique_hotels.values())
+        return hotels
     
     async def _check_hotel_availability(self, hotels: List[Dict[str, Any]], slots) -> List[Dict[str, Any]]:
         """
