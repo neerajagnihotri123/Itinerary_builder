@@ -58,35 +58,35 @@
   --error-500: #ef4444;
 }
 
-/* Professional Gradient Backgrounds */
+/* Professional Gradient Backgrounds - Updated with new palette */
 .gradient-bg {
-  background: linear-gradient(135deg, var(--primary-600) 0%, var(--accent-600) 100%);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--charcoal-700) 100%);
 }
 
 .gradient-primary {
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-700) 100%);
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
 }
 
 .gradient-secondary {
-  background: linear-gradient(135deg, var(--secondary-500) 0%, var(--secondary-700) 100%);
+  background: linear-gradient(135deg, var(--charcoal-800) 0%, var(--charcoal-900) 100%);
 }
 
 .gradient-accent {
   background: linear-gradient(135deg, var(--accent-500) 0%, var(--accent-700) 100%);
 }
 
-/* Professional Glass Morphism */
+/* Professional Glass Morphism - Updated */
 .glass-morphism {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(211, 210, 208, 0.3);
+  box-shadow: 0 8px 32px rgba(35, 35, 35, 0.1);
 }
 
 .glass-dark {
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(35, 35, 35, 0.95);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(116, 116, 116, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
