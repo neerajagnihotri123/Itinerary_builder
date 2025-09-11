@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
-from .slot_agents import DestinationAgent, DatesAgent, TravelersAgent, BudgetAgent
+from .slot_agents import DestinationAgent, DatesAgent, TravelersAgent, BudgetAgent, SlotAgent
 from .retrieval_agent import RetrievalAgent
 from .planner_agent import PlannerAgent
 from .accommodation_agent import AccommodationAgent
