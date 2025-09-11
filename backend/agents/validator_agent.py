@@ -18,18 +18,60 @@ class ValidatorAgent:
     async def validate(self, planner_output: Dict[str, Any], retrieval_candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         LLM-powered validation of planner output against retrieved facts
-        Returns: {"valid": bool, "issues": [...], "corrections": [...], "confidence": float}
+        Returns: Structured JSON validation result for frontend consumption
         """
         try:
             # Try LLM-powered validation first
             llm_validation = await self._validate_with_llm(planner_output, retrieval_candidates)
             if llm_validation:
-                return llm_validation
+                return self._structure_validation_response(llm_validation, planner_output)
         except Exception as e:
             print(f"❌ LLM validation failed: {e}")
         
         # Fallback to rule-based validation
-        return await self._fallback_validation(planner_output, retrieval_candidates)
+        fallback_result = await self._fallback_validation(planner_output, retrieval_candidates)
+        return self._structure_validation_response(fallback_result, planner_output)
+    
+    def _structure_validation_response(self, validation_result: Dict[str, Any], planner_output: Dict[str, Any]) -> Dict[str, Any]:
+        """Structure validation response for consistent frontend consumption"""
+        
+        # Ensure all required fields exist
+        structured_response = {
+            "valid": validation_result.get("valid", False),
+            "confidence": validation_result.get("confidence", 0.5),
+            "issues": validation_result.get("issues", []),
+            "corrections": validation_result.get("corrections", []),
+            "validation_summary": {
+                "total_items_validated": validation_result.get("metadata", {}).get("total_items_checked", 0),
+                "issues_found": len(validation_result.get("issues", [])),
+                "corrections_suggested": len(validation_result.get("corrections", [])),
+                "validation_method": validation_result.get("metadata", {}).get("validation_method", "unknown")
+            },
+            "recommendations": validation_result.get("recommendations", []),
+            "metadata": {
+                "validated_by": "validator_agent",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "planner_items": {
+                    "days": len(planner_output.get("itinerary", [])),
+                    "hotels": len(planner_output.get("hotel_recommendations", [])),
+                    "total_activities": sum(len(day.get('activities', [])) for day in planner_output.get('itinerary', []))
+                },
+                **validation_result.get("metadata", {})
+            }
+        }
+        
+        # Add validation status text for frontend display
+        if structured_response["valid"]:
+            if structured_response["confidence"] >= 0.9:
+                structured_response["status_text"] = "Excellent itinerary - all details verified!"
+            elif structured_response["confidence"] >= 0.7:
+                structured_response["status_text"] = "Great itinerary with minor adjustments suggested."
+            else:
+                structured_response["status_text"] = "Good itinerary foundation with some improvements needed."
+        else:
+            structured_response["status_text"] = "Itinerary needs review - several issues identified."
+        
+        return structured_response
     
     async def _validate_with_llm(self, planner_output: Dict[str, Any], retrieval_candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Use LLM to intelligently validate planner output"""
