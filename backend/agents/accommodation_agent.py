@@ -970,23 +970,29 @@ Ensure prices are realistic for {destination} and match the budget tier.
         """Calculate price compatibility score"""
         hotel_price = hotel.get('price_estimate', 5000)
         
-        if not slots.budget_per_night:
+        budget = getattr(slots, 'budget_per_night', None)
+        if not budget or budget <= 0:
             return 0.7  # Neutral score if no budget specified
         
-        budget = slots.budget_per_night
-        
-        # Perfect match at exact budget
-        if hotel_price <= budget:
-            return 1.0
-        
-        # Gradual decrease for over-budget hotels
-        over_budget_ratio = (hotel_price - budget) / budget
-        if over_budget_ratio <= 0.2:  # Within 20% of budget
-            return 0.8
-        elif over_budget_ratio <= 0.5:  # Within 50% of budget
-            return 0.5
-        else:
-            return 0.2  # Significantly over budget
+        try:
+            hotel_price = float(hotel_price)
+            budget = float(budget)
+            
+            # Perfect match at exact budget
+            if hotel_price <= budget:
+                return 1.0
+            
+            # Gradual decrease for over-budget hotels
+            over_budget_ratio = (hotel_price - budget) / budget
+            if over_budget_ratio <= 0.2:  # Within 20% of budget
+                return 0.8
+            elif over_budget_ratio <= 0.5:  # Within 50% of budget
+                return 0.5
+            else:
+                return 0.2  # Significantly over budget
+                
+        except (ValueError, TypeError):
+            return 0.7  # Neutral score if comparison fails
     
     def _generate_reason(self, hotel: Dict[str, Any], slots, score: float) -> str:
         """Generate explanation for why this hotel was recommended"""
