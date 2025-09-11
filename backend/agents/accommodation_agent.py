@@ -189,11 +189,25 @@ class AccommodationAgent:
     def _calculate_price_score(self, hotel: Dict[str, Any], slots) -> float:
         """Calculate normalized price score (0-1, higher = better value)"""
         hotel_price = hotel.get('price_estimate', 5000)
-        user_budget = getattr(slots, 'budget_per_night', None)
         
-        if not user_budget:
-            # If no budget specified, use mid-range preference
+        # Handle different slot types and None values
+        user_budget = None
+        if hasattr(slots, 'budget_per_night'):
+            user_budget = slots.budget_per_night
+        elif isinstance(slots, dict):
+            user_budget = slots.get('budget_per_night')
+        
+        # Ensure we have a valid budget for comparison
+        if user_budget is None or user_budget <= 0:
+            # If no budget specified, use mid-range preference based on destination
             user_budget = 7000
+        
+        # Ensure budget is numeric
+        try:
+            user_budget = float(user_budget)
+            hotel_price = float(hotel_price)
+        except (ValueError, TypeError):
+            return 0.5  # Default score if price comparison fails
         
         # Score based on how close price is to budget (perfect match = 1.0)
         if hotel_price <= user_budget:
