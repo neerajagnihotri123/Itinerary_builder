@@ -702,6 +702,385 @@ class TravelloAPITester:
         print(f"\n🇮🇳 Mock Data Integration: {integration_tests_passed}/{len(indian_destinations)} destinations passed")
         return integration_tests_passed == len(indian_destinations)
 
+    def test_slot_agent_intent_detection(self):
+        """Test SlotAgent.extract_intent_and_destination() method as specified in review request"""
+        print(f"\n🎯 Testing SlotAgent Intent Detection...")
+        
+        # Test scenarios from review request
+        test_scenarios = [
+            {
+                "message": "plan a trip to kerala",
+                "expected_intent": "plan",
+                "expected_destination": "Kerala, India",
+                "description": "Plan intent with destination"
+            },
+            {
+                "message": "hotels in goa", 
+                "expected_intent": "accommodation",
+                "expected_destination": "Goa, India",
+                "description": "Accommodation intent with destination"
+            },
+            {
+                "message": "tell me about manali",
+                "expected_intent": "find", 
+                "expected_destination": "Manali, Himachal Pradesh",
+                "description": "Find intent with destination"
+            },
+            {
+                "message": "hello",
+                "expected_intent": "general",
+                "expected_destination": None,
+                "description": "General intent without destination"
+            }
+        ]
+        
+        intent_tests_passed = 0
+        for i, scenario in enumerate(test_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            print(f"      Input: '{scenario['message']}'")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{self.session_id}_intent_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Intent Detection {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                # Check response metadata for intent detection results
+                chat_text = response.get('chat_text', '')
+                ui_actions = response.get('ui_actions', [])
+                
+                # Analyze response to infer intent detection
+                detected_intent = "unknown"
+                detected_destination = None
+                
+                # Infer intent from response patterns
+                if any(word in chat_text.lower() for word in ['itinerary', 'plan', 'trip planning']):
+                    detected_intent = "plan"
+                elif any(word in chat_text.lower() for word in ['hotel', 'accommodation', 'stay']):
+                    detected_intent = "accommodation"
+                elif any(word in chat_text.lower() for word in ['explore', 'about', 'destination']):
+                    detected_intent = "find"
+                elif any(word in chat_text.lower() for word in ['hello', 'help', 'assist']):
+                    detected_intent = "general"
+                
+                # Check for destination cards to infer destination detection
+                destination_cards = [action for action in ui_actions 
+                                   if action.get('type') == 'card_add' and 
+                                   action.get('payload', {}).get('category') == 'destination']
+                
+                hotel_cards = [action for action in ui_actions 
+                             if action.get('type') == 'card_add' and 
+                             action.get('payload', {}).get('category') == 'hotel']
+                
+                # Infer destination from cards or response text
+                if destination_cards:
+                    card_title = destination_cards[0].get('payload', {}).get('title', '')
+                    if 'kerala' in card_title.lower():
+                        detected_destination = "Kerala, India"
+                    elif 'goa' in card_title.lower():
+                        detected_destination = "Goa, India"
+                    elif 'manali' in card_title.lower():
+                        detected_destination = "Manali, Himachal Pradesh"
+                elif hotel_cards:
+                    # For hotel queries, check if hotels are for the right destination
+                    if 'goa' in scenario['message'].lower() and len(hotel_cards) > 0:
+                        detected_destination = "Goa, India"
+                
+                # Evaluate results
+                intent_match = detected_intent == scenario['expected_intent']
+                destination_match = (detected_destination == scenario['expected_destination'] or 
+                                   (scenario['expected_destination'] is None and detected_destination is None))
+                
+                if intent_match and destination_match:
+                    intent_tests_passed += 1
+                    print(f"      ✅ PASS: Intent={detected_intent}, Destination={detected_destination}")
+                else:
+                    print(f"      ❌ FAIL: Expected intent={scenario['expected_intent']}, got {detected_intent}")
+                    print(f"               Expected destination={scenario['expected_destination']}, got {detected_destination}")
+                
+                # Show additional analysis
+                print(f"      Response analysis: {len(ui_actions)} UI actions, {len(chat_text)} chars")
+                if destination_cards:
+                    print(f"      Destination cards: {len(destination_cards)}")
+                if hotel_cards:
+                    print(f"      Hotel cards: {len(hotel_cards)}")
+            else:
+                print(f"      ❌ API call failed")
+        
+        print(f"\n🎯 SlotAgent Intent Detection Results: {intent_tests_passed}/{len(test_scenarios)} scenarios passed")
+        return intent_tests_passed >= 3  # Pass if at least 3/4 scenarios work
+
+    def test_routing_flow_architecture(self):
+        """Test the new routing flow: conversation_agent → slot_agent → retrieval_agent → route to appropriate agent"""
+        print(f"\n🔄 Testing Routing Flow Architecture...")
+        
+        # Test different routing flows
+        routing_scenarios = [
+            {
+                "message": "plan a 5-day trip to rishikesh",
+                "expected_flow": "planner_flow",
+                "expected_agents": ["slot_agent", "retrieval_agent", "planner_agent", "validator_agent"],
+                "description": "Planner flow routing"
+            },
+            {
+                "message": "show me luxury hotels in andaman",
+                "expected_flow": "accommodation_flow", 
+                "expected_agents": ["slot_agent", "retrieval_agent", "accommodation_agent"],
+                "description": "Accommodation flow routing"
+            },
+            {
+                "message": "tell me about kerala backwaters",
+                "expected_flow": "find_flow",
+                "expected_agents": ["slot_agent", "retrieval_agent", "conversation_agent"],
+                "description": "Find flow routing (render cards)"
+            }
+        ]
+        
+        routing_tests_passed = 0
+        for i, scenario in enumerate(routing_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            print(f"      Input: '{scenario['message']}'")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{self.session_id}_routing_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Routing Flow {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                chat_text = response.get('chat_text', '')
+                ui_actions = response.get('ui_actions', [])
+                
+                # Analyze response to determine which flow was used
+                flow_indicators = {
+                    "planner_flow": ["itinerary", "plan", "day 1", "day 2", "schedule"],
+                    "accommodation_flow": ["hotel", "accommodation", "stay", "book now"],
+                    "find_flow": ["explore", "destination", "highlights", "plan trip"]
+                }
+                
+                detected_flow = "unknown"
+                for flow, indicators in flow_indicators.items():
+                    if any(indicator in chat_text.lower() for indicator in indicators):
+                        detected_flow = flow
+                        break
+                
+                # Check UI actions for flow confirmation
+                destination_cards = len([a for a in ui_actions if a.get('type') == 'card_add' and a.get('payload', {}).get('category') == 'destination'])
+                hotel_cards = len([a for a in ui_actions if a.get('type') == 'card_add' and a.get('payload', {}).get('category') == 'hotel'])
+                itinerary_actions = len([a for a in ui_actions if a.get('type') == 'itinerary_display'])
+                trip_planner_cards = len([a for a in ui_actions if a.get('type') == 'trip_planner_card'])
+                
+                # Refine flow detection based on UI actions
+                if hotel_cards > 0 and destination_cards == 0:
+                    detected_flow = "accommodation_flow"
+                elif destination_cards > 0 and hotel_cards == 0:
+                    detected_flow = "find_flow"
+                elif itinerary_actions > 0 or trip_planner_cards > 0:
+                    detected_flow = "planner_flow"
+                
+                # Evaluate routing
+                flow_match = detected_flow == scenario['expected_flow']
+                
+                if flow_match:
+                    routing_tests_passed += 1
+                    print(f"      ✅ PASS: Correct routing to {detected_flow}")
+                    print(f"      UI Actions: {destination_cards} destination, {hotel_cards} hotel, {itinerary_actions} itinerary")
+                else:
+                    print(f"      ❌ FAIL: Expected {scenario['expected_flow']}, got {detected_flow}")
+                    print(f"      UI Actions: {destination_cards} destination, {hotel_cards} hotel, {itinerary_actions} itinerary")
+                    print(f"      Response preview: {chat_text[:100]}...")
+            else:
+                print(f"      ❌ API call failed")
+        
+        print(f"\n🔄 Routing Flow Results: {routing_tests_passed}/{len(routing_scenarios)} flows working correctly")
+        return routing_tests_passed >= 2  # Pass if at least 2/3 flows work
+
+    def test_ui_actions_generation_formats(self):
+        """Test the new UI action formats as specified in review request"""
+        print(f"\n🎨 Testing UI Actions Generation Formats...")
+        
+        format_scenarios = [
+            {
+                "message": "show me destinations in india",
+                "expected_actions": [
+                    {"type": "card_add", "category": "destination"}
+                ],
+                "description": "Destination cards with 'card_add' type and 'destination' category"
+            },
+            {
+                "message": "find hotels in kerala",
+                "expected_actions": [
+                    {"type": "card_add", "category": "hotel"}
+                ],
+                "description": "Hotel cards with 'card_add' type and 'hotel' category"
+            },
+            {
+                "message": "plan a trip to goa",
+                "expected_actions": [
+                    {"type": "question_chip"},
+                    {"type": "trip_planner_card"}
+                ],
+                "description": "Question chips and trip planner card for pre-generation mode"
+            }
+        ]
+        
+        format_tests_passed = 0
+        for i, scenario in enumerate(format_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            print(f"      Input: '{scenario['message']}'")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{self.session_id}_format_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"UI Format {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                ui_actions = response.get('ui_actions', [])
+                
+                # Check for expected action formats
+                format_matches = 0
+                for expected_action in scenario['expected_actions']:
+                    expected_type = expected_action['type']
+                    expected_category = expected_action.get('category')
+                    
+                    # Find matching actions
+                    matching_actions = [
+                        action for action in ui_actions 
+                        if action.get('type') == expected_type and 
+                        (not expected_category or action.get('payload', {}).get('category') == expected_category)
+                    ]
+                    
+                    if matching_actions:
+                        format_matches += 1
+                        action = matching_actions[0]
+                        payload = action.get('payload', {})
+                        
+                        print(f"      ✅ Found {expected_type}: {payload.get('title', payload.get('question', 'N/A'))}")
+                        
+                        # Verify required fields for each type
+                        if expected_type == "card_add":
+                            required_fields = ['id', 'category', 'title']
+                            missing_fields = [field for field in required_fields if field not in payload]
+                            if missing_fields:
+                                print(f"         ⚠️  Missing fields: {missing_fields}")
+                            else:
+                                print(f"         ✅ All required fields present")
+                        
+                        elif expected_type == "question_chip":
+                            required_fields = ['id', 'question', 'category']
+                            missing_fields = [field for field in required_fields if field not in payload]
+                            if missing_fields:
+                                print(f"         ⚠️  Missing fields: {missing_fields}")
+                            else:
+                                print(f"         ✅ All required fields present")
+                    else:
+                        print(f"      ❌ Missing {expected_type} with category {expected_category}")
+                
+                # Evaluate format compliance
+                if format_matches == len(scenario['expected_actions']):
+                    format_tests_passed += 1
+                    print(f"      ✅ PASS: All expected UI action formats found")
+                else:
+                    print(f"      ❌ FAIL: Found {format_matches}/{len(scenario['expected_actions'])} expected formats")
+                
+                print(f"      Total UI actions generated: {len(ui_actions)}")
+            else:
+                print(f"      ❌ API call failed")
+        
+        print(f"\n🎨 UI Actions Format Results: {format_tests_passed}/{len(format_scenarios)} scenarios passed")
+        return format_tests_passed >= 2  # Pass if at least 2/3 scenarios work
+
+    def test_error_handling_and_fallbacks(self):
+        """Test clarification responses and fallback mechanisms"""
+        print(f"\n🛡️ Testing Error Handling and Fallback Mechanisms...")
+        
+        error_scenarios = [
+            {
+                "message": "plan a trip to xyz unknown place",
+                "expected_behavior": "clarification_request",
+                "description": "Unknown destination handling"
+            },
+            {
+                "message": "book hotel",
+                "expected_behavior": "destination_clarification", 
+                "description": "Missing destination for accommodation"
+            },
+            {
+                "message": "asdfghjkl random text",
+                "expected_behavior": "general_help",
+                "description": "Unrecognizable input handling"
+            },
+            {
+                "message": "",
+                "expected_behavior": "prompt_for_input",
+                "description": "Empty message handling"
+            }
+        ]
+        
+        error_tests_passed = 0
+        for i, scenario in enumerate(error_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            print(f"      Input: '{scenario['message']}'")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{self.session_id}_error_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Error Handling {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                chat_text = response.get('chat_text', '')
+                ui_actions = response.get('ui_actions', [])
+                
+                # Analyze response for appropriate error handling
+                error_indicators = {
+                    "clarification_request": ["which", "specify", "clarify", "could you", "please"],
+                    "destination_clarification": ["destination", "where", "which place"],
+                    "general_help": ["help", "assist", "what can", "how can"],
+                    "prompt_for_input": ["tell me", "what would", "how can I help"]
+                }
+                
+                detected_behavior = "unknown"
+                for behavior, indicators in error_indicators.items():
+                    if any(indicator in chat_text.lower() for indicator in indicators):
+                        detected_behavior = behavior
+                        break
+                
+                # Check for helpful UI actions (question chips, help options)
+                question_chips = [a for a in ui_actions if a.get('type') == 'question_chip']
+                help_actions = len([a for a in ui_actions if 'help' in str(a).lower()])
+                
+                # Evaluate error handling
+                behavior_match = detected_behavior == scenario['expected_behavior']
+                has_helpful_actions = len(question_chips) > 0 or help_actions > 0
+                
+                if behavior_match and has_helpful_actions:
+                    error_tests_passed += 1
+                    print(f"      ✅ PASS: Appropriate {detected_behavior} with {len(question_chips)} question chips")
+                elif behavior_match:
+                    error_tests_passed += 0.5  # Partial credit
+                    print(f"      ⚠️  PARTIAL: Correct behavior but limited helpful actions")
+                else:
+                    print(f"      ❌ FAIL: Expected {scenario['expected_behavior']}, got {detected_behavior}")
+                
+                print(f"      Response: {chat_text[:80]}...")
+                print(f"      Helpful actions: {len(question_chips)} question chips, {help_actions} help actions")
+            else:
+                print(f"      ❌ API call failed")
+        
+        print(f"\n🛡️ Error Handling Results: {error_tests_passed}/{len(error_scenarios)} scenarios handled appropriately")
+        return error_tests_passed >= 3  # Pass if at least 3/4 scenarios work
+
     def test_review_request_critical_scenarios(self):
         """Test the exact critical scenarios from the review request"""
         print(f"\n🎯 Testing ENHANCED CHAT FUNCTIONALITY - Review Request Scenarios...")
