@@ -1734,20 +1734,20 @@ def main():
     
     # Overall assessment including review-specific tests
     total_critical_score = critical_passed + review_passed
-    max_critical_score = 14  # 5 general + 9 review-specific
+    max_critical_score = 15  # 5 general + 10 review-specific
     
-    if success_rate >= 90 and critical_passed >= 4 and review_passed >= 7:
-        print("🎉 Excellent! Backend is working great including SlotAgent and routing flow!")
+    if success_rate >= 90 and critical_passed >= 4 and review_passed >= 8:
+        print("🎉 Excellent! Backend is working great including RetrievalAgent implementation!")
         return 0
-    elif success_rate >= 70 and critical_passed >= 3 and review_passed >= 5:
+    elif success_rate >= 70 and critical_passed >= 3 and review_passed >= 6:
         print("✅ Good! Backend is mostly functional with minor issues")
         return 0
-    elif success_rate >= 50 and (critical_passed >= 2 or review_passed >= 4):
+    elif success_rate >= 50 and (critical_passed >= 2 or review_passed >= 5):
         print("⚠️  Warning! Backend has significant issues")
         return 1
     else:
         print("❌ Critical! Backend is severely broken")
-        print(f"   SlotAgent & Routing tests: {review_passed}/9 passing")
+        print(f"   RetrievalAgent & Review tests: {review_passed}/10 passing")
         print(f"   General critical tests: {critical_passed}/5 passing")
         return 1
 
