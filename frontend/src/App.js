@@ -496,7 +496,13 @@ const MessageBubble = ({ message, isUser }) => (
     <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'} flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
       {/* User Icon */}
       {isUser && (
-        <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+        <div 
+          className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm"
+          style={{ 
+            background: 'linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%)',
+            color: 'var(--light-50)'
+          }}
+        >
           U
         </div>
       )}
@@ -511,16 +517,24 @@ const MessageBubble = ({ message, isUser }) => (
       <div className="flex flex-col">
         {/* Name label */}
         {!isUser && (
-          <span className="text-sm text-gray-600 font-medium mb-1 ml-1">Travello.ai</span>
+          <span className="text-sm font-medium mb-1 ml-1" style={{ color: 'var(--accent-500)' }}>
+            Travello.ai
+          </span>
         )}
         
         {/* Message bubble */}
         <div
           className={`p-4 rounded-2xl shadow-lg ${
             isUser
-              ? 'gradient-primary text-white'
-              : 'glass-morphism text-gray-800'
+              ? 'text-white'
+              : 'glass-morphism'
           }`}
+          style={{
+            background: isUser 
+              ? 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)'
+              : undefined,
+            color: isUser ? 'var(--light-50)' : 'var(--charcoal-900)'
+          }}
         >
           <p className="leading-relaxed">{message.content}</p>
         </div>
