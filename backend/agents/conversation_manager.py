@@ -645,6 +645,91 @@ Focus on authentic experiences and practical appeal for travelers.
                 "ui_actions": []
             }
     
+    async def _handle_confirmation_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
+        """Handle confirmation responses like 'yes', 'ok', 'proceed' by maintaining context"""
+        print(f"✅ Handling confirmation flow")
+        
+        # If user has a destination from previous context, provide helpful next steps
+        if slots.destination:
+            return {
+                "chat_text": f"Perfect! Since you're interested in {slots.destination}, would you like me to show you more hotels, plan activities, or provide travel tips?",
+                "ui_actions": [
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": f"hotels_{hash(slots.destination) % 1000}",
+                            "question": f"Hotels in {slots.destination}",
+                            "category": "accommodation"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": f"activities_{hash(slots.destination) % 1000}",
+                            "question": f"Things to do in {slots.destination}",
+                            "category": "activities"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": f"tips_{hash(slots.destination) % 1000}",
+                            "question": f"Travel tips for {slots.destination}",
+                            "category": "tips"
+                        }
+                    }
+                ],
+                "updated_slots": {
+                    "destination": slots.destination,
+                    "start_date": slots.start_date,
+                    "end_date": slots.end_date,
+                    "budget_per_night": slots.budget_per_night,
+                    "adults": slots.adults,
+                    "children": slots.children
+                },
+                "metadata": {
+                    "intent": "confirmation",
+                    "context_maintained": True,
+                    "agent": "conversation_manager"
+                }
+            }
+        else:
+            # No previous context, ask what they want to confirm
+            return {
+                "chat_text": "I'd love to help! What would you like to explore today? I can help you discover destinations, plan trips, or find accommodations.",
+                "ui_actions": [
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "discover_destinations",
+                            "question": "Discover destinations",
+                            "category": "discovery"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "plan_new_trip",
+                            "question": "Plan a new trip",
+                            "category": "planning"
+                        }
+                    }
+                ],
+                "updated_slots": {
+                    "destination": slots.destination,
+                    "start_date": slots.start_date,
+                    "end_date": slots.end_date,
+                    "budget_per_night": slots.budget_per_night,
+                    "adults": slots.adults,
+                    "children": slots.children
+                },
+                "metadata": {
+                    "intent": "confirmation",
+                    "context_maintained": False,
+                    "agent": "conversation_manager"
+                }
+            }
+    
     async def _handle_general_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """General conversation flow with friendly, jovial responses (2-3 sentences)"""
         print(f"💬 Handling general flow for: '{message}'")
