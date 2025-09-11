@@ -21,7 +21,7 @@ class RetrievalAgent:
         
     async def get_facts(self, slots) -> List[Dict[str, Any]]:
         """
-        Fetch and return top-K matching facts (hotels, POIs, activities)
+        Fetch and return top-K matching facts (hotels, POIs, activities) using LLM
         Returns: List of facts with metadata
         """
         facts = []
@@ -31,8 +31,190 @@ class RetrievalAgent:
         if not destination_name:
             return []
         
+        try:
+            # Use LLM to generate comprehensive facts about the destination
+            llm_facts = await self._generate_facts_with_llm(destination_name, slots)
+            facts.extend(llm_facts)
+        except Exception as e:
+            print(f"❌ LLM fact generation failed: {e}")
+            # Fallback to mock data
+            facts.extend(self._get_fallback_facts(destination_name, slots))
+        
+        # Sort by confidence and return top results
+        facts.sort(key=lambda x: x.get('confidence', 0), reverse=True)
+        return facts[:20]  # Return top 20 facts
+    
+    async def _generate_facts_with_llm(self, destination: str, slots) -> List[Dict[str, Any]]:
+        """Use LLM to generate comprehensive destination facts"""
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            # Create LLM client for fact generation
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"retrieval_{hash(destination) % 10000}",
+                system_message="You are a travel expert. Generate accurate, detailed information about destinations, hotels, and activities in JSON format."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Create comprehensive prompt for fact generation
+            context = self._prepare_fact_generation_context(destination, slots)
+            user_message = UserMessage(text=context)
+            response = await llm_client.send_message(user_message)
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+            
+            # Parse the JSON response
+            try:
+                facts_data = json.loads(content)
+                return self._parse_llm_facts(facts_data, destination)
+            except json.JSONDecodeError:
+                print(f"❌ Invalid JSON from LLM fact generation")
+                return self._get_fallback_facts(destination, slots)
+                
+        except Exception as e:
+            print(f"❌ LLM fact generation error: {e}")
+            return self._get_fallback_facts(destination, slots)
+    
+    def _prepare_fact_generation_context(self, destination: str, slots) -> str:
+        """Prepare context for LLM fact generation"""
+        return f"""
+Generate comprehensive travel facts for {destination} including POIs, hotels, and activities.
+
+User Context:
+- Destination: {destination}
+- Travelers: {getattr(slots, 'adults', 2)} adults, {getattr(slots, 'children', 0)} children
+- Budget: {getattr(slots, 'budget_per_night', 'Not specified')} per night
+- Duration: {getattr(slots, 'start_date', '')} to {getattr(slots, 'end_date', '')}
+
+Generate JSON with following structure:
+{{
+  "pois": [
+    {{
+      "id": "unique_poi_id",
+      "name": "POI Name",
+      "description": "Detailed description",
+      "coordinates": {{"lat": 0.0, "lng": 0.0}},
+      "rating": 4.5,
+      "highlights": ["highlight1", "highlight2"],
+      "category": ["category1"],
+      "confidence": 0.9
+    }}
+  ],
+  "hotels": [
+    {{
+      "id": "unique_hotel_id", 
+      "name": "Hotel Name",
+      "description": "Hotel description",
+      "location": "Specific location",
+      "rating": 4.0,
+      "price_per_night": 5000,
+      "amenities": ["amenity1", "amenity2"],
+      "hotel_type": "Resort/Hotel/etc",
+      "coordinates": {{"lat": 0.0, "lng": 0.0}},
+      "confidence": 0.9
+    }}
+  ],
+  "activities": [
+    {{
+      "id": "unique_activity_id",
+      "name": "Activity Name", 
+      "description": "Activity description",
+      "location": "Activity location",
+      "duration": "2-3 hours",
+      "price": 1500,
+      "rating": 4.3,
+      "category": "Adventure/Cultural/etc",
+      "highlights": ["highlight1"],
+      "confidence": 0.8
+    }}
+  ]
+}}
+
+Focus on:
+- Popular attractions and hidden gems in {destination}
+- Accommodations suitable for {getattr(slots, 'adults', 2)} adults and {getattr(slots, 'children', 0)} children
+- Activities matching the destination's character (adventure, cultural, nature, etc.)
+- Realistic prices in Indian Rupees
+- Accurate locations and ratings
+
+Generate 5 POIs, 3-5 hotels, and 8 activities maximum.
+"""
+    
+    def _parse_llm_facts(self, facts_data: Dict, destination: str) -> List[Dict[str, Any]]:
+        """Parse LLM-generated facts into standard format"""
+        facts = []
+        
+        # Parse POIs
+        for poi in facts_data.get('pois', []):
+            fact = {
+                "type": "poi",
+                "id": poi.get('id', f"poi_{hash(poi.get('name', '')) % 10000}"),
+                "name": poi.get('name', ''),
+                "address": f"{poi.get('name', '')}, {destination}",
+                "coords": poi.get('coordinates', {}),
+                "rating": poi.get('rating', 4.5),
+                "price_estimate": None,
+                "source": "llm_generated",
+                "availability_cache_ts": datetime.now(timezone.utc).isoformat(),
+                "confidence": poi.get('confidence', 0.9),
+                "description": poi.get('description', ''),
+                "highlights": poi.get('highlights', []),
+                "category": poi.get('category', [])
+            }
+            facts.append(fact)
+        
+        # Parse hotels
+        for hotel in facts_data.get('hotels', []):
+            fact = {
+                "type": "hotel",
+                "id": hotel.get('id', f"hotel_{hash(hotel.get('name', '')) % 10000}"),
+                "name": hotel.get('name', ''),
+                "address": hotel.get('location', destination),
+                "coords": hotel.get('coordinates', {}),
+                "rating": hotel.get('rating', 4.0),
+                "price_estimate": hotel.get('price_per_night', 5000),
+                "source": "llm_generated",
+                "availability_cache_ts": datetime.now(timezone.utc).isoformat(),
+                "confidence": hotel.get('confidence', 0.9),
+                "amenities": hotel.get('amenities', []),
+                "hotel_type": hotel.get('hotel_type', 'Hotel'),
+                "description": hotel.get('description', '')
+            }
+            facts.append(fact)
+        
+        # Parse activities
+        for activity in facts_data.get('activities', []):
+            fact = {
+                "type": "activity",
+                "subtype": "llm_generated",
+                "id": activity.get('id', f"activity_{hash(activity.get('name', '')) % 10000}"),
+                "name": activity.get('name', ''),
+                "address": activity.get('location', destination),
+                "coords": {},
+                "rating": activity.get('rating', 4.3),
+                "price_estimate": activity.get('price', 1500),
+                "source": "llm_generated",
+                "availability_cache_ts": datetime.now(timezone.utc).isoformat(),
+                "confidence": activity.get('confidence', 0.8),
+                "duration": activity.get('duration', '2-3 hours'),
+                "description": activity.get('description', ''),
+                "category": activity.get('category', 'Experience')
+            }
+            facts.append(fact)
+        
+        print(f"✅ LLM generated {len(facts)} facts for {destination}")
+        return facts
+    
+    def _get_fallback_facts(self, destination: str, slots) -> List[Dict[str, Any]]:
+        """Enhanced fallback using mock data with better matching"""
+        facts = []
+        
         # Extract base destination name for matching
-        base_destination = self._extract_base_destination(destination_name)
+        base_destination = self._extract_base_destination(destination)
         
         # Retrieve POIs (destinations)
         poi_facts = self._get_poi_facts(base_destination)
@@ -46,9 +228,8 @@ class RetrievalAgent:
         activity_facts = self._get_activity_facts(base_destination)
         facts.extend(activity_facts)
         
-        # Sort by confidence and return top results
-        facts.sort(key=lambda x: x.get('confidence', 0), reverse=True)
-        return facts[:20]  # Return top 20 facts
+        print(f"🔄 Using fallback facts: {len(facts)} facts for {destination}")
+        return facts
     
     def _extract_base_destination(self, destination_name: str) -> str:
         """Extract base destination name for matching"""
