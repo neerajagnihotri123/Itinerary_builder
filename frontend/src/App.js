@@ -1983,6 +1983,8 @@ function App() {
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [selectedDestination, setSelectedDestination] = useState(null);
   const [isDestinationModalOpen, setIsDestinationModalOpen] = useState(false);
+  const [itinerary, setItinerary] = useState(null);
+  const [showTripPlanner, setShowTripPlanner] = useState(false);
   const [destinations] = useState([
     {
       id: "manali_himachal",
