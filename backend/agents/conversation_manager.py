@@ -35,10 +35,17 @@ class ConversationManager:
     
     def __init__(self, llm_client):
         self.llm_client = llm_client
+        
+        # Primary slot agent for intent detection flow
+        self.slot_agent = SlotAgent(llm_client)
+        
+        # Individual slot agents for backward compatibility
         self.destination_agent = DestinationAgent(llm_client)
         self.dates_agent = DatesAgent(llm_client)
         self.travelers_agent = TravelersAgent(llm_client)
         self.budget_agent = BudgetAgent(llm_client)
+        
+        # Downstream agents
         self.retrieval_agent = RetrievalAgent(llm_client)
         self.planner_agent = PlannerAgent(llm_client)
         self.accommodation_agent = AccommodationAgent(llm_client)
