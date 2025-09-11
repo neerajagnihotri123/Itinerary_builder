@@ -45,9 +45,10 @@ class SlotAgent:
             'general': ['hello', 'hi', 'help', 'what can you do', 'hey', 'good morning', 'good evening']
         }
     
-    async def extract_intent_and_destination(self, message: str) -> Dict[str, Any]:
+    async def extract_intent_and_destination(self, message: str, current_slots: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Extract canonical destination and primary intent from user message.
+        Consider session context when determining if clarification is needed.
         
         Returns: {
             "destination_name": str|None,
@@ -74,9 +75,19 @@ class SlotAgent:
                 clarify = destination_result['clarification_question']
                 confidence = 0.3
             elif destination_result['destination_name'] is None and intent in ['accommodation']:
-                # Only ask for clarification for accommodation queries, not for general plan/find intent
-                clarify = "Which destination would you like to explore?"
-                confidence = 0.5
+                # For accommodation queries, check if there's a destination in session context
+                session_destination = current_slots.get('destination') if current_slots else None
+                if session_destination:
+                    # Use destination from session context
+                    destination_result['destination_name'] = session_destination
+                    # Try to find canonical place ID
+                    normalized = self.normalize_place_name(session_destination)
+                    destination_result['canonical_place_id'] = normalized.get('canonical_place_id')
+                    confidence = 0.9
+                    print(f"🔄 Using session destination for accommodation: {session_destination}")
+                else:
+                    clarify = "Which destination would you like to find accommodations for?"
+                    confidence = 0.5
             elif destination_result['destination_name'] is None and intent == 'plan':
                 # For general planning ("plan a trip"), let the planner flow handle destination selection
                 confidence = 0.8
