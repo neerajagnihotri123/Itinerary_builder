@@ -2,7 +2,7 @@
 Planner Agent - Generates day-by-day itineraries using retrieved facts
 """
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List
 
 class PlannerAgent:
