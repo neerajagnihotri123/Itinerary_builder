@@ -118,7 +118,7 @@ Rules:
         return context
     
     async def _generate_with_llm(self, context: str) -> str:
-        """Generate itinerary using LLM"""
+        """Generate comprehensive itinerary using LLM with improved prompting"""
         try:
             # Use the same approach as in the main server - create a new LlmChat instance
             from emergentintegrations.llm.chat import LlmChat, UserMessage
@@ -128,11 +128,29 @@ Rules:
             llm_client = LlmChat(
                 api_key=os.environ.get('EMERGENT_LLM_KEY'),
                 session_id=f"planner_{hash(context) % 10000}",
-                system_message="You are an expert travel planner. Generate detailed, realistic travel itineraries in JSON format."
+                system_message="You are an expert travel planner with extensive knowledge of Indian destinations. Generate detailed, realistic travel itineraries in JSON format with accurate information about places, activities, and logistics."
             ).with_model("openai", "gpt-4o-mini")
             
+            # Enhanced context with better structure
+            enhanced_context = f"""
+{context}
+
+Additional Guidelines:
+- Ensure all locations and activities are REAL and accurate
+- Include realistic travel times between locations
+- Consider local weather, seasons, and best visiting times
+- Add specific details like opening hours, entry fees where relevant
+- Include meal breaks at appropriate times
+- Balance active and relaxing activities
+- Consider the traveler profile (adults/children) for activity selection
+- Use actual place names, not generic descriptions
+- Include specific recommendations for authentic local experiences
+
+Focus on creating an itinerary that a real traveler could actually follow.
+"""
+            
             # Create and send the message
-            user_message = UserMessage(text=context)
+            user_message = UserMessage(text=enhanced_context)
             response = await llm_client.send_message(user_message)
             
             # Handle different response types
@@ -141,8 +159,14 @@ Rules:
             else:
                 content = str(response)
             
-            print(f"✅ LLM generation successful: {len(content)} characters")
-            return content
+            # Validate JSON structure before returning
+            try:
+                json.loads(content)
+                print(f"✅ LLM generation successful: {len(content)} characters, valid JSON")
+                return content
+            except json.JSONDecodeError:
+                print(f"❌ LLM generated invalid JSON, using intelligent fallback")
+                return self._generate_fallback_itinerary(enhanced_context)
             
         except Exception as e:
             print(f"❌ LLM generation failed: {e}")
