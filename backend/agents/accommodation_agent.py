@@ -16,8 +16,7 @@ class AccommodationAgent:
     def __init__(self, llm_client):
         self.llm_client = llm_client
         
-        # Mock hotel data for Indian destinations
-        self.mock_hotels = [
+        return [
             # Andaman Islands Hotels
             {
                 "id": "hotel_andaman_1",
