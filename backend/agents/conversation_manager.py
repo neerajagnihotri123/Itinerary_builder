@@ -288,6 +288,62 @@ class ConversationManager:
         """Find flow: retrieval_agent → conversation_agent (render cards)"""
         print(f"🔍 Handling find flow")
         
+        # Check if user is asking for general recommendations
+        message_lower = message.lower()
+        if any(word in message_lower for word in ['recommendations', 'recommend', 'suggest', 'popular', 'show me', 'what about']):
+            # Show popular destinations without asking for clarification
+            popular_destinations = [
+                {
+                    'name': 'Kerala, India', 
+                    'id': 'kerala_backwaters', 
+                    'description': 'God\'s Own Country with serene backwaters and lush greenery',
+                    'highlights': ['Backwaters', 'Hill stations', 'Beaches', 'Spice plantations'],
+                    'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
+                },
+                {
+                    'name': 'Rajasthan, India', 
+                    'id': 'rajasthan_india', 
+                    'description': 'Land of kings with majestic palaces and desert adventures',
+                    'highlights': ['Royal palaces', 'Desert safaris', 'Forts', 'Cultural heritage'],
+                    'hero_image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop'
+                },
+                {
+                    'name': 'Manali, Himachal Pradesh', 
+                    'id': 'manali_himachal', 
+                    'description': 'Mountain paradise perfect for adventure and relaxation',
+                    'highlights': ['Snow-capped peaks', 'Adventure sports', 'Apple orchards', 'Scenic drives'],
+                    'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
+                },
+                {
+                    'name': 'Andaman Islands', 
+                    'id': 'andaman_islands', 
+                    'description': 'Tropical paradise with pristine beaches and marine life',
+                    'highlights': ['Pristine beaches', 'Scuba diving', 'Water sports', 'Marine national parks'],
+                    'hero_image': 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=600&h=400&fit=crop'
+                },
+                {
+                    'name': 'Rishikesh, Uttarakhand', 
+                    'id': 'rishikesh_uttarakhand', 
+                    'description': 'Yoga capital and adventure hub with spiritual experiences',
+                    'highlights': ['River rafting', 'Yoga retreats', 'Bungee jumping', 'Spiritual ashrams'],
+                    'hero_image': 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop'
+                }
+            ]
+            
+            destination_cards = self._create_destination_cards(popular_destinations)
+            
+            return {
+                "chat_text": "Here are some amazing destinations I'd recommend! ✨ Each offers unique experiences perfect for different types of travelers. Which one catches your eye?",
+                "ui_actions": destination_cards,
+                "metadata": {
+                    "intent": "find",
+                    "cards_generated": len(destination_cards),
+                    "type": "discovery",
+                    "agent": "conversation_manager"
+                }
+            }
+        
+        # If specific destination mentioned
         if slots.destination:
             # Generate destination card with information
             destination_cards = self._create_destination_cards([{
@@ -327,28 +383,46 @@ class ConversationManager:
                 "metadata": {
                     "intent": "find",
                     "destination": slots.destination,
-                    "cards_generated": len(destination_cards)
+                    "cards_generated": len(destination_cards),
+                    "agent": "conversation_manager"
                 }
             }
         else:
-            # General discovery - show popular destinations
+            # No specific destination, show popular destinations anyway
             popular_destinations = [
-                {'name': 'Kerala, India', 'id': 'kerala_backwaters', 'description': 'God\'s Own Country with serene backwaters'},
-                {'name': 'Rajasthan, India', 'id': 'rajasthan_india', 'description': 'Land of kings with majestic palaces'},
-                {'name': 'Manali, India', 'id': 'manali_himachal', 'description': 'Mountain paradise in Himachal Pradesh'},
-                {'name': 'Andaman Islands, India', 'id': 'andaman_islands', 'description': 'Tropical paradise with pristine beaches'},
-                {'name': 'Rishikesh, India', 'id': 'rishikesh_uttarakhand', 'description': 'Yoga capital with adventure sports'}
+                {
+                    'name': 'Kerala, India', 
+                    'id': 'kerala_backwaters', 
+                    'description': 'God\'s Own Country with serene backwaters',
+                    'highlights': ['Backwaters', 'Hill stations', 'Beaches', 'Spice plantations'],
+                    'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
+                },
+                {
+                    'name': 'Rajasthan, India', 
+                    'id': 'rajasthan_india', 
+                    'description': 'Land of kings with majestic palaces',
+                    'highlights': ['Royal palaces', 'Desert safaris', 'Forts', 'Cultural heritage'],
+                    'hero_image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop'
+                },
+                {
+                    'name': 'Goa, India', 
+                    'id': 'goa_india', 
+                    'description': 'Beach paradise with vibrant nightlife',
+                    'highlights': ['Beautiful beaches', 'Portuguese heritage', 'Water sports', 'Nightlife'],
+                    'hero_image': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&h=400&fit=crop'
+                }
             ]
             
             destination_cards = self._create_destination_cards(popular_destinations)
             
             return {
-                "chat_text": "Here are some amazing destinations perfect for your next adventure! Each offers unique experiences and unforgettable memories.",
+                "chat_text": "Here are some incredible destinations perfect for your next adventure! Each offers unique experiences and unforgettable memories. 🗺️",
                 "ui_actions": destination_cards,
                 "metadata": {
                     "intent": "find",
                     "cards_generated": len(destination_cards),
-                    "type": "discovery"
+                    "type": "discovery",
+                    "agent": "conversation_manager"
                 }
             }
     
