@@ -322,24 +322,40 @@ class AccommodationAgent:
         else:
             reasons.append("Good alternative choice")
         
-        # Add specific reasons
+        # Add specific reasons with safe slot access
         price = hotel.get('price_estimate', 5000)
-        user_budget = getattr(slots, 'budget_per_night', 7000)
+        user_budget = 7000  # Default
         
-        if price <= user_budget:
-            reasons.append("Within your budget")
+        if hasattr(slots, 'budget_per_night') and slots.budget_per_night:
+            user_budget = slots.budget_per_night
+        elif isinstance(slots, dict) and slots.get('budget_per_night'):
+            user_budget = slots.get('budget_per_night')
+        
+        try:
+            if float(price) <= float(user_budget):
+                reasons.append("Within your budget")
+        except (ValueError, TypeError):
+            pass  # Skip budget comparison if values are invalid
         
         rating = hotel.get('rating', 4.0)
-        if rating >= 4.5:
-            reasons.append(f"Outstanding {rating}★ rating")
-        elif rating >= 4.0:
-            reasons.append(f"Excellent {rating}★ rating")
+        try:
+            rating = float(rating)
+            if rating >= 4.5:
+                reasons.append(f"Outstanding {rating}★ rating")
+            elif rating >= 4.0:
+                reasons.append(f"Excellent {rating}★ rating")
+        except (ValueError, TypeError):
+            pass  # Skip rating if invalid
         
         distance = hotel.get('distance_to_day1_km', hotel.get('distance_to_center_km', 2.0))
-        if distance <= 2.0:
-            reasons.append("Prime location")
-        elif distance <= 5.0:
-            reasons.append("Convenient location")
+        try:
+            distance = float(distance)
+            if distance <= 2.0:
+                reasons.append("Prime location")
+            elif distance <= 5.0:
+                reasons.append("Convenient location")
+        except (ValueError, TypeError):
+            pass  # Skip distance if invalid
         
         return " • ".join(reasons[:3])  # Limit to 3 reasons
     
