@@ -1724,12 +1724,13 @@ def main():
     print(f"💭 Question Chip Generation: {'PASS' if question_chip_success else 'FAIL'}")
     print(f"🔍 UI Actions Structure: {'PASS' if structure_success else 'FAIL'}")
     print(f"🇮🇳 Mock Data Integration: {'PASS' if mock_data_success else 'FAIL'}")
+    print(f"🔍 RetrievalAgent Implementation: {'PASS' if retrieval_agent_success else 'FAIL'}")
     
     # Update review tests count
     review_tests = [slot_agent_success, routing_flow_success, ui_format_success, error_handling_success, 
-                   critical_scenarios_success, accommodation_success, question_chip_success, structure_success, mock_data_success]
+                   critical_scenarios_success, accommodation_success, question_chip_success, structure_success, mock_data_success, retrieval_agent_success]
     review_passed = sum(review_tests)
-    print(f"\nReview Tests: {review_passed}/9 passing")
+    print(f"\nReview Tests: {review_passed}/10 passing")
     
     # Overall assessment including review-specific tests
     total_critical_score = critical_passed + review_passed
