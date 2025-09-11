@@ -152,8 +152,8 @@ class SlotAgent:
                     "clarification_question": question
                 }
         
-        # Step 3: Skip LLM for general recommendation queries  
-        if any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'popular', 'give me']):
+        # Step 3: Skip LLM for general recommendation queries and general planning  
+        if any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'popular', 'give me', 'plan a trip', 'plan trip']):
             return {
                 "destination_name": None,
                 "canonical_place_id": None,
