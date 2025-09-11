@@ -353,18 +353,65 @@ class ConversationManager:
             }
     
     async def _handle_general_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
-        """General conversation flow"""
+        """General conversation flow with friendly, jovial responses (2-3 sentences)"""
         print(f"💬 Handling general flow")
         
-        # Use UX agent to format general response
-        ux_response = await self.ux_agent.format_general_response(message)
+        # Generate short, warm response
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"general_{hash(message) % 1000}",
+                system_message="""You are a friendly, jovial travel concierge. 
+                
+BEHAVIOR:
+- Keep responses light, encouraging, and professional
+- Use short and sweet sentences, no long paragraphs  
+- Maximum 2-3 sentences per response
+- Be warm and engaging but concise
+- Ask clarifying questions to help users plan trips"""
+            ).with_model("openai", "gpt-4o-mini")
+            
+            user_message = UserMessage(text=f"User said: '{message}'. Respond as a friendly travel concierge in 2-3 short, warm sentences.")
+            response = await llm_client.send_message(user_message)
+            
+            if hasattr(response, 'content'):
+                chat_text = response.content.strip()
+            else:
+                chat_text = str(response).strip()
+                
+        except Exception as e:
+            print(f"❌ General flow LLM error: {e}")
+            chat_text = "Hello! I'm here to help you plan amazing trips. Where would you like to explore?"
+        
+        # Generate question chips for exploration
+        ui_actions = [
+            {
+                "type": "question_chip",
+                "payload": {
+                    "id": "popular_destinations",
+                    "question": "Show popular destinations",
+                    "category": "discovery"
+                }
+            },
+            {
+                "type": "question_chip", 
+                "payload": {
+                    "id": "plan_trip",
+                    "question": "Plan a trip",
+                    "category": "planning"
+                }
+            }
+        ]
         
         return {
-            "chat_text": ux_response.get('human_text', 'Hello! I\'m here to help you plan amazing trips. Where would you like to explore?'),
-            "ui_actions": self._convert_ux_actions_to_ui_actions(ux_response.get('actions', [])),
+            "chat_text": chat_text,
+            "ui_actions": ui_actions,
             "metadata": {
                 "intent": "general",
-                "conversational": True
+                "conversational": True,
+                "agent": "conversation_manager"
             }
         }
     
