@@ -2097,6 +2097,28 @@ function App() {
     scrollToBottom();
   }, [messages, recommendations]);
 
+  // Extract destinations from text for map highlighting
+  const extractDestinationsFromText = (text) => {
+    const knownDestinations = [
+      'Kerala', 'Goa', 'Rajasthan', 'Manali', 'Rishikesh', 'Kashmir', 'Ladakh', 
+      'Andaman Islands', 'Pondicherry', 'Himachal Pradesh', 'Mumbai', 'Delhi', 
+      'Bangalore', 'Chennai', 'Kolkata', 'Agra', 'Jaipur', 'Udaipur', 'Jodhpur',
+      'Varanasi', 'Haridwar', 'Darjeeling', 'Shimla', 'Ooty', 'Munnar', 'Kochi',
+      'Alleppey', 'Thekkady', 'Hampi', 'Mysore'
+    ];
+    
+    const found = [];
+    const textLower = text.toLowerCase();
+    
+    knownDestinations.forEach(destination => {
+      if (textLower.includes(destination.toLowerCase())) {
+        found.push(destination);
+      }
+    });
+    
+    return found;
+  };
+
   const handleSendMessage = async () => {
     console.log('🚀 handleSendMessage called!');
     
