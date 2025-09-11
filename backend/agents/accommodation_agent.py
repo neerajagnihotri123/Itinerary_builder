@@ -243,13 +243,35 @@ class AccommodationAgent:
         amenities = [a.lower() for a in hotel.get('amenities', [])]
         score = 0.5  # Base score
         
+        # Safely get slot values with fallbacks
+        children = 0
+        adults = 2
+        
+        if hasattr(slots, 'children'):
+            children = slots.children or 0
+        elif isinstance(slots, dict):
+            children = slots.get('children', 0)
+        
+        if hasattr(slots, 'adults'):
+            adults = slots.adults or 2
+        elif isinstance(slots, dict):
+            adults = slots.get('adults', 2)
+        
+        # Ensure numeric values
+        try:
+            children = int(children)
+            adults = int(adults)
+        except (ValueError, TypeError):
+            children = 0
+            adults = 2
+        
         # Must-have amenities for different user types
-        if getattr(slots, 'children', 0) > 0:
+        if children > 0:
             family_amenities = ['pool', 'family room', 'kids club', 'playground', 'babysitting']
             family_matches = sum(1 for amenity in family_amenities if any(fa in amenity for fa in amenities))
             score += (family_matches / len(family_amenities)) * 0.3
         
-        if getattr(slots, 'adults', 2) >= 4:  # Group travel
+        if adults >= 4:  # Group travel
             group_amenities = ['restaurant', 'conference room', 'group booking', 'large rooms']
             group_matches = sum(1 for amenity in group_amenities if any(ga in amenity for ga in amenities))
             score += (group_matches / len(group_amenities)) * 0.2
