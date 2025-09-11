@@ -400,6 +400,23 @@ class AccommodationAgent:
         """
         print(f"🔍 Checking availability for hotel {hotel_id}")
         
+        # Safely get number of nights
+        nights = 2  # Default
+        try:
+            if hasattr(slots, 'nights') and slots.nights:
+                nights = int(slots.nights)
+            elif isinstance(slots, dict) and slots.get('nights'):
+                nights = int(slots.get('nights'))
+            elif hasattr(slots, 'start_date') and hasattr(slots, 'end_date') and slots.start_date and slots.end_date:
+                # Calculate nights from dates
+                from datetime import datetime
+                start = datetime.fromisoformat(str(slots.start_date))
+                end = datetime.fromisoformat(str(slots.end_date))
+                nights = (end - start).days
+        except (ValueError, TypeError, AttributeError) as e:
+            print(f"⚠️  Error calculating nights: {e}, using default")
+            nights = 2
+        
         # In a real system, this would call hotel booking APIs
         # For now, simulate availability check
         availability_result = {
@@ -407,7 +424,8 @@ class AccommodationAgent:
             'available': True,
             'rooms_available': 3,
             'price_per_night': 8500,
-            'total_price': 8500 * (getattr(slots, 'nights', 2)),
+            'total_price': 8500 * nights,
+            'nights': nights,
             'cancellation_policy': 'Free cancellation up to 24 hours before check-in',
             'booking_options': {
                 'standard_room': {'available': True, 'price': 8500},
