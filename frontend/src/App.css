@@ -123,10 +123,10 @@
   border-radius: 20px 20px 0 0;
 }
 
-/* Professional Buttons */
+/* Professional Buttons - Updated with new palette */
 .btn-primary {
   background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
-  color: white;
+  color: var(--light-50);
   border: none;
   border-radius: 12px;
   padding: 12px 24px;
@@ -134,18 +134,18 @@
   font-size: 14px;
   letter-spacing: 0.025em;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(230, 149, 67, 0.3);
 }
 
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
-  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(230, 149, 67, 0.4);
   transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: linear-gradient(135deg, var(--secondary-500) 0%, var(--secondary-600) 100%);
-  color: white;
+  background: linear-gradient(135deg, var(--charcoal-800) 0%, var(--charcoal-900) 100%);
+  color: var(--light-50);
   border: none;
   border-radius: 12px;
   padding: 12px 24px;
@@ -153,12 +153,12 @@
   font-size: 14px;
   letter-spacing: 0.025em;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 12px rgba(35, 35, 35, 0.3);
 }
 
 .btn-secondary:hover {
-  background: linear-gradient(135deg, var(--secondary-600) 0%, var(--secondary-700) 100%);
-  box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+  background: linear-gradient(135deg, var(--charcoal-900) 0%, var(--charcoal-800) 100%);
+  box-shadow: 0 6px 20px rgba(35, 35, 35, 0.4);
   transform: translateY(-1px);
 }
 
