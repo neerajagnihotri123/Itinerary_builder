@@ -2190,6 +2190,10 @@ function App() {
         
         if (newItinerary) {
           setItinerary(newItinerary);
+          // Connect to the rendering state and show in right panel
+          setGeneratedItinerary(newItinerary.itinerary || []);
+          setRightPanelContent('itinerary');
+          console.log('🗓️ Set itinerary with', (newItinerary.itinerary || []).length, 'days');
         }
       }
 
