@@ -21,10 +21,8 @@ class RetrievalAgent:
         
     async def get_facts(self, slots) -> List[Dict[str, Any]]:
         """
-        Fetch and return top-K matching facts (hotels, POIs, activities) using LLM
-        Sorts by relevance + freshness; includes provider/source and last_updated
-        Returns confidence score (0–1) for each fact
-        If none found, return explainable no_facts response
+        Fetch and return top-K matching facts using pure LLM generation
+        No mock data - only LLM-generated responses
         """
         facts = []
         
@@ -34,22 +32,16 @@ class RetrievalAgent:
             return self._generate_no_facts_response("No destination specified")
         
         try:
-            # Use LLM to generate comprehensive facts about the destination
+            # Use only LLM to generate comprehensive facts about the destination
             llm_facts = await self._generate_facts_with_llm(destination_name, slots)
             if llm_facts:
                 facts.extend(llm_facts)
             else:
-                # Fallback to mock data if LLM returns empty
-                facts.extend(self._get_fallback_facts(destination_name, slots))
+                return self._generate_no_facts_response(f"Could not generate facts for {destination_name}")
                 
         except Exception as e:
             print(f"❌ LLM fact generation failed: {e}")
-            # Fallback to mock data
-            facts.extend(self._get_fallback_facts(destination_name, slots))
-        
-        # If no facts found at all, return explanatory response
-        if not facts:
-            return self._generate_no_facts_response(f"No facts found for {destination_name}")
+            return self._generate_no_facts_response(f"Error generating facts for {destination_name}: {str(e)}")
         
         # Sort by relevance (confidence) + freshness (last_updated)
         facts = self._sort_facts_by_relevance_and_freshness(facts)
