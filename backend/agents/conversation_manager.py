@@ -354,44 +354,65 @@ class ConversationManager:
     
     async def _handle_general_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """General conversation flow with friendly, jovial responses (2-3 sentences)"""
-        print(f"💬 Handling general flow")
+        print(f"💬 Handling general flow for: '{message}'")
         
-        # Generate short, warm response
-        try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-            
-            llm_client = LlmChat(
-                api_key=os.environ.get('EMERGENT_LLM_KEY'),
-                session_id=f"general_{hash(message) % 1000}",
-                system_message="""You are a friendly, jovial travel concierge. 
-                
-BEHAVIOR:
-- Keep responses light, encouraging, and professional
-- Use short and sweet sentences, no long paragraphs  
-- Maximum 2-3 sentences per response
-- Be warm and engaging but concise
-- Ask clarifying questions to help users plan trips"""
-            ).with_model("openai", "gpt-4o-mini")
-            
-            user_message = UserMessage(text=f"User said: '{message}'. Respond as a friendly travel concierge in 2-3 short, warm sentences.")
-            response = await llm_client.send_message(user_message)
-            
-            if hasattr(response, 'content'):
-                chat_text = response.content.strip()
-            else:
-                chat_text = str(response).strip()
-                
-        except Exception as e:
-            print(f"❌ General flow LLM error: {e}")
-            chat_text = "Hello! I'm here to help you plan amazing trips. Where would you like to explore?"
+        # Generate warm, personalized responses based on common greetings
+        message_lower = message.lower().strip()
         
-        # Generate question chips for exploration
+        if message_lower in ['hi', 'hello', 'hey', 'hiya']:
+            chat_text = "Hello there! 😊 I'm your friendly travel companion, ready to help you discover amazing destinations. What adventure are you dreaming of today?"
+        elif 'help' in message_lower:
+            chat_text = "I'd love to help you plan the perfect trip! ✈️ Tell me about a destination you're curious about, or let me show you some incredible places to explore."
+        elif message_lower in ['good morning', 'morning']:
+            chat_text = "Good morning, fellow adventurer! ☀️ What a perfect day to start planning your next getaway. Any destinations calling to you?"
+        elif message_lower in ['good evening', 'evening']:
+            chat_text = "Good evening! 🌅 There's something magical about planning travels in the evening. Where shall we explore together?"
+        else:
+            # For other general messages, try LLM but with better fallback
+            try:
+                from emergentintegrations.llm.chat import LlmChat, UserMessage
+                
+                llm_client = LlmChat(
+                    api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                    session_id=f"general_{hash(message) % 1000}",
+                    system_message="""You are a warm, enthusiastic travel concierge named Alex. 
+
+PERSONALITY:
+- Friendly and jovial, like talking to a best friend
+- Use emojis sparingly but effectively 
+- Show genuine excitement about travel
+- Keep responses to 2-3 short sentences maximum
+- Always end with a travel-related question or suggestion
+
+RESPONSE STYLE:
+- "Hey there! 😊" 
+- "That sounds exciting!"
+- "I'd love to help you with that!"
+- "What adventure are you thinking about?"
+"""
+                ).with_model("openai", "gpt-4o-mini")
+                
+                user_message = UserMessage(text=f"User just said: '{message}'. Respond warmly as travel concierge Alex in 2-3 sentences max.")
+                response = await llm_client.send_message(user_message)
+                
+                if hasattr(response, 'content'):
+                    chat_text = response.content.strip()
+                    print(f"✅ LLM generated: {chat_text}")
+                else:
+                    chat_text = str(response).strip()
+                    print(f"✅ LLM generated (str): {chat_text}")
+                    
+            except Exception as e:
+                print(f"❌ General flow LLM error: {e}")
+                chat_text = "Hey there! 😊 I'm excited to help you plan an incredible journey. What destination has been on your mind lately?"
+        
+        # Generate engaging question chips
         ui_actions = [
             {
                 "type": "question_chip",
                 "payload": {
                     "id": "popular_destinations",
-                    "question": "Show popular destinations",
+                    "question": "Show me popular destinations",
                     "category": "discovery"
                 }
             },
@@ -399,11 +420,21 @@ BEHAVIOR:
                 "type": "question_chip", 
                 "payload": {
                     "id": "plan_trip",
-                    "question": "Plan a trip",
+                    "question": "Help me plan a trip",
                     "category": "planning"
+                }
+            },
+            {
+                "type": "question_chip", 
+                "payload": {
+                    "id": "beach_destinations",
+                    "question": "Beach destinations",
+                    "category": "discovery"
                 }
             }
         ]
+        
+        print(f"✅ Generated general response: {chat_text}")
         
         return {
             "chat_text": chat_text,
@@ -411,7 +442,8 @@ BEHAVIOR:
             "metadata": {
                 "intent": "general",
                 "conversational": True,
-                "agent": "conversation_manager"
+                "agent": "conversation_manager",
+                "response_type": "friendly_greeting"
             }
         }
     
