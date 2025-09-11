@@ -2174,9 +2174,34 @@ function App() {
             newItinerary = action.payload;
             console.log('🗓️ Added itinerary:', action.payload.id);
           } else if (action.type === 'trip_planner_card' && action.payload) {
-            // Show trip planner modal
+            // Pre-populate trip planner with backend data
+            const payload = action.payload;
+            if (payload.current_destination) {
+              setTripDetails(prev => ({
+                ...prev,
+                destination: payload.current_destination
+              }));
+            }
+            if (payload.current_dates) {
+              // Parse date range if provided
+              const dateMatch = payload.current_dates.match(/(\d{4}-\d{2}-\d{2}) to (\d{4}-\d{2}-\d{2})/);
+              if (dateMatch) {
+                setTripDetails(prev => ({
+                  ...prev,
+                  dates: payload.current_dates,
+                  startDate: dateMatch[1],
+                  endDate: dateMatch[2]
+                }));
+              }
+            }
+            if (payload.current_budget) {
+              setTripDetails(prev => ({
+                ...prev,
+                budget: payload.current_budget
+              }));
+            }
             setShowTripPlanner(true);
-            console.log('📋 Showing trip planner form');
+            console.log('📋 Showing trip planner form with payload:', payload);
           }
         });
 
