@@ -183,6 +183,9 @@ class AccommodationAgent:
         # Sort by total score (descending)
         scored_hotels.sort(key=lambda h: h['total_score'], reverse=True)
         
+        print(f"   📊 Hotels scored and ranked by comprehensive factors")
+        return scored_hotels
+    
     def _calculate_price_score(self, hotel: Dict[str, Any], slots) -> float:
         """Calculate normalized price score (0-1, higher = better value)"""
         hotel_price = hotel.get('price_estimate', 5000)
