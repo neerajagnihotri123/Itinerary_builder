@@ -419,24 +419,24 @@ class ConversationManager:
         
         return ui_actions
     
-    def _create_hotel_ui_actions(self, hotels: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Create UI actions for hotel cards"""
+    def _create_hotel_ui_actions(self, hotels: List[Dict]) -> List[Dict[str, Any]]:
+        """Create hotel card UI actions"""
         ui_actions = []
-        
-        for hotel in hotels[:3]:  # Limit to 3 hotels
+        for hotel in hotels:
             ui_actions.append({
-                "type": "hotel_card",
+                "type": "card_add", 
                 "payload": {
-                    "id": hotel.get('id', f"hotel_{hash(str(hotel)) % 1000}"),
-                    "name": hotel.get('name', 'Hotel'),
-                    "rating": hotel.get('rating', 4.5),
-                    "price": hotel.get('price_per_night', hotel.get('price_estimate', 5000)),
-                    "description": hotel.get('description', hotel.get('reason', 'Great location and amenities')),
+                    "id": hotel.get('id', f"hotel_{hash(hotel.get('name', '')) % 1000}"),
+                    "category": "hotel",
+                    "title": hotel.get('name', 'Hotel'),
+                    "rating": hotel.get('rating', 4.0),
+                    "price_estimate": hotel.get('price_estimate', 5000),
                     "amenities": hotel.get('amenities', []),
-                    "image": hotel.get('image', 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop')
+                    "hero_image": hotel.get('hero_image', 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&h=400&fit=crop'),
+                    "booking_available": hotel.get('booking_link_estimate', True),
+                    "distance_info": f"{hotel.get('distance_to_day1_km', 2.0)} km from center"
                 }
             })
-        
         return ui_actions
     
     def _create_destination_cards(self, destinations: List[Dict]) -> List[Dict[str, Any]]:
