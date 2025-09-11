@@ -57,6 +57,176 @@ class PlannerAgent:
             print(f"❌ LLM generation failed: {e}")
             return self._generate_fallback_itinerary(context)
     
+    def _build_context(self, slots, retrieval_candidates: List[Dict[str, Any]]) -> str:
+        """Build context for LLM generation using slots and retrieval facts"""
+        # Calculate trip duration
+        if slots.start_date and slots.end_date:
+            start = datetime.fromisoformat(slots.start_date)
+            end = datetime.fromisoformat(slots.end_date)
+            days = (end - start).days + 1
+        else:
+            days = 5  # Default trip length
+        
+        # Use the existing _prepare_planning_context method
+        return self._prepare_planning_context(slots, retrieval_candidates, days)
+    
+    def _calculate_budget_estimate(self, itinerary_data: Dict, slots) -> Dict[str, Any]:
+        """Calculate budget estimate from itinerary data"""
+        try:
+            itinerary = itinerary_data.get('itinerary', [])
+            hotels = itinerary_data.get('hotel_recommendations', [])
+            
+            # Calculate accommodation costs
+            accommodation_cost = 0
+            if hotels:
+                avg_hotel_price = sum(h.get('price_estimate', 5000) for h in hotels) / len(hotels)
+                nights = len(itinerary) - 1 if len(itinerary) > 1 else 1
+                accommodation_cost = avg_hotel_price * nights
+            
+            # Calculate activity costs
+            activity_cost = 0
+            for day in itinerary:
+                for activity in day.get('activities', []):
+                    activity_cost += activity.get('price_estimate', 1000)
+            
+            # Calculate total per person
+            total_per_person = accommodation_cost + activity_cost
+            travelers = getattr(slots, 'adults', 2) + getattr(slots, 'children', 0)
+            
+            return {
+                "total_per_person": int(total_per_person),
+                "accommodation": int(accommodation_cost),
+                "activities": int(activity_cost),
+                "total_for_group": int(total_per_person * travelers),
+                "currency": "INR",
+                "travelers": travelers
+            }
+            
+        except Exception as e:
+            print(f"⚠️ Budget calculation error: {e}")
+            return {
+                "total_per_person": 15000,
+                "accommodation": 10000,
+                "activities": 5000,
+                "total_for_group": 30000,
+                "currency": "INR",
+                "travelers": 2
+            }
+    
+    def _extract_highlights(self, itinerary_data: Dict) -> List[str]:
+        """Extract key highlights from itinerary"""
+        highlights = []
+        
+        try:
+            itinerary = itinerary_data.get('itinerary', [])
+            
+            for day in itinerary[:3]:  # First 3 days for highlights
+                for activity in day.get('activities', [])[:2]:  # Top 2 activities per day
+                    title = activity.get('title', '')
+                    if title and len(highlights) < 6:
+                        highlights.append(title)
+            
+            if not highlights:
+                highlights = ["Scenic destinations", "Cultural experiences", "Adventure activities"]
+                
+        except Exception:
+            highlights = ["Amazing experiences await", "Unforgettable memories", "Perfect getaway"]
+        
+        return highlights
+
+    def _generate_fallback_itinerary(self, context: str) -> Dict[str, Any]:
+        """Generate fallback itinerary when LLM fails"""
+        # Use the existing fallback logic but adapt the return format
+        try:
+            # Extract basic info from context
+            destination = "Unknown Destination"
+            if "Destination:" in context:
+                lines = context.split('\n')
+                for line in lines:
+                    if line.strip().startswith("- Destination:"):
+                        destination = line.split(":")[1].strip()
+                        break
+            
+            # Create basic structured response
+            fallback_data = {
+                "itinerary": [
+                    {
+                        "day": 1,
+                        "date": datetime.now().strftime("%Y-%m-%d"),
+                        "activities": [
+                            {
+                                "time": "10:00",
+                                "type": "arrival",
+                                "id": "arrival",
+                                "title": f"Arrival in {destination}",
+                                "notes": "Check-in and orientation"
+                            },
+                            {
+                                "time": "15:00",
+                                "type": "poi",
+                                "id": "exploration",
+                                "title": "Local Exploration",
+                                "notes": "Discover the area"
+                            }
+                        ]
+                    }
+                ],
+                "hotel_recommendations": [
+                    {
+                        "id": "fallback_hotel",
+                        "name": f"Recommended Hotel in {destination}",
+                        "price_estimate": 5000,
+                        "reason": "Comfortable accommodation with good amenities"
+                    }
+                ],
+                "total_days": 1,
+                "destination": destination,
+                "travelers": 2,
+                "budget_estimate": {
+                    "total_per_person": 10000,
+                    "accommodation": 5000,
+                    "activities": 5000,
+                    "total_for_group": 20000,
+                    "currency": "INR",
+                    "travelers": 2
+                },
+                "highlights": ["Local exploration", "Cultural immersion", "Relaxation"],
+                "metadata": {
+                    "generated_by": "planner_agent",
+                    "generation_method": "fallback",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "facts_used": 0
+                }
+            }
+            
+            return fallback_data
+            
+        except Exception as e:
+            print(f"❌ Fallback generation failed: {e}")
+            # Return minimal valid structure
+            return {
+                "itinerary": [],
+                "hotel_recommendations": [],
+                "total_days": 0,
+                "destination": "Unknown",
+                "travelers": 2,
+                "budget_estimate": {
+                    "total_per_person": 0,
+                    "accommodation": 0,
+                    "activities": 0,
+                    "total_for_group": 0,
+                    "currency": "INR",
+                    "travelers": 2
+                },
+                "highlights": [],
+                "metadata": {
+                    "generated_by": "planner_agent",
+                    "generation_method": "minimal_fallback",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "facts_used": 0
+                }
+            }
+    
     def _prepare_planning_context(self, slots, candidates: List[Dict[str, Any]], days: int) -> str:
         """Prepare context for LLM planning"""
         
