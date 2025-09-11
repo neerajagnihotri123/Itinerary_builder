@@ -83,7 +83,7 @@ class ConversationManager:
             print(f"🔄 Processing message: {message[:50]}...")
             
             # STEP 1: Intent detection - conversation_agent → slot_agent
-            slot_result = await self.slot_agent.extract_intent_and_destination(message)
+            slot_result = await self.slot_agent.extract_intent_and_destination(message, current_slots)
             
             intent = slot_result.get('intent', 'general')
             destination = slot_result.get('destination_name')
