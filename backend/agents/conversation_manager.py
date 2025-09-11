@@ -191,20 +191,24 @@ Guidelines:
             return f"User is asking: '{message}'"
     
     def _classify_intent(self, message: str) -> str:
-        """Classify user intent for metadata"""
-        message_lower = message.lower()
+        """Classify user intent for metadata - matching server.py expectations"""
+        message_lower = message.lower().strip()
         
-        # Hotel-related intents
-        if any(word in message_lower for word in ['hotel', 'stay', 'accommodation', 'resort', 'lodge', 'booking']):
-            return "hotel_inquiry"
+        # Check for destination-specific queries (like "tell me about kerala")
+        if self._is_destination_specific_query(message):
+            return "destination_specific"
+        
+        # Check for destination discovery queries (like "popular destinations")
+        elif self._is_destination_discovery_query(message):
+            return "destination_discovery"
+        
+        # Check for accommodation queries (like "hotels in goa")
+        elif self._is_accommodation_query(message):
+            return "accommodation_query"
         
         # Activity-related intents  
         elif any(word in message_lower for word in ['activity', 'adventure', 'things to do', 'experience', 'attractions', 'sightseeing']):
             return "activity_inquiry"
-        
-        # Destination-related intents
-        elif any(word in message_lower for word in ['destination', 'place', 'visit', 'go to', 'beach', 'mountain', 'city']):
-            return "destination_inquiry"
         
         # Planning-related intents
         elif any(word in message_lower for word in ['plan', 'trip', 'itinerary', 'travel', 'vacation']):
