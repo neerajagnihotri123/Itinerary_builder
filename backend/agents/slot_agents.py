@@ -72,10 +72,13 @@ class SlotAgent:
             if destination_result['needs_clarification']:
                 clarify = destination_result['clarification_question']
                 confidence = 0.3
-            elif destination_result['destination_name'] is None and intent in ['plan', 'accommodation']:
-                # Only ask for clarification for plan and accommodation, not for find intent
+            elif destination_result['destination_name'] is None and intent in ['accommodation']:
+                # Only ask for clarification for accommodation queries, not for general plan/find intent
                 clarify = "Which destination would you like to explore?"
                 confidence = 0.5
+            elif destination_result['destination_name'] is None and intent == 'plan':
+                # For general planning ("plan a trip"), let the planner flow handle destination selection
+                confidence = 0.8
             elif intent == 'general' and destination_result['destination_name'] is None:
                 confidence = 0.8  # General queries don't need destinations
             
