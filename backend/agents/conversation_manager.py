@@ -114,7 +114,11 @@ class ConversationManager:
                     retrieval_facts = []
             
             # STEP 3: Route to appropriate agent based on intent
-            if intent == 'plan':
+            if intent == 'confirmation':
+                # Handle confirmation responses like "yes", "ok", "proceed"
+                return await self._handle_confirmation_flow(message, slots, retrieval_facts, session_id)
+            
+            elif intent == 'plan':
                 # Planner flow: slot_agent → retrieval_agent → planner_agent → validator_agent → conversation_agent
                 return await self._handle_planner_flow(message, slots, retrieval_facts, session_id)
             
