@@ -124,6 +124,8 @@ class SlotAgent:
             return 'accommodation'
         elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'about', 'what', 'find', 'destinations', 'beach destinations', 'mountain destinations']):
             return 'find'
+        elif any(word in message_lower for word in ['yes', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect']):
+            return 'confirmation'
         else:
             return 'general'
     
