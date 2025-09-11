@@ -1155,7 +1155,7 @@ const DestinationModal = ({ destination, isOpen, onClose, onPlanTrip, onViewAllI
   );
 };
 
-// Sidebar Component
+// Sidebar Component with updated color palette
 const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
   <AnimatePresence>
     {isOpen && (
@@ -1170,17 +1170,27 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
           initial={{ x: -300 }}
           animate={{ x: 0 }}
           exit={{ x: -300 }}
-          className="w-80 h-full bg-white/95 backdrop-blur-xl border-r border-white/30 shadow-2xl z-[55]"
+          className="w-80 h-full border-r shadow-2xl z-[55]"
+          style={{
+            backgroundColor: 'var(--light-50)',
+            borderColor: 'var(--light-300)'
+          }}
           onClick={e => e.stopPropagation()}
         >
-          <div className="p-6 border-b border-white/30">
+          <div className="p-6 border-b" style={{ borderColor: 'var(--light-300)' }}>
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-800">Chat History</h2>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--charcoal-900)' }}>Chat History</h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                className="p-2 rounded-lg transition-colors duration-200"
+                style={{ 
+                  color: 'var(--accent-600)',
+                  backgroundColor: 'transparent'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--light-200)'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -1188,7 +1198,11 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
           <div className="p-4">
             <motion.button
               onClick={onNewChat}
-              className="w-full flex items-center gap-3 p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 mb-4"
+              className="w-full flex items-center gap-3 p-4 text-white rounded-xl transition-all duration-200 mb-4 shadow-lg"
+              style={{
+                background: 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)',
+                boxShadow: '0 4px 12px rgba(230, 149, 67, 0.3)'
+              }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -1198,8 +1212,8 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
 
             <div className="space-y-2">
               {chatHistory.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <div className="text-center py-8" style={{ color: 'var(--accent-500)' }}>
+                  <MessageCircle className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--light-400)' }} />
                   <p>No previous chats</p>
                 </div>
               ) : (
@@ -1207,13 +1221,26 @@ const Sidebar = ({ isOpen, onClose, chatHistory, onNewChat, onSelectChat }) => (
                   <motion.button
                     key={chat.id}
                     onClick={() => onSelectChat(chat)}
-                    className="w-full text-left p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 border border-gray-100"
+                    className="w-full text-left p-3 rounded-lg transition-colors duration-200 border"
+                    style={{
+                      backgroundColor: 'var(--light-50)',
+                      borderColor: 'var(--light-300)',
+                      color: 'var(--charcoal-900)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = 'var(--light-200)';
+                      e.target.style.borderColor = 'var(--primary-300)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'var(--light-50)';
+                      e.target.style.borderColor = 'var(--light-300)';
+                    }}
                     whileHover={{ scale: 1.01 }}
                   >
-                    <div className="font-medium text-gray-800 truncate">
+                    <div className="font-medium truncate">
                       {chat.title || 'Travel Planning Chat'}
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">
+                    <div className="text-sm mt-1" style={{ color: 'var(--accent-500)' }}>
                       {new Date(chat.timestamp).toLocaleDateString()}
                     </div>
                   </motion.button>
