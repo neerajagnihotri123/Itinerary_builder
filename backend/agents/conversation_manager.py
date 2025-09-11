@@ -728,6 +728,14 @@ RESPONSE STYLE:
         return {
             "chat_text": chat_text,
             "ui_actions": ui_actions,
+            "updated_slots": {
+                "destination": slots.destination,
+                "start_date": slots.start_date,
+                "end_date": slots.end_date,
+                "budget_per_night": slots.budget_per_night,
+                "adults": slots.adults,
+                "children": slots.children
+            },
             "metadata": {
                 "intent": "general",
                 "conversational": True,
