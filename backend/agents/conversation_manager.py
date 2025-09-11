@@ -325,39 +325,85 @@ class ConversationManager:
         """Accommodation flow: retrieval_agent → accommodation_agent → booking flow"""
         print(f"🏨 Handling accommodation flow")
         
-        if not slots.destination:
+        # Check for destination - first from slots, then try to extract from message
+        destination = getattr(slots, 'destination', None)
+        
+        if not destination:
+            # Try to extract destination from the current message  
+            message_lower = message.lower()
+            for dest_name, dest_data in {
+                'goa': 'Goa, India',
+                'kerala': 'Kerala, India', 
+                'manali': 'Manali, Himachal Pradesh',
+                'rishikesh': 'Rishikesh, Uttarakhand',
+                'andaman': 'Andaman Islands',
+                'rajasthan': 'Rajasthan, India'
+            }.items():
+                if dest_name in message_lower:
+                    destination = dest_data
+                    # Update slots with found destination
+                    slots.destination = destination
+                    break
+        
+        if not destination:
             return {
-                "chat_text": "Which destination would you like to find accommodations for?",
+                "chat_text": "Which destination would you like to find accommodations for? I can help you find great hotels!",
                 "ui_actions": [
                     {
                         "type": "question_chip",
                         "payload": {
-                            "id": "destination_clarify",
-                            "question": "Please specify your destination",
-                            "category": "destination"
+                            "id": "goa_hotels",
+                            "question": "Hotels in Goa",
+                            "category": "accommodation"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "kerala_hotels",
+                            "question": "Hotels in Kerala",
+                            "category": "accommodation"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "manali_hotels",
+                            "question": "Hotels in Manali",
+                            "category": "accommodation"
                         }
                     }
                 ],
-                "metadata": {"intent": "accommodation", "needs_destination": True}
+                "updated_slots": {
+                    k: v for k, v in {
+                        "destination": destination,
+                        "start_date": getattr(slots, 'start_date', None),
+                        "end_date": getattr(slots, 'end_date', None),
+                        "budget_per_night": getattr(slots, 'budget_per_night', None),
+                        "adults": getattr(slots, 'adults', 2),
+                        "children": getattr(slots, 'children', 0)
+                    }.items() if v is not None
+                },
+                "metadata": {"intent": "accommodation", "needs_destination": True, "agent": "conversation_manager"}
             }
         
         try:
             # Get hotels using accommodation_agent
-            hotels = await self.accommodation_agent.get_hotels_for_destination(slots.destination, slots)
+            hotels = await self.accommodation_agent.get_hotels_for_destination(destination, slots)
             
             if hotels:
                 # Create hotel cards
                 ui_actions = self._create_hotel_ui_actions(hotels)
                 
                 # Generate contextual response
-                response_text = f"Found {len(hotels)} great hotel options in {slots.destination}! Each one offers unique experiences perfect for your stay."
+                response_text = f"Found {len(hotels)} great hotel options in {destination}! Each one offers unique experiences perfect for your stay."
                 
                 # Add question chips for further assistance
                 ui_actions.extend([
                     {
                         "type": "question_chip",
                         "payload": {
-                            "id": f"hotel_compare_{hash(slots.destination) % 1000}",
+                            "id": f"hotel_compare_{hash(destination) % 1000}",
                             "question": "Compare these hotels",
                             "category": "accommodation"
                         }
@@ -365,9 +411,9 @@ class ConversationManager:
                     {
                         "type": "question_chip",
                         "payload": {
-                            "id": f"hotel_budget_{hash(slots.destination) % 1000}",
-                            "question": "Show budget-friendly options",
-                            "category": "accommodation"
+                            "id": f"travel_tips_{hash(destination) % 1000}",
+                            "question": f"Travel tips for {destination}",
+                            "category": "tips"
                         }
                     }
                 ])
@@ -376,23 +422,25 @@ class ConversationManager:
                     "chat_text": response_text,
                     "ui_actions": ui_actions,
                     "updated_slots": {
-                        "destination": slots.destination,
-                        "start_date": slots.start_date,
-                        "end_date": slots.end_date,
-                        "budget_per_night": slots.budget_per_night,
-                        "adults": slots.adults,
-                        "children": slots.children
+                        k: v for k, v in {
+                            "destination": destination,
+                            "start_date": getattr(slots, 'start_date', None),
+                            "end_date": getattr(slots, 'end_date', None),
+                            "budget_per_night": getattr(slots, 'budget_per_night', None),
+                            "adults": getattr(slots, 'adults', 2),
+                            "children": getattr(slots, 'children', 0)
+                        }.items() if v is not None
                     },
                     "metadata": {
                         "intent": "accommodation",
                         "hotels_found": len(hotels),
-                        "destination": slots.destination,
+                        "destination": destination,
                         "agent": "conversation_manager"
                     }
                 }
             else:
                 return {
-                    "chat_text": f"I couldn't find specific hotels in {slots.destination} right now. Let me help you with general accommodation information.",
+                    "chat_text": f"I couldn't find specific hotels in {destination} right now. Let me help you with general accommodation information.",
                     "ui_actions": [
                         {
                             "type": "question_chip",
@@ -403,7 +451,17 @@ class ConversationManager:
                             }
                         }
                     ],
-                    "metadata": {"intent": "accommodation", "hotels_found": 0}
+                    "updated_slots": {
+                        k: v for k, v in {
+                            "destination": destination,
+                            "start_date": getattr(slots, 'start_date', None),
+                            "end_date": getattr(slots, 'end_date', None),
+                            "budget_per_night": getattr(slots, 'budget_per_night', None),
+                            "adults": getattr(slots, 'adults', 2),
+                            "children": getattr(slots, 'children', 0)
+                        }.items() if v is not None
+                    },
+                    "metadata": {"intent": "accommodation", "hotels_found": 0, "agent": "conversation_manager"}
                 }
                 
         except Exception as e:
