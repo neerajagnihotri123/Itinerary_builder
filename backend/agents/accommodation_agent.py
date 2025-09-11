@@ -498,11 +498,48 @@ class AccommodationAgent:
             return []
     
     def _prepare_hotel_context(self, destination: str, slots) -> str:
-        """Prepare context for LLM hotel generation"""
-        budget_info = f"Budget: ₹{getattr(slots, 'budget_per_night', 8000)} per night" if getattr(slots, 'budget_per_night', None) else "Budget: Mid-range"
-        travelers = f"{getattr(slots, 'adults', 2)} adults"
-        if getattr(slots, 'children', 0) > 0:
-            travelers += f", {getattr(slots, 'children', 0)} children"
+        """Prepare context for LLM hotel generation with safe slot access"""
+        
+        # Safely extract slot values
+        budget_per_night = 8000  # Default mid-range
+        adults = 2
+        children = 0
+        start_date = 'Flexible'
+        end_date = 'Flexible'
+        
+        try:
+            if hasattr(slots, 'budget_per_night') and slots.budget_per_night:
+                budget_per_night = int(slots.budget_per_night)
+            elif isinstance(slots, dict) and slots.get('budget_per_night'):
+                budget_per_night = int(slots.get('budget_per_night'))
+            
+            if hasattr(slots, 'adults') and slots.adults:
+                adults = int(slots.adults)
+            elif isinstance(slots, dict) and slots.get('adults'):
+                adults = int(slots.get('adults'))
+                
+            if hasattr(slots, 'children') and slots.children:
+                children = int(slots.children)
+            elif isinstance(slots, dict) and slots.get('children'):
+                children = int(slots.get('children'))
+                
+            if hasattr(slots, 'start_date') and slots.start_date:
+                start_date = str(slots.start_date)
+            elif isinstance(slots, dict) and slots.get('start_date'):
+                start_date = str(slots.get('start_date'))
+                
+            if hasattr(slots, 'end_date') and slots.end_date:
+                end_date = str(slots.end_date)
+            elif isinstance(slots, dict) and slots.get('end_date'):
+                end_date = str(slots.get('end_date'))
+                
+        except (ValueError, TypeError) as e:
+            print(f"⚠️  Error parsing slot values: {e}, using defaults")
+        
+        budget_info = f"Budget: ₹{budget_per_night} per night"
+        travelers = f"{adults} adults"
+        if children > 0:
+            travelers += f", {children} children"
         
         return f"""
 Generate hotel recommendations for {destination} based on:
@@ -511,7 +548,7 @@ User Requirements:
 - Destination: {destination}
 - Travelers: {travelers}
 - {budget_info}
-- Dates: {getattr(slots, 'start_date', 'Flexible')} to {getattr(slots, 'end_date', 'Flexible')}
+- Dates: {start_date} to {end_date}
 
 Generate JSON with this structure:
 {{
@@ -521,7 +558,7 @@ Generate JSON with this structure:
       "name": "Hotel Name",
       "location": "Specific area/neighborhood",
       "rating": 4.5,
-      "price_estimate": 8000,
+      "price_estimate": {budget_per_night},
       "hotel_type": "Luxury Resort/Heritage Hotel/Budget Hotel/etc",
       "amenities": ["Free WiFi", "Swimming Pool", "Spa", "Restaurant"],
       "hero_image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=600&h=400&fit=crop",
@@ -535,9 +572,9 @@ Generate JSON with this structure:
 
 Requirements:
 - Generate 3-5 hotels that match the user's profile
-- Include mix of budget ranges around the specified budget
+- Include mix of budget ranges around the specified budget (₹{budget_per_night})
 - Use realistic Indian hotel names and pricing (in INR)
-- Include family-friendly options if children are mentioned
+- Include family-friendly options if children are mentioned ({children} children)
 - Focus on hotels in {destination} with accurate locations
 - Provide high-quality Unsplash image URLs
 - Consider proximity to major attractions
