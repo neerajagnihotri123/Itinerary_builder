@@ -3378,12 +3378,13 @@ function App() {
               ))}
             </AnimatePresence>
 
-            {/* Recommendations Carousel */}
+            {/* Enhanced Recommendations Carousel */}
             {recommendations.length > 0 && (
-              <RecommendationCarousel
+              <ProfessionalCarousel
                 items={recommendations}
                 onAction={handleCardAction}
                 title="Your Personalized Recommendations"
+                itemsPerView={3}
               />
             )}
 
