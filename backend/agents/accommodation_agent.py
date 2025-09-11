@@ -183,8 +183,227 @@ class AccommodationAgent:
         # Sort by total score (descending)
         scored_hotels.sort(key=lambda h: h['total_score'], reverse=True)
         
-        print(f"   📊 Hotels scored and ranked by comprehensive factors")
-        return scored_hotels
+    def _calculate_price_score(self, hotel: Dict[str, Any], slots) -> float:
+        """Calculate normalized price score (0-1, higher = better value)"""
+        hotel_price = hotel.get('price_estimate', 5000)
+        user_budget = getattr(slots, 'budget_per_night', None)
+        
+        if not user_budget:
+            # If no budget specified, use mid-range preference
+            user_budget = 7000
+        
+        # Score based on how close price is to budget (perfect match = 1.0)
+        if hotel_price <= user_budget:
+            # Under budget is good, but not as good as perfect match
+            price_ratio = hotel_price / user_budget
+            return 0.8 + (price_ratio * 0.2)  # 0.8 to 1.0
+        else:
+            # Over budget decreases score
+            over_budget_ratio = (hotel_price - user_budget) / user_budget
+            return max(0.1, 1.0 - over_budget_ratio)
+    
+    def _calculate_rating_score(self, hotel: Dict[str, Any]) -> float:
+        """Calculate rating score (0-1, higher rating = higher score)"""
+        rating = hotel.get('rating', 4.0)
+        # Normalize 5-star rating to 0-1 scale
+        return min(rating / 5.0, 1.0)
+    
+    def _calculate_distance_score(self, hotel: Dict[str, Any], slots) -> float:
+        """Calculate distance to POIs score (0-1, closer = higher score)"""
+        distance_km = hotel.get('distance_to_day1_km', hotel.get('distance_to_center_km', 2.0))
+        
+        # Ideal distance is 0-2km (score 1.0), decreases linearly to 10km (score 0.1)
+        if distance_km <= 2.0:
+            return 1.0
+        elif distance_km >= 10.0:
+            return 0.1
+        else:
+            # Linear decrease from 1.0 to 0.1 between 2km and 10km
+            return 1.0 - ((distance_km - 2.0) / 8.0) * 0.9
+    
+    def _calculate_amenity_score(self, hotel: Dict[str, Any], slots) -> float:
+        """Calculate amenity match score based on user needs"""
+        amenities = [a.lower() for a in hotel.get('amenities', [])]
+        score = 0.5  # Base score
+        
+        # Must-have amenities for different user types
+        if getattr(slots, 'children', 0) > 0:
+            family_amenities = ['pool', 'family room', 'kids club', 'playground', 'babysitting']
+            family_matches = sum(1 for amenity in family_amenities if any(fa in amenity for fa in amenities))
+            score += (family_matches / len(family_amenities)) * 0.3
+        
+        if getattr(slots, 'adults', 2) >= 4:  # Group travel
+            group_amenities = ['restaurant', 'conference room', 'group booking', 'large rooms']
+            group_matches = sum(1 for amenity in group_amenities if any(ga in amenity for ga in amenities))
+            score += (group_matches / len(group_amenities)) * 0.2
+        
+        # Universal desirable amenities
+        universal_amenities = ['wifi', 'breakfast', 'parking', 'gym', 'spa', 'room service']
+        universal_matches = sum(1 for amenity in universal_amenities if any(ua in amenity for ua in amenities))
+        score += (universal_matches / len(universal_amenities)) * 0.3
+        
+        return min(score, 1.0)
+    
+    def _calculate_flexibility_score(self, hotel: Dict[str, Any]) -> float:
+        """Calculate cancellation flexibility score"""
+        availability_details = hotel.get('availability_details', {})
+        flexibility_score = availability_details.get('flexibility_score', 0.5)
+        
+        # Boost score for flexible cancellation policies
+        cancellation_policy = availability_details.get('cancellation_policy', '').lower()
+        if 'free cancellation' in cancellation_policy:
+            flexibility_score += 0.3
+        if '24 hours' in cancellation_policy:
+            flexibility_score += 0.2
+        
+        return min(flexibility_score, 1.0)
+    
+    def _calculate_reviews_score(self, hotel: Dict[str, Any]) -> float:
+        """Calculate recency of reviews score (simulated)"""
+        # In a real system, this would check review dates
+        # For now, simulate based on hotel characteristics
+        rating = hotel.get('rating', 4.0)
+        
+        # Higher rated hotels likely have more recent reviews
+        if rating >= 4.5:
+            return 0.9
+        elif rating >= 4.0:
+            return 0.7
+        else:
+            return 0.5
+    
+    def _generate_ranking_reason(self, hotel: Dict[str, Any], total_score: float, slots) -> str:
+        """Generate explanation for why hotel is ranked at this position"""
+        reasons = []
+        
+        if total_score >= 0.85:
+            reasons.append("Excellent match for your preferences")
+        elif total_score >= 0.7:
+            reasons.append("Great option for your trip")
+        else:
+            reasons.append("Good alternative choice")
+        
+        # Add specific reasons
+        price = hotel.get('price_estimate', 5000)
+        user_budget = getattr(slots, 'budget_per_night', 7000)
+        
+        if price <= user_budget:
+            reasons.append("Within your budget")
+        
+        rating = hotel.get('rating', 4.0)
+        if rating >= 4.5:
+            reasons.append(f"Outstanding {rating}★ rating")
+        elif rating >= 4.0:
+            reasons.append(f"Excellent {rating}★ rating")
+        
+        distance = hotel.get('distance_to_day1_km', hotel.get('distance_to_center_km', 2.0))
+        if distance <= 2.0:
+            reasons.append("Prime location")
+        elif distance <= 5.0:
+            reasons.append("Convenient location")
+        
+        return " • ".join(reasons[:3])  # Limit to 3 reasons
+    
+    def _prepare_final_hotel_list(self, scored_hotels: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Prepare final hotel list with booking metadata, never include payment credentials"""
+        final_hotels = []
+        
+        for i, hotel in enumerate(scored_hotels[:5]):  # Top 5 hotels
+            # Add booking metadata (NO PAYMENT CREDENTIALS)
+            booking_metadata = {
+                'booking_available': True,
+                'booking_id': f"bk_{hash(hotel.get('name', '')) % 10000}",
+                'requires_info': ['guest_name', 'contact_email', 'check_in_date', 'check_out_date'],
+                'booking_deadline': hotel.get('availability_details', {}).get('booking_deadline'),
+                'cancellation_policy': hotel.get('availability_details', {}).get('cancellation_policy')
+            }
+            
+            final_hotel = {
+                'id': hotel.get('id'),
+                'name': hotel.get('name'),
+                'rating': hotel.get('rating'),
+                'price_estimate': hotel.get('price_estimate'),
+                'hotel_type': hotel.get('hotel_type'),
+                'amenities': hotel.get('amenities', []),
+                'location': hotel.get('location'),
+                'hero_image': hotel.get('hero_image'),
+                'distance_info': f"{hotel.get('distance_to_day1_km', 2.0)} km from center",
+                'total_score': hotel.get('total_score'),
+                'ranking_reason': hotel.get('ranking_reason'),
+                'booking_metadata': booking_metadata,
+                'rank': i + 1
+            }
+            
+            final_hotels.append(final_hotel)
+        
+        return final_hotels
+    
+    async def check_availability(self, hotel_id: str, slots) -> Dict[str, Any]:
+        """
+        Check real-time availability for a specific hotel
+        Returns: availability status with booking options
+        """
+        print(f"🔍 Checking availability for hotel {hotel_id}")
+        
+        # In a real system, this would call hotel booking APIs
+        # For now, simulate availability check
+        availability_result = {
+            'hotel_id': hotel_id,
+            'available': True,
+            'rooms_available': 3,
+            'price_per_night': 8500,
+            'total_price': 8500 * (getattr(slots, 'nights', 2)),
+            'cancellation_policy': 'Free cancellation up to 24 hours before check-in',
+            'booking_options': {
+                'standard_room': {'available': True, 'price': 8500},
+                'deluxe_room': {'available': True, 'price': 12000},
+                'suite': {'available': False, 'price': 18000}
+            },
+            'last_checked': datetime.now(timezone.utc).isoformat()
+        }
+        
+        return availability_result
+    
+    async def initiate_booking(self, hotel_id: str, room_type: str, guest_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Initiate booking flow: collect minimal booking info → confirm/return booking_result
+        NEVER returns payment credentials to frontend
+        """
+        print(f"🏨 Initiating booking for hotel {hotel_id}, room {room_type}")
+        
+        # Validate required guest information
+        required_fields = ['guest_name', 'contact_email', 'check_in_date', 'check_out_date']
+        missing_fields = [field for field in required_fields if not guest_info.get(field)]
+        
+        if missing_fields:
+            return {
+                'booking_status': 'info_required',
+                'missing_fields': missing_fields,
+                'message': f"Please provide: {', '.join(missing_fields)}"
+            }
+        
+        # Generate booking confirmation (simulate booking API call)
+        booking_result = {
+            'booking_status': 'confirmed',
+            'booking_reference': f"TR{hash(hotel_id + str(datetime.now())) % 100000}",
+            'hotel_id': hotel_id,
+            'room_type': room_type,
+            'guest_name': guest_info['guest_name'],
+            'check_in': guest_info['check_in_date'],
+            'check_out': guest_info['check_out_date'],
+            'total_nights': 2,  # Calculate from dates
+            'total_amount': 17000,  # Calculate based on room type
+            'currency': 'INR',
+            'confirmation_sent_to': guest_info['contact_email'],
+            'cancellation_deadline': (datetime.now() + timedelta(hours=24)).isoformat(),
+            'booking_timestamp': datetime.now(timezone.utc).isoformat(),
+            # NO PAYMENT CREDENTIALS EVER RETURNED
+            'payment_status': 'pending_checkout',
+            'payment_instructions': 'You will be redirected to secure payment gateway'
+        }
+        
+        print(f"✅ Booking confirmed: {booking_result['booking_reference']}")
+        return booking_result
     
     async def _generate_hotels_with_llm(self, destination: str, slots) -> List[Dict[str, Any]]:
         """Use LLM to generate hotel recommendations"""
