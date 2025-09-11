@@ -345,13 +345,15 @@ Focus on creating an itinerary that a real traveler could actually follow.
                 return content
             except json.JSONDecodeError:
                 print(f"❌ LLM generated invalid JSON, using intelligent fallback")
-                return self._generate_fallback_itinerary(enhanced_context)
+                fallback_result = self._generate_fallback_itinerary(enhanced_context)
+                return json.dumps(fallback_result)
             
         except Exception as e:
             print(f"❌ LLM generation failed: {e}")
             print(f"🔄 Using intelligent fallback for context: {context[:100]}...")
             # Generate a more realistic fallback itinerary based on input
-            return self._generate_fallback_itinerary(context)
+            fallback_result = self._generate_fallback_itinerary(context)
+            return json.dumps(fallback_result)
     
     def _generate_fallback_itinerary(self, context: str) -> str:
         """Generate a realistic fallback itinerary"""
