@@ -41,6 +41,7 @@ class SlotAgent:
             'plan': ['plan', 'generate', 'itinerary', 'trip', 'schedule', 'create itinerary', 'make plan'],
             'accommodation': ['hotel', 'stay', 'accommodation', 'book', 'reserve', 'resort', 'lodge'],
             'find': ['find', 'recommend', 'suggest', 'show', 'tell me about', 'what about', 'explore', 'recommendations', 'popular destinations', 'give me'],
+            'confirmation': ['yes', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect'],
             'general': ['hello', 'hi', 'help', 'what can you do', 'hey', 'good morning', 'good evening']
         }
     
