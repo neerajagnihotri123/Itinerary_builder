@@ -168,6 +168,7 @@ Focus on:
     
     async def _fallback_validation(self, planner_output: Dict[str, Any], retrieval_candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Enhanced fallback validation with better logic"""
+        print(f"🔄 Using fallback validation for planner output")
         try:
             # Create lookup dictionary for quick fact checking
             candidate_ids = {candidate['id']: candidate for candidate in retrieval_candidates}
@@ -193,7 +194,8 @@ Focus on:
                         issues.append({
                             "item": f"Day {day.get('day')} - {activity.get('title')}",
                             "issue": f"Activity ID '{activity_id}' not found in retrieval database",
-                            "type": "missing_reference"
+                            "type": "missing_reference",
+                            "severity": "medium"
                         })
                         
                         # Try to find a correction
@@ -202,7 +204,8 @@ Focus on:
                             corrections.append({
                                 "original_id": activity_id,
                                 "corrected_id": correction['id'],
-                                "corrected_title": correction['name']
+                                "corrected_title": correction['name'],
+                                "reason": "Found similar activity in database"
                             })
             
             # Validate hotel recommendations
@@ -216,7 +219,8 @@ Focus on:
                     issues.append({
                         "item": f"Hotel - {hotel.get('name')}",
                         "issue": f"Hotel ID '{hotel_id}' not found in retrieval database",
-                        "type": "missing_reference"
+                        "type": "missing_reference",
+                        "severity": "high"
                     })
                     
                     # Try to find a correction
@@ -225,7 +229,8 @@ Focus on:
                         corrections.append({
                             "original_id": hotel_id,
                             "corrected_id": correction['id'],
-                            "corrected_name": correction['name']
+                            "corrected_name": correction['name'],
+                            "reason": "Found similar hotel in database"
                         })
             
             # Calculate validation score
@@ -241,20 +246,55 @@ Focus on:
                 "corrections": corrections,
                 "confidence": confidence,
                 "validation_score": validation_score,
+                "validation_notes": f"Rule-based validation completed. Score: {validation_score:.2f}",
+                "recommendations": self._generate_recommendations(issues, planner_output),
                 "metadata": {
                     "total_items_checked": total_items,
                     "valid_items": valid_items,
-                    "issues_found": len(issues)
+                    "issues_found": len(issues),
+                    "validation_method": "rule_based_fallback"
                 }
             }
             
         except Exception as e:
             return {
                 "valid": False,
-                "issues": [{"item": "validation", "issue": f"Validation error: {str(e)}", "type": "system_error"}],
+                "issues": [{"item": "validation", "issue": f"Validation error: {str(e)}", "type": "system_error", "severity": "high"}],
                 "corrections": [],
-                "confidence": 0.1
+                "confidence": 0.1,
+                "validation_notes": "Validation system error occurred",
+                "recommendations": ["Please try regenerating the itinerary"],
+                "metadata": {"validation_method": "error_fallback"}
             }
+    
+    def _generate_recommendations(self, issues: List[Dict], planner_output: Dict) -> List[str]:
+        """Generate actionable recommendations based on validation issues"""
+        recommendations = []
+        
+        # Analyze issue types
+        issue_types = [issue.get('type') for issue in issues]
+        
+        if 'missing_reference' in issue_types:
+            recommendations.append("Some activities or hotels were not found in our database. Consider using suggested alternatives.")
+        
+        if len(issues) > 3:
+            recommendations.append("Multiple issues detected. Consider simplifying the itinerary or choosing a different destination.")
+        
+        # Check itinerary structure
+        itinerary = planner_output.get('itinerary', [])
+        if len(itinerary) > 7:
+            recommendations.append("Long itinerary detected. Consider splitting into multiple trips for better experience.")
+        
+        # Check daily activity count
+        for day in itinerary:
+            activities = day.get('activities', [])
+            if len(activities) > 5:
+                recommendations.append(f"Day {day.get('day')} has many activities. Consider reducing to 3-4 for better pacing.")
+        
+        if not recommendations:
+            recommendations.append("Itinerary looks well-structured with minor adjustments needed.")
+        
+        return recommendations[:3]  # Limit to top 3 recommendations
     
     def _find_activity_correction(self, activity: Dict[str, Any], candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Find a suitable replacement activity from candidates"""
