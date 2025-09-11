@@ -338,8 +338,7 @@ Focus on creating an itinerary that a real traveler could actually follow.
                 )
             except asyncio.TimeoutError:
                 print(f"❌ LLM generation timed out for planner")
-                fallback_result = self._generate_fallback_itinerary(enhanced_context)
-                return json.dumps(fallback_result)
+                return self._generate_fallback_itinerary(enhanced_context)
             
             # Handle different response types
             if hasattr(response, 'content'):
