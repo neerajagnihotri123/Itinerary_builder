@@ -2049,6 +2049,11 @@ def main():
     retrieval_agent_success = tester.test_retrieval_agent_implementation()
     test_results.append((retrieval_agent_success, {}))
     
+    # NEW: AccommodationAgent Refined Implementation Tests
+    print("\n" + "🏨" * 20 + " ACCOMMODATION AGENT TESTS " + "🏨" * 20)
+    accommodation_agent_success = tester.test_accommodation_agent_refined_implementation()
+    test_results.append((accommodation_agent_success, {}))
+    
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 FINAL RESULTS")
