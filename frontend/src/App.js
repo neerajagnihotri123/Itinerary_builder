@@ -4282,10 +4282,7 @@ function App() {
         onClose={() => setIsSidebarOpen(false)}
         chatHistory={chatHistory}
         onNewChat={handleNewChat}
-        onSelectChat={(chat) => {
-          console.log('Selected chat:', chat);
-          setIsSidebarOpen(false);
-        }}
+        onSelectChat={handleSelectChat}
       />
     </div>
   );
