@@ -163,15 +163,12 @@ class ConversationManager:
         print(f"🗓️ Handling planner flow")
         
         # Check if we have enough information to generate itinerary
+        # Only require destination - make dates and budget optional with defaults
         missing_slots = []
         if not slots.destination:
             missing_slots.append("destination")
-        if not slots.start_date:
-            missing_slots.append("dates")
-        if not slots.budget_per_night:
-            missing_slots.append("budget")
         
-        # Pre-generation mode: Present trip-planner card if missing essentials
+        # Pre-generation mode: Present trip-planner card only if missing critical slots
         if missing_slots:
             # Instead of just asking, show destinations + trip planning help
             if not slots.destination:
