@@ -401,23 +401,26 @@ class ConversationManager:
             }
         }
     
-    def _create_itinerary_ui_actions(self, planner_output: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Create UI actions for itinerary display"""
-        ui_actions = []
+    def _create_itinerary_ui_actions(self, planner_output: Dict) -> List[Dict[str, Any]]:
+        """Create itinerary UI actions"""
+        itinerary = planner_output.get('itinerary', [])
+        if not itinerary:
+            return []
         
-        # Add itinerary card
-        if planner_output.get('itinerary'):
-            ui_actions.append({
-                "type": "itinerary_card",
-                "payload": {
-                    "id": f"itinerary_{hash(str(planner_output)) % 1000}",
-                    "title": f"{len(planner_output['itinerary'])}-Day Itinerary",
-                    "days": planner_output['itinerary'],
-                    "destination": planner_output.get('destination', 'Your Destination')
-                }
-            })
-        
-        return ui_actions
+        return [{
+            "type": "itinerary_display",
+            "payload": {
+                "id": "generated_itinerary",
+                "itinerary": itinerary,
+                "total_days": len(itinerary),
+                "highlights": [
+                    activity.get('title', '') 
+                    for day in itinerary[:3] 
+                    for activity in day.get('activities', [])[:2]
+                    if activity.get('title')
+                ][:6]
+            }
+        }]
     
     def _create_hotel_ui_actions(self, hotels: List[Dict]) -> List[Dict[str, Any]]:
         """Create hotel card UI actions"""
