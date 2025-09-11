@@ -379,135 +379,74 @@ class ConversationManager:
             return await self._generate_error_response(f"Error finding accommodations: {str(e)}")
     
     async def _handle_find_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
-        """Find flow: retrieval_agent → conversation_agent (render cards)"""
-        print(f"🔍 Handling find flow")
+        """Find flow: Pure LLM-generated recommendations without mock data"""
+        print(f"🔍 Handling find flow with LLM generation")
         
         # Check if user is asking for general recommendations
         message_lower = message.lower()
         if any(word in message_lower for word in ['recommendations', 'recommend', 'suggest', 'popular', 'show me', 'what about']):
-            # Show popular destinations without asking for clarification
-            popular_destinations = [
-                {
-                    'name': 'Kerala, India', 
-                    'id': 'kerala_backwaters', 
-                    'description': 'God\'s Own Country with serene backwaters and lush greenery',
-                    'highlights': ['Backwaters', 'Hill stations', 'Beaches', 'Spice plantations'],
-                    'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
-                },
-                {
-                    'name': 'Rajasthan, India', 
-                    'id': 'rajasthan_india', 
-                    'description': 'Land of kings with majestic palaces and desert adventures',
-                    'highlights': ['Royal palaces', 'Desert safaris', 'Forts', 'Cultural heritage'],
-                    'hero_image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop'
-                },
-                {
-                    'name': 'Manali, Himachal Pradesh', 
-                    'id': 'manali_himachal', 
-                    'description': 'Mountain paradise perfect for adventure and relaxation',
-                    'highlights': ['Snow-capped peaks', 'Adventure sports', 'Apple orchards', 'Scenic drives'],
-                    'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
-                },
-                {
-                    'name': 'Andaman Islands', 
-                    'id': 'andaman_islands', 
-                    'description': 'Tropical paradise with pristine beaches and marine life',
-                    'highlights': ['Pristine beaches', 'Scuba diving', 'Water sports', 'Marine national parks'],
-                    'hero_image': 'https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?w=600&h=400&fit=crop'
-                },
-                {
-                    'name': 'Rishikesh, Uttarakhand', 
-                    'id': 'rishikesh_uttarakhand', 
-                    'description': 'Yoga capital and adventure hub with spiritual experiences',
-                    'highlights': ['River rafting', 'Yoga retreats', 'Bungee jumping', 'Spiritual ashrams'],
-                    'hero_image': 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop'
-                }
-            ]
+            # Use LLM to generate destination recommendations
+            destination_cards = await self._generate_destination_cards_with_llm(message, slots)
             
-            destination_cards = self._create_destination_cards(popular_destinations)
-            
-            return {
-                "chat_text": "Here are some amazing destinations I'd recommend! ✨ Each offers unique experiences perfect for different types of travelers. Which one catches your eye?",
-                "ui_actions": destination_cards,
-                "metadata": {
-                    "intent": "find",
-                    "cards_generated": len(destination_cards),
-                    "type": "discovery",
-                    "agent": "conversation_manager"
+            if destination_cards:
+                return {
+                    "chat_text": "Here are some amazing destinations I'd recommend! ✨ Each offers unique experiences perfect for different types of travelers. Which one catches your eye?",
+                    "ui_actions": destination_cards,
+                    "metadata": {
+                        "intent": "find",
+                        "cards_generated": len(destination_cards),
+                        "type": "discovery",
+                        "agent": "conversation_manager",
+                        "generation_method": "llm_powered"
+                    }
                 }
-            }
+            else:
+                # LLM generation failed, provide helpful response
+                return {
+                    "chat_text": "I'd love to help you discover amazing destinations! Could you tell me what type of experience you're looking for - adventure, relaxation, cultural exploration, or something else?",
+                    "ui_actions": [
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "adventure_destinations",
+                                "question": "Adventure destinations",
+                                "category": "discovery"
+                            }
+                        },
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "beach_destinations", 
+                                "question": "Beach destinations",
+                                "category": "discovery"
+                            }
+                        }
+                    ],
+                    "metadata": {
+                        "intent": "find",
+                        "type": "fallback_exploration",
+                        "agent": "conversation_manager"
+                    }
+                }
         
         # If specific destination mentioned
         if slots.destination:
-            # Generate destination card with information
-            destination_cards = self._create_destination_cards([{
-                'id': slots.canonical_place_id or f"dest_{hash(slots.destination) % 1000}",
-                'name': slots.destination,
-                'description': f"Explore the wonderful {slots.destination} with its unique attractions and experiences.",
-                'highlights': ['Beautiful scenery', 'Rich culture', 'Adventure activities', 'Local cuisine'],
-                'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
-            }])
-            
-            # Generate contextual response
-            response_text = f"{slots.destination} offers incredible experiences! From stunning landscapes to rich cultural heritage, it's a perfect destination for travelers seeking adventure and beauty."
-            
-            # Add question chips
-            question_chips = [
-                {
-                    "type": "question_chip",
-                    "payload": {
-                        "id": f"hotels_{hash(slots.destination) % 1000}",
-                        "question": f"Hotels in {slots.destination}",
-                        "category": "accommodation"
-                    }
-                },
-                {
-                    "type": "question_chip",
-                    "payload": {
-                        "id": f"plan_{hash(slots.destination) % 1000}",
-                        "question": f"Plan a trip to {slots.destination}",
-                        "category": "planning"
-                    }
-                }
-            ]
+            # Generate LLM-powered destination information
+            destination_info = await self._generate_destination_info_with_llm(slots.destination)
             
             return {
-                "chat_text": response_text,
-                "ui_actions": destination_cards + question_chips,
+                "chat_text": destination_info.get('description', f"{slots.destination} offers incredible experiences! From stunning landscapes to rich cultural heritage, it's a perfect destination for travelers seeking adventure and beauty."),
+                "ui_actions": destination_info.get('ui_actions', []),
                 "metadata": {
                     "intent": "find",
                     "destination": slots.destination,
-                    "cards_generated": len(destination_cards),
-                    "agent": "conversation_manager"
+                    "agent": "conversation_manager",
+                    "generation_method": "llm_powered"
                 }
             }
         else:
-            # No specific destination, show popular destinations anyway
-            popular_destinations = [
-                {
-                    'name': 'Kerala, India', 
-                    'id': 'kerala_backwaters', 
-                    'description': 'God\'s Own Country with serene backwaters',
-                    'highlights': ['Backwaters', 'Hill stations', 'Beaches', 'Spice plantations'],
-                    'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
-                },
-                {
-                    'name': 'Rajasthan, India', 
-                    'id': 'rajasthan_india', 
-                    'description': 'Land of kings with majestic palaces',
-                    'highlights': ['Royal palaces', 'Desert safaris', 'Forts', 'Cultural heritage'],
-                    'hero_image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop'
-                },
-                {
-                    'name': 'Goa, India', 
-                    'id': 'goa_india', 
-                    'description': 'Beach paradise with vibrant nightlife',
-                    'highlights': ['Beautiful beaches', 'Portuguese heritage', 'Water sports', 'Nightlife'],
-                    'hero_image': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=600&h=400&fit=crop'
-                }
-            ]
-            
-            destination_cards = self._create_destination_cards(popular_destinations)
+            # No specific destination, generate general recommendations
+            destination_cards = await self._generate_destination_cards_with_llm(message, slots)
             
             return {
                 "chat_text": "Here are some incredible destinations perfect for your next adventure! Each offers unique experiences and unforgettable memories. 🗺️",
@@ -516,8 +455,162 @@ class ConversationManager:
                     "intent": "find",
                     "cards_generated": len(destination_cards),
                     "type": "discovery",
-                    "agent": "conversation_manager"
+                    "agent": "conversation_manager",
+                    "generation_method": "llm_powered"
                 }
+            }
+    
+    async def _generate_destination_cards_with_llm(self, message: str, slots: UserSlots) -> List[Dict[str, Any]]:
+        """Generate destination cards using pure LLM intelligence"""
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"dest_cards_{hash(message) % 1000}",
+                system_message="You are a travel expert. Generate destination recommendations in JSON format with accurate information about Indian travel destinations."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            prompt = f"""
+Generate 4-5 amazing travel destination recommendations for this request: "{message}"
+
+User context:
+- Looking for travel recommendations
+- Interested in diverse experiences
+- Wants to explore destinations in India
+
+Generate JSON with this exact structure:
+{{
+  "destinations": [
+    {{
+      "id": "unique_destination_id",
+      "name": "Destination Name, State/Region",
+      "description": "Compelling 15-20 word description highlighting what makes it special",
+      "highlights": ["highlight1", "highlight2", "highlight3", "highlight4"],
+      "hero_image": "https://images.unsplash.com/photo-RELEVANT_ID?w=600&h=400&fit=crop",
+      "category": ["category1", "category2"],
+      "why_special": "What makes this destination unique"
+    }}
+  ]
+}}
+
+Requirements:
+- Focus on diverse Indian destinations (mountains, beaches, culture, adventure)
+- Include realistic Unsplash image URLs 
+- Provide compelling, accurate descriptions
+- Mix popular and lesser-known gems
+- Each destination should offer different experiences
+- Make highlights specific and enticing
+"""
+            
+            user_message = UserMessage(text=prompt)
+            response = await llm_client.send_message(user_message)
+            
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+            
+            # Clean and parse JSON
+            content = content.strip()
+            if content.startswith('```json'):
+                content = content.replace('```json', '').replace('```', '').strip()
+            
+            destinations_data = json.loads(content)
+            
+            # Convert to UI card format
+            destination_cards = []
+            for dest in destinations_data.get('destinations', []):
+                destination_cards.append({
+                    "type": "card_add",
+                    "payload": {
+                        "id": dest.get('id', f"dest_{hash(dest.get('name', '')) % 1000}"),
+                        "category": "destination",
+                        "title": dest.get('name', ''),
+                        "description": dest.get('description', ''),
+                        "highlights": dest.get('highlights', []),
+                        "hero_image": dest.get('hero_image', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'),
+                        "plan_trip_button": True,
+                        "cta_primary": {"label": "Plan Trip", "action": f"plan_trip_{dest.get('id', '')}"},
+                        "cta_secondary": {"label": "Learn More", "action": f"learn_more_{dest.get('id', '')}"}
+                    }
+                })
+            
+            print(f"✅ Generated {len(destination_cards)} destination cards via LLM")
+            return destination_cards
+            
+        except Exception as e:
+            print(f"❌ LLM destination cards generation error: {e}")
+            return []
+    
+    async def _generate_destination_info_with_llm(self, destination: str) -> Dict[str, Any]:
+        """Generate detailed destination information using LLM"""
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"dest_info_{hash(destination) % 1000}",
+                system_message="You are a travel expert. Provide detailed, accurate information about destinations."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            prompt = f"""
+Provide detailed information about {destination} as a travel destination.
+
+Generate a warm, engaging description (30-40 words) that highlights:
+- What makes this destination special
+- Key experiences visitors can have
+- The atmosphere and character of the place
+
+Focus on authentic experiences and practical appeal for travelers.
+"""
+            
+            user_message = UserMessage(text=prompt)
+            response = await llm_client.send_message(user_message)
+            
+            if hasattr(response, 'content'):
+                description = response.content.strip()
+            else:
+                description = str(response).strip()
+            
+            # Generate contextual question chips
+            question_chips = [
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"hotels_{hash(destination) % 1000}",
+                        "question": f"Hotels in {destination}",
+                        "category": "accommodation"
+                    }
+                },
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"plan_{hash(destination) % 1000}",
+                        "question": f"Plan a trip to {destination}",
+                        "category": "planning"
+                    }
+                },
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"activities_{hash(destination) % 1000}",
+                        "question": f"Things to do in {destination}",
+                        "category": "activities"
+                    }
+                }
+            ]
+            
+            return {
+                "description": description,
+                "ui_actions": question_chips
+            }
+            
+        except Exception as e:
+            print(f"❌ LLM destination info generation error: {e}")
+            return {
+                "description": f"{destination} offers incredible experiences! From stunning landscapes to rich cultural heritage, it's a perfect destination for travelers seeking adventure and beauty.",
+                "ui_actions": []
             }
     
     async def _handle_general_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
