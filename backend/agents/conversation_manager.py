@@ -296,6 +296,14 @@ class ConversationManager:
             return {
                 "chat_text": ux_response.get('human_text', 'Here\'s your personalized itinerary!'),
                 "ui_actions": ui_actions,
+                "updated_slots": {
+                    "destination": slots.destination,
+                    "start_date": slots.start_date,
+                    "end_date": slots.end_date,
+                    "budget_per_night": slots.budget_per_night,
+                    "adults": slots.adults,
+                    "children": slots.children
+                },
                 "metadata": {
                     "intent": "plan",
                     "planner_output": planner_output,
