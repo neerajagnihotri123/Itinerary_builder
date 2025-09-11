@@ -2401,7 +2401,8 @@ function App() {
         });
 
         if (newRecommendations.length > 0) {
-          setRecommendations(prev => [...prev, ...newRecommendations]);
+          // Replace recommendations instead of appending to prevent continuous addition
+          setRecommendations(newRecommendations);
         }
         
         if (newQuestionChips.length > 0) {
