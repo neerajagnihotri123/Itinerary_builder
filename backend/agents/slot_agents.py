@@ -72,7 +72,8 @@ class SlotAgent:
             if destination_result['needs_clarification']:
                 clarify = destination_result['clarification_question']
                 confidence = 0.3
-            elif destination_result['destination_name'] is None and intent in ['plan', 'accommodation', 'find']:
+            elif destination_result['destination_name'] is None and intent in ['plan', 'accommodation']:
+                # Only ask for clarification for plan and accommodation, not for find intent
                 clarify = "Which destination would you like to explore?"
                 confidence = 0.5
             elif intent == 'general' and destination_result['destination_name'] is None:
