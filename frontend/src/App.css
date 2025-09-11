@@ -2,55 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Professional Color System */
+/* Professional Color System - Updated with new palette */
 :root {
-  /* Primary Colors - Professional Blue */
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-300: #93c5fd;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
-  --primary-800: #1e40af;
-  --primary-900: #1e3a8a;
+  /* Primary Orange - Energy and Innovation */
+  --primary-50: #fef7ed;
+  --primary-100: #fdedd3;
+  --primary-200: #fbd8a5;
+  --primary-300: #f9bc6d;
+  --primary-400: #f69d33;
+  --primary-500: #e69543; /* Main Orange */
+  --primary-600: #d17a1f;
+  --primary-700: #ae5d17;
+  --primary-800: #8c4a18;
+  --primary-900: #743e17;
 
-  /* Secondary Colors - Warm Orange */
-  --secondary-50: #fff7ed;
-  --secondary-100: #ffedd5;
-  --secondary-200: #fed7aa;
-  --secondary-300: #fdba74;
-  --secondary-400: #fb923c;
-  --secondary-500: #f97316;
-  --secondary-600: #ea580c;
-  --secondary-700: #c2410c;
-  --secondary-800: #9a3412;
-  --secondary-900: #7c2d12;
+  /* Charcoal/Black - Clarity and Contrast */
+  --charcoal-50: #f6f6f6;
+  --charcoal-100: #e7e7e7;
+  --charcoal-200: #d1d1d1;
+  --charcoal-300: #b0b0b0;
+  --charcoal-400: #888888;
+  --charcoal-500: #6d6d6d;
+  --charcoal-600: #5d5d5d;
+  --charcoal-700: #4f4f4f;
+  --charcoal-800: #454545;
+  --charcoal-900: #232323; /* Main Charcoal */
 
-  /* Accent Colors - Professional Purple */
-  --accent-50: #faf5ff;
-  --accent-100: #f3e8ff;
-  --accent-200: #e9d5ff;
-  --accent-300: #d8b4fe;
-  --accent-400: #c084fc;
-  --accent-500: #a855f7;
-  --accent-600: #9333ea;
-  --accent-700: #7c3aed;
-  --accent-800: #6b21a8;
-  --accent-900: #581c87;
+  /* Light Gray/White - Clean backgrounds */
+  --light-50: #ffffff; /* Pure White */
+  --light-100: #fdfdfd;
+  --light-200: #f8f8f8;
+  --light-300: #f0f0f0;
+  --light-400: #e8e8e8;
+  --light-500: #d3d2d0; /* Main Light Gray */
+  --light-600: #b8b7b5;
+  --light-700: #9d9c9a;
+  --light-800: #82817f;
+  --light-900: #676664;
 
-  /* Neutral Colors */
-  --neutral-50: #f8fafc;
-  --neutral-100: #f1f5f9;
-  --neutral-200: #e2e8f0;
-  --neutral-300: #cbd5e1;
-  --neutral-400: #94a3b8;
-  --neutral-500: #64748b;
-  --neutral-600: #475569;
-  --neutral-700: #334155;
-  --neutral-800: #1e293b;
-  --neutral-900: #0f172a;
+  /* Accent Gray - Secondary elements */
+  --accent-50: #fafafa;
+  --accent-100: #f5f5f5;
+  --accent-200: #e5e5e5;
+  --accent-300: #d4d4d4;
+  --accent-400: #a3a3a3;
+  --accent-500: #747474; /* Main Accent Gray */
+  --accent-600: #525252;
+  --accent-700: #404040;
+  --accent-800: #262626;
+  --accent-900: #171717;
 
   /* Success & Status Colors */
   --success-500: #10b981;
