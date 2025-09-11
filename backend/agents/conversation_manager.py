@@ -39,7 +39,7 @@ class ConversationManager:
         self.dates_agent = DatesAgent(llm_client)
         self.travelers_agent = TravelersAgent(llm_client)
         self.budget_agent = BudgetAgent(llm_client)
-        self.retrieval_agent = RetrievalAgent()
+        self.retrieval_agent = RetrievalAgent(llm_client)
         self.planner_agent = PlannerAgent(llm_client)
         self.accommodation_agent = AccommodationAgent(llm_client)
         self.validator_agent = ValidatorAgent(llm_client)
