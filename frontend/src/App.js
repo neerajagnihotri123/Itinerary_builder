@@ -2162,11 +2162,18 @@ function App() {
         const newRecommendations = [];
         const newQuestionChips = [];
         let newItinerary = null;
+        const mentionedDestinations = [];
         
         data.ui_actions.forEach(action => {
           if (action.type === 'card_add' && action.payload) {
             newRecommendations.push(action.payload);
             console.log('🎴 Added card:', action.payload.title);
+            
+            // Extract destination for map highlighting if it's a destination card
+            if (action.payload.category === 'destination' && action.payload.title) {
+              const destinationName = action.payload.title.split(',')[0].trim(); // Get main name before comma
+              mentionedDestinations.push(destinationName);
+            }
           } else if (action.type === 'question_chip' && action.payload) {
             newQuestionChips.push(action.payload);
             console.log('💬 Added question chip:', action.payload.question);
@@ -2219,6 +2226,27 @@ function App() {
           setGeneratedItinerary(newItinerary.itinerary || []);
           setRightPanelContent('itinerary');
           console.log('🗓️ Set itinerary with', (newItinerary.itinerary || []).length, 'days');
+        }
+
+        // Update map highlighting for mentioned destinations
+        if (mentionedDestinations.length > 0) {
+          setHighlightedDestinations(prev => {
+            const newHighlighted = [...new Set([...prev, ...mentionedDestinations])]; // Remove duplicates
+            console.log('🗺️ Highlighting destinations on map:', newHighlighted);
+            return newHighlighted;
+          });
+        }
+      }
+
+      // Also extract destinations from the assistant's text response for map highlighting
+      if (data.chat_text) {
+        const extractedDestinations = extractDestinationsFromText(data.chat_text);
+        if (extractedDestinations.length > 0) {
+          setHighlightedDestinations(prev => {
+            const newHighlighted = [...new Set([...prev, ...extractedDestinations])];
+            console.log('🗺️ Highlighting destinations from text:', extractedDestinations);
+            return newHighlighted;
+          });
         }
       }
 
