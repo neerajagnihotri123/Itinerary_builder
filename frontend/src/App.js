@@ -107,6 +107,150 @@ const Avatar = () => (
   </motion.div>
 );
 
+// Enhanced Horizontal Carousel Component for Recommendation Cards
+const RecommendationCarousel = ({ items, onAction, title = "Recommendations" }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
+  const carouselRef = useRef(null);
+
+  const itemsPerView = window.innerWidth >= 1200 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+  const maxIndex = Math.max(0, items.length - itemsPerView);
+
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.clientX - translateX);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const currentX = e.clientX - startX;
+    setTranslateX(currentX);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    
+    const cardWidth = 340; // card width + gap
+    const threshold = cardWidth / 3;
+    
+    if (translateX > threshold && currentIndex > 0) {
+      setCurrentIndex(prev => prev - 1);
+    } else if (translateX < -threshold && currentIndex < maxIndex) {
+      setCurrentIndex(prev => prev + 1);
+    }
+    
+    setTranslateX(0);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, startX, translateX, currentIndex, maxIndex]);
+
+  const goToPrevious = () => {
+    setCurrentIndex(prev => Math.max(0, prev - 1));
+  };
+
+  const goToNext = () => {
+    setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
+  };
+
+  const goToSlide = (index) => {
+    setCurrentIndex(Math.min(index, maxIndex));
+  };
+
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6 px-6">
+        <h3 className="text-xl font-bold" style={{ color: 'var(--charcoal-900)' }}>
+          {title}
+        </h3>
+        <div className="flex items-center gap-2">
+          <span className="text-sm" style={{ color: 'var(--accent-500)' }}>
+            {currentIndex + 1} - {Math.min(currentIndex + itemsPerView, items.length)} of {items.length}
+          </span>
+        </div>
+      </div>
+
+      {/* Carousel Container */}
+      <div className="cards-carousel-container">
+        <motion.div
+          ref={carouselRef}
+          className={`cards-carousel ${isDragging ? 'dragging' : ''}`}
+          style={{
+            transform: `translateX(${-currentIndex * 340 + translateX}px)`,
+          }}
+          animate={{
+            transform: `translateX(${-currentIndex * 340}px)`,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+          }}
+          onMouseDown={handleMouseDown}
+        >
+          {items.map((item, index) => (
+            <motion.div
+              key={item.id || index}
+              className="carousel-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -8, boxShadow: '0 25px 50px rgba(35,35,35,0.15)' }}
+            >
+              <RecommendationCard item={item} onAction={onAction} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+
+      {/* Navigation */}
+      <div className="carousel-navigation">
+        <button
+          className="carousel-nav-button"
+          onClick={goToPrevious}
+          disabled={currentIndex === 0}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        
+        <div className="carousel-dots">
+          {Array.from({ length: Math.ceil(items.length / itemsPerView) }, (_, index) => (
+            <button
+              key={index}
+              className={`carousel-dot ${Math.floor(currentIndex / itemsPerView) === index ? 'active' : ''}`}
+              onClick={() => goToSlide(index * itemsPerView)}
+            />
+          ))}
+        </div>
+        
+        <button
+          className="carousel-nav-button"
+          onClick={goToNext}
+          disabled={currentIndex >= maxIndex}
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const RecommendationCard = ({ item, onAction }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
