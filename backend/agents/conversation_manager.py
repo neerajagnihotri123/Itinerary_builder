@@ -260,43 +260,24 @@ Guidelines:
             ]
     
     async def _generate_smart_hotel_cards(self, message: str, slots: UserSlots) -> list:
-        """Generate hotel cards when relevant"""
+        """Generate hotel cards when relevant using AccommodationAgent"""
         intent = self._classify_intent(message)
         if intent not in ["accommodation_query"]:
             return []
         
         try:
-            import sys
-            import os
-            sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            from mock_data import MOCK_HOTELS
+            # Extract destination from message or slots
+            destination = slots.destination if slots.destination else self._extract_destination_from_message(message)
             
-            # Smart hotel matching
-            message_words = message.lower().split()
-            relevant_hotels = []
+            if not destination:
+                print("❌ No destination found for hotel query")
+                return []
             
-            for hotel in MOCK_HOTELS:
-                hotel_location_words = hotel.get('location', '').lower().split()
-                location_match = any(word in hotel_location_words for word in message_words)
-                reverse_match = any(word in message_words for word in hotel_location_words)
-                
-                if location_match or reverse_match:
-                    relevant_hotels.append(hotel)
+            # Use AccommodationAgent to get hotels for the destination
+            hotels = await self.accommodation_agent.get_hotels_for_destination(destination, slots)
             
-            # Convert to cards
-            hotel_cards = []
-            for hotel in relevant_hotels[:3]:  # Top 3
-                hotel_cards.append({
-                    "id": hotel.get("id"),
-                    "name": hotel.get("name"),
-                    "rating": hotel.get("rating", 4.5),
-                    "price_estimate": hotel.get("price_per_night", 5000),
-                    "reason": hotel.get("description", "Excellent choice for your stay"),
-                    "amenities": hotel.get("amenities", []),
-                    "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"
-                })
-            
-            return hotel_cards
+            print(f"🏨 AccommodationAgent returned {len(hotels)} hotels for {destination}")
+            return hotels
             
         except Exception as e:
             print(f"❌ Error generating hotel cards: {e}")
