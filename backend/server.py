@@ -1008,7 +1008,7 @@ async def chat_endpoint(request: ChatRequest):
             })
         
         return ChatResponse(
-            chat_text=result.get("human_text", "I'd be happy to help you plan your trip!"),
+            chat_text=result.get("chat_text", result.get("human_text", "I'd be happy to help you plan your trip!")),
             ui_actions=ui_actions,
             updated_profile=request.user_profile or {},
             followup_questions=[],
