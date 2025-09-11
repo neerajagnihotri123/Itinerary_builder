@@ -102,7 +102,15 @@ class SlotAgent:
             }
     
     def _detect_intent(self, message_lower: str) -> str:
-        """Detect primary intent from message"""
+        """Detect primary intent from message with better compound query handling"""
+        
+        # Handle compound queries that mention multiple intents
+        if any(word in message_lower for word in ['tips', 'advice', 'information']) and any(word in message_lower for word in ['hotel', 'accommodation']):
+            # Travel tips + hotels = find intent (information gathering)
+            return 'find'
+        elif any(word in message_lower for word in ['plan', 'book']) and any(word in message_lower for word in ['hotel', 'accommodation']):
+            # Plan + hotels = accommodation intent  
+            return 'accommodation'
         
         # Check for explicit intent keywords
         for intent, keywords in self.intent_patterns.items():
@@ -112,17 +120,19 @@ class SlotAgent:
                         return 'plan'
                     elif intent == 'accommodation' and any(word in message_lower for word in ['hotel', 'stay', 'book', 'accommodation']):
                         return 'accommodation'
-                    elif intent == 'find' and any(word in message_lower for word in ['tell me about', 'recommend', 'suggest', 'find']):
+                    elif intent == 'find' and any(word in message_lower for word in ['tell me about', 'recommend', 'suggest', 'find', 'tips', 'advice']):
                         return 'find'
+                    elif intent == 'confirmation':
+                        return 'confirmation'
                     elif intent == 'general':
                         return 'general'
         
-        # Contextual intent detection
+        # Contextual intent detection with enhanced patterns
         if any(word in message_lower for word in ['plan', 'trip', 'itinerary', 'generate', 'create plan']):
             return 'plan'
         elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'book', 'reserve']):
             return 'accommodation'
-        elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'about', 'what', 'find', 'destinations', 'beach destinations', 'mountain destinations']):
+        elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'about', 'what', 'find', 'destinations', 'beach destinations', 'mountain destinations', 'tips', 'advice', 'information']):
             return 'find'
         elif any(word in message_lower for word in ['yes', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect']):
             return 'confirmation'
