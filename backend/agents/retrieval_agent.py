@@ -122,10 +122,18 @@ class RetrievalAgent:
             
             # Parse the JSON response
             try:
+                # Clean the content to ensure it's valid JSON
+                content = content.strip()
+                if content.startswith('```json'):
+                    content = content.replace('```json', '').replace('```', '').strip()
+                elif content.startswith('```'):
+                    content = content.replace('```', '').strip()
+                
                 facts_data = json.loads(content)
                 return self._parse_llm_facts(facts_data, destination)
-            except json.JSONDecodeError:
-                print(f"❌ Invalid JSON from LLM fact generation")
+            except json.JSONDecodeError as e:
+                print(f"❌ Invalid JSON from LLM fact generation: {e}")
+                print(f"   Raw content: {content[:200]}...")
                 return self._get_fallback_facts(destination, slots)
                 
         except Exception as e:
