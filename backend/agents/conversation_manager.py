@@ -647,49 +647,51 @@ Focus on authentic experiences and practical appeal for travelers.
     
     async def _handle_confirmation_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """Handle confirmation responses like 'yes', 'ok', 'proceed' by maintaining context"""
-        print(f"✅ Handling confirmation flow")
+        print(f"✅ Handling confirmation flow with slots: destination={getattr(slots, 'destination', None)}")
         
-        # If user has a destination from previous context, provide helpful next steps
-        if slots.destination:
+        # Check if user has a destination from previous context
+        destination = getattr(slots, 'destination', None)
+        if destination:
             return {
-                "chat_text": f"Perfect! Since you're interested in {slots.destination}, would you like me to show you more hotels, plan activities, or provide travel tips?",
+                "chat_text": f"Perfect! Since you're interested in {destination}, would you like me to show you more hotels, plan activities, or provide travel tips?",
                 "ui_actions": [
                     {
                         "type": "question_chip",
                         "payload": {
-                            "id": f"hotels_{hash(slots.destination) % 1000}",
-                            "question": f"Hotels in {slots.destination}",
+                            "id": f"hotels_{hash(destination) % 1000}",
+                            "question": f"Hotels in {destination}",
                             "category": "accommodation"
                         }
                     },
                     {
                         "type": "question_chip",
                         "payload": {
-                            "id": f"activities_{hash(slots.destination) % 1000}",
-                            "question": f"Things to do in {slots.destination}",
+                            "id": f"activities_{hash(destination) % 1000}",
+                            "question": f"Things to do in {destination}",
                             "category": "activities"
                         }
                     },
                     {
                         "type": "question_chip",
                         "payload": {
-                            "id": f"tips_{hash(slots.destination) % 1000}",
-                            "question": f"Travel tips for {slots.destination}",
+                            "id": f"tips_{hash(destination) % 1000}",
+                            "question": f"Travel tips for {destination}",
                             "category": "tips"
                         }
                     }
                 ],
                 "updated_slots": {
-                    "destination": slots.destination,
-                    "start_date": slots.start_date,
-                    "end_date": slots.end_date,
-                    "budget_per_night": slots.budget_per_night,
-                    "adults": slots.adults,
-                    "children": slots.children
+                    "destination": getattr(slots, 'destination', None),
+                    "start_date": getattr(slots, 'start_date', None),
+                    "end_date": getattr(slots, 'end_date', None),
+                    "budget_per_night": getattr(slots, 'budget_per_night', None),
+                    "adults": getattr(slots, 'adults', 2),
+                    "children": getattr(slots, 'children', 0)
                 },
                 "metadata": {
                     "intent": "confirmation",
                     "context_maintained": True,
+                    "destination": destination,
                     "agent": "conversation_manager"
                 }
             }
@@ -716,12 +718,12 @@ Focus on authentic experiences and practical appeal for travelers.
                     }
                 ],
                 "updated_slots": {
-                    "destination": slots.destination,
-                    "start_date": slots.start_date,
-                    "end_date": slots.end_date,
-                    "budget_per_night": slots.budget_per_night,
-                    "adults": slots.adults,
-                    "children": slots.children
+                    "destination": getattr(slots, 'destination', None),
+                    "start_date": getattr(slots, 'start_date', None),
+                    "end_date": getattr(slots, 'end_date', None),
+                    "budget_per_night": getattr(slots, 'budget_per_night', None),
+                    "adults": getattr(slots, 'adults', 2),
+                    "children": getattr(slots, 'children', 0)
                 },
                 "metadata": {
                     "intent": "confirmation",
