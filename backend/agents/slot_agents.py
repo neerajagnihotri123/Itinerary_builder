@@ -40,8 +40,8 @@ class SlotAgent:
         self.intent_patterns = {
             'plan': ['plan', 'generate', 'itinerary', 'trip', 'schedule', 'create itinerary', 'make plan'],
             'accommodation': ['hotel', 'stay', 'accommodation', 'book', 'reserve', 'resort', 'lodge'],
-            'find': ['find', 'recommend', 'suggest', 'show', 'tell me about', 'what about', 'explore'],
-            'general': ['hello', 'hi', 'help', 'what can you do', 'popular destinations']
+            'find': ['find', 'recommend', 'suggest', 'show', 'tell me about', 'what about', 'explore', 'recommendations', 'popular destinations', 'give me'],
+            'general': ['hello', 'hi', 'help', 'what can you do', 'hey', 'good morning', 'good evening']
         }
     
     async def extract_intent_and_destination(self, message: str) -> Dict[str, Any]:
