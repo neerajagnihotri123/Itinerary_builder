@@ -1,11 +1,17 @@
 """
-Accommodation Agent - Scores and ranks hotel recommendations
+Accommodation Agent - LLM-powered hotel recommendations and ranking
 """
 import math
+import json
+import os
+from datetime import datetime, timezone
 from typing import List, Dict, Any
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class AccommodationAgent:
-    """Handles hotel scoring and ranking based on user preferences"""
+    """Handles LLM-powered hotel scoring and ranking based on user preferences"""
     
     def __init__(self, llm_client):
         self.llm_client = llm_client
