@@ -114,6 +114,369 @@ class ConversationManager:
             print(f"❌ ConversationManager error: {e}")
             return await self._generate_error_response(str(e))
     
+    async def _generate_clarification_response(self, clarify: str, slot_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate response when clarification is needed"""
+        return {
+            "chat_text": clarify,
+            "ui_actions": [
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"clarify_{hash(clarify) % 1000}",
+                        "question": "Please specify your destination",
+                        "category": "clarification"
+                    }
+                }
+            ],
+            "metadata": {
+                "intent": slot_result.get('intent', 'general'),
+                "needs_clarification": True,
+                "confidence": slot_result.get('confidence', 0.3)
+            }
+        }
+    
+    async def _handle_planner_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
+        """
+        Planner flow: slot_agent → retrieval_agent → planner_agent → validator_agent → conversation_agent
+        Pre-generation mode: when intent = generate/plan → treat as planner mode with trip-planner card
+        """
+        print(f"🗓️ Handling planner flow")
+        
+        # Check if we have enough information to generate itinerary
+        missing_slots = []
+        if not slots.destination:
+            missing_slots.append("destination")
+        if not slots.start_date:
+            missing_slots.append("dates")
+        if not slots.budget_per_night:
+            missing_slots.append("budget")
+        
+        # Pre-generation mode: Present trip-planner card if missing essentials
+        if missing_slots:
+            return await self._present_trip_planner_card(message, slots, missing_slots)
+        
+        try:
+            # Step 1: Generate itinerary using planner_agent
+            planner_output = await self.planner_agent.generate_itinerary(slots, retrieval_facts)
+            
+            # Step 2: Validate using validator_agent
+            validation_result = await self.validator_agent.validate(planner_output, retrieval_facts)
+            
+            # Step 3: Format response using ux_agent (conversation_agent render)
+            ux_response = await self.ux_agent.format_response(planner_output, validation_result)
+            
+            # Step 4: Create UI actions for itinerary + hotel cards
+            ui_actions = self._create_itinerary_ui_actions(planner_output)
+            ui_actions.extend(self._create_hotel_ui_actions(planner_output.get('hotel_recommendations', [])))
+            
+            return {
+                "chat_text": ux_response.get('human_text', 'Here\'s your personalized itinerary!'),
+                "ui_actions": ui_actions,
+                "metadata": {
+                    "intent": "plan",
+                    "planner_output": planner_output,
+                    "validation": validation_result,
+                    "confidence": validation_result.get('confidence', 0.8)
+                }
+            }
+            
+        except Exception as e:
+            print(f"❌ Planner flow error: {e}")
+            return await self._generate_error_response(f"Error generating itinerary: {str(e)}")
+    
+    async def _handle_accommodation_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
+        """Accommodation flow: retrieval_agent → accommodation_agent → booking flow"""
+        print(f"🏨 Handling accommodation flow")
+        
+        if not slots.destination:
+            return {
+                "chat_text": "Which destination would you like to find accommodations for?",
+                "ui_actions": [
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "destination_clarify",
+                            "question": "Please specify your destination",
+                            "category": "destination"
+                        }
+                    }
+                ],
+                "metadata": {"intent": "accommodation", "needs_destination": True}
+            }
+        
+        try:
+            # Get hotels using accommodation_agent
+            hotels = await self.accommodation_agent.get_hotels_for_destination(slots.destination, slots)
+            
+            if hotels:
+                # Create hotel cards
+                ui_actions = self._create_hotel_ui_actions(hotels)
+                
+                # Generate contextual response
+                response_text = f"Found {len(hotels)} great hotel options in {slots.destination}! Each one offers unique experiences perfect for your stay."
+                
+                # Add question chips for further assistance
+                ui_actions.extend([
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": f"hotel_compare_{hash(slots.destination) % 1000}",
+                            "question": "Compare these hotels",
+                            "category": "accommodation"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": f"hotel_budget_{hash(slots.destination) % 1000}",
+                            "question": "Show budget-friendly options",
+                            "category": "accommodation"
+                        }
+                    }
+                ])
+                
+                return {
+                    "chat_text": response_text,
+                    "ui_actions": ui_actions,
+                    "metadata": {
+                        "intent": "accommodation",
+                        "hotels_found": len(hotels),
+                        "destination": slots.destination
+                    }
+                }
+            else:
+                return {
+                    "chat_text": f"I couldn't find specific hotels in {slots.destination} right now. Let me help you with general accommodation information.",
+                    "ui_actions": [
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "accommodation_help",
+                                "question": "Show nearby destinations with hotels",
+                                "category": "accommodation"
+                            }
+                        }
+                    ],
+                    "metadata": {"intent": "accommodation", "hotels_found": 0}
+                }
+                
+        except Exception as e:
+            print(f"❌ Accommodation flow error: {e}")
+            return await self._generate_error_response(f"Error finding accommodations: {str(e)}")
+    
+    async def _handle_find_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
+        """Find flow: retrieval_agent → conversation_agent (render cards)"""
+        print(f"🔍 Handling find flow")
+        
+        if slots.destination:
+            # Generate destination card with information
+            destination_cards = self._create_destination_cards([{
+                'id': slots.canonical_place_id or f"dest_{hash(slots.destination) % 1000}",
+                'name': slots.destination,
+                'description': f"Explore the wonderful {slots.destination} with its unique attractions and experiences.",
+                'highlights': ['Beautiful scenery', 'Rich culture', 'Adventure activities', 'Local cuisine'],
+                'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
+            }])
+            
+            # Generate contextual response
+            response_text = f"{slots.destination} offers incredible experiences! From stunning landscapes to rich cultural heritage, it's a perfect destination for travelers seeking adventure and beauty."
+            
+            # Add question chips
+            question_chips = [
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"hotels_{hash(slots.destination) % 1000}",
+                        "question": f"Hotels in {slots.destination}",
+                        "category": "accommodation"
+                    }
+                },
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"plan_{hash(slots.destination) % 1000}",
+                        "question": f"Plan a trip to {slots.destination}",
+                        "category": "planning"
+                    }
+                }
+            ]
+            
+            return {
+                "chat_text": response_text,
+                "ui_actions": destination_cards + question_chips,
+                "metadata": {
+                    "intent": "find",
+                    "destination": slots.destination,
+                    "cards_generated": len(destination_cards)
+                }
+            }
+        else:
+            # General discovery - show popular destinations
+            popular_destinations = [
+                {'name': 'Kerala, India', 'id': 'kerala_backwaters', 'description': 'God\'s Own Country with serene backwaters'},
+                {'name': 'Rajasthan, India', 'id': 'rajasthan_india', 'description': 'Land of kings with majestic palaces'},
+                {'name': 'Manali, India', 'id': 'manali_himachal', 'description': 'Mountain paradise in Himachal Pradesh'},
+                {'name': 'Andaman Islands, India', 'id': 'andaman_islands', 'description': 'Tropical paradise with pristine beaches'},
+                {'name': 'Rishikesh, India', 'id': 'rishikesh_uttarakhand', 'description': 'Yoga capital with adventure sports'}
+            ]
+            
+            destination_cards = self._create_destination_cards(popular_destinations)
+            
+            return {
+                "chat_text": "Here are some amazing destinations perfect for your next adventure! Each offers unique experiences and unforgettable memories.",
+                "ui_actions": destination_cards,
+                "metadata": {
+                    "intent": "find",
+                    "cards_generated": len(destination_cards),
+                    "type": "discovery"
+                }
+            }
+    
+    async def _handle_general_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
+        """General conversation flow"""
+        print(f"💬 Handling general flow")
+        
+        # Use UX agent to format general response
+        ux_response = await self.ux_agent.format_general_response(message)
+        
+        return {
+            "chat_text": ux_response.get('human_text', 'Hello! I\'m here to help you plan amazing trips. Where would you like to explore?'),
+            "ui_actions": self._convert_ux_actions_to_ui_actions(ux_response.get('actions', [])),
+            "metadata": {
+                "intent": "general",
+                "conversational": True
+            }
+        }
+    
+    async def _generate_error_response(self, error_message: str) -> Dict[str, Any]:
+        """Generate error response"""
+        return {
+            "chat_text": "I apologize, but I encountered an issue processing your request. Let me help you with travel planning in a different way.",
+            "ui_actions": [
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": "help_destinations",
+                        "question": "Show popular destinations",
+                        "category": "help"
+                    }
+                },
+                {
+                    "type": "question_chip",
+                    "payload": {
+                        "id": "help_planning",
+                        "question": "Help me plan a trip",
+                        "category": "help"
+                    }
+                }
+            ],
+            "metadata": {
+                "intent": "error",
+                "error": error_message,
+                "fallback": True
+            }
+        }
+    
+    async def _present_trip_planner_card(self, message: str, slots: UserSlots, missing_slots: List[str]) -> Dict[str, Any]:
+        """Present trip planner card when essential information is missing"""
+        return {
+            "chat_text": f"I'd love to help you plan your trip! To create the perfect itinerary, I need a few more details.",
+            "ui_actions": [
+                {
+                    "type": "trip_planner_card",
+                    "payload": {
+                        "id": "trip_planner_main",
+                        "title": "Plan Your Perfect Trip",
+                        "missing_slots": missing_slots,
+                        "current_destination": slots.destination,
+                        "current_dates": f"{slots.start_date} to {slots.end_date}" if slots.start_date and slots.end_date else None,
+                        "current_budget": slots.budget_per_night
+                    }
+                }
+            ],
+            "metadata": {
+                "intent": "plan",
+                "pre_generation_mode": True,
+                "missing_slots": missing_slots
+            }
+        }
+    
+    def _create_itinerary_ui_actions(self, planner_output: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Create UI actions for itinerary display"""
+        ui_actions = []
+        
+        # Add itinerary card
+        if planner_output.get('itinerary'):
+            ui_actions.append({
+                "type": "itinerary_card",
+                "payload": {
+                    "id": f"itinerary_{hash(str(planner_output)) % 1000}",
+                    "title": f"{len(planner_output['itinerary'])}-Day Itinerary",
+                    "days": planner_output['itinerary'],
+                    "destination": planner_output.get('destination', 'Your Destination')
+                }
+            })
+        
+        return ui_actions
+    
+    def _create_hotel_ui_actions(self, hotels: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Create UI actions for hotel cards"""
+        ui_actions = []
+        
+        for hotel in hotels[:3]:  # Limit to 3 hotels
+            ui_actions.append({
+                "type": "hotel_card",
+                "payload": {
+                    "id": hotel.get('id', f"hotel_{hash(str(hotel)) % 1000}"),
+                    "name": hotel.get('name', 'Hotel'),
+                    "rating": hotel.get('rating', 4.5),
+                    "price": hotel.get('price_per_night', hotel.get('price_estimate', 5000)),
+                    "description": hotel.get('description', hotel.get('reason', 'Great location and amenities')),
+                    "amenities": hotel.get('amenities', []),
+                    "image": hotel.get('image', 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop')
+                }
+            })
+        
+        return ui_actions
+    
+    def _create_destination_cards(self, destinations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Create UI actions for destination cards"""
+        ui_actions = []
+        
+        for dest in destinations:
+            ui_actions.append({
+                "type": "destination_card",
+                "payload": {
+                    "id": dest.get('id', f"dest_{hash(dest['name']) % 1000}"),
+                    "name": dest['name'],
+                    "description": dest.get('description', ''),
+                    "highlights": dest.get('highlights', []),
+                    "image": dest.get('hero_image', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop')
+                }
+            })
+        
+        return ui_actions
+    
+    def _convert_ux_actions_to_ui_actions(self, ux_actions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Convert UX agent actions to UI actions format"""
+        ui_actions = []
+        
+        for action in ux_actions:
+            if action.get('type') == 'button':
+                ui_actions.append({
+                    "type": "question_chip",
+                    "payload": {
+                        "id": f"ux_{hash(action.get('label', '')) % 1000}",
+                        "question": action.get('label', ''),
+                        "category": action.get('category', 'general')
+                    }
+                })
+            else:
+                # Pass through other action types
+                ui_actions.append(action)
+        
+        return ui_actions
+
     async def _build_smart_context(self, message: str, slots: UserSlots, session_id: str) -> str:
         """Build intelligent context for LLM based on user query"""
         try:
