@@ -90,12 +90,19 @@ const modalVariants = {
   }
 };
 
-// Components
+// Components with updated color palette
 const Avatar = () => (
   <motion.div 
-    className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg"
+    className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
+    style={{
+      background: 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)'
+    }}
     animate={{ 
-      boxShadow: ['0 4px 20px rgba(59, 130, 246, 0.3)', '0 4px 30px rgba(147, 51, 234, 0.4)', '0 4px 20px rgba(59, 130, 246, 0.3)']
+      boxShadow: [
+        '0 4px 20px rgba(230, 149, 67, 0.3)', 
+        '0 4px 30px rgba(230, 149, 67, 0.5)', 
+        '0 4px 20px rgba(230, 149, 67, 0.3)'
+      ]
     }}
     transition={{ 
       duration: 2, 
@@ -103,7 +110,7 @@ const Avatar = () => (
       repeatType: 'reverse' 
     }}
   >
-    <Plane className="w-6 h-6 text-white" />
+    <Plane className="w-6 h-6" style={{ color: 'var(--light-50)' }} />
   </motion.div>
 );
 
