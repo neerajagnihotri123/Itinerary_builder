@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 class AccommodationAgentTester:
-    def __init__(self, base_url="https://travello-agents.preview.emergentagent.com"):
+    def __init__(self, base_url="https://tripbot-ai.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.session_id = f"accommodation_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
