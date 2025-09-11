@@ -3268,16 +3268,14 @@ function App() {
               ))}
             </AnimatePresence>
 
-            {/* Recommendations */}
-            <AnimatePresence>
-              {recommendations.map((item, index) => (
-                <RecommendationCard
-                  key={`${item.id}_${index}`}
-                  item={item}
-                  onAction={handleCardAction}
-                />
-              ))}
-            </AnimatePresence>
+            {/* Recommendations Carousel */}
+            {recommendations.length > 0 && (
+              <RecommendationCarousel
+                items={recommendations}
+                onAction={handleCardAction}
+                title="Your Personalized Recommendations"
+              />
+            )}
 
             {/* Debug: Show if we have recommendations */}
             {recommendations.length === 0 && messages.length > 1 && (
