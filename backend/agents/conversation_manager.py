@@ -175,32 +175,8 @@ class ConversationManager:
         if missing_slots:
             # Instead of just asking, show destinations + trip planning help
             if not slots.destination:
-                # Show popular destinations for trip planning
-                popular_destinations = [
-                    {
-                        'name': 'Kerala, India', 
-                        'id': 'kerala_backwaters', 
-                        'description': 'Perfect for relaxing backwater cruises and hill station retreats',
-                        'highlights': ['Backwaters', 'Hill stations', 'Ayurveda', 'Spice tours'],
-                        'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
-                    },
-                    {
-                        'name': 'Manali, Himachal Pradesh', 
-                        'id': 'manali_himachal', 
-                        'description': 'Adventure lover\'s paradise with snow-capped mountains',
-                        'highlights': ['Skiing', 'Paragliding', 'Trekking', 'Mountain views'],
-                        'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
-                    },
-                    {
-                        'name': 'Rajasthan, India', 
-                        'id': 'rajasthan_india', 
-                        'description': 'Royal heritage experience with palaces and desert safaris',
-                        'highlights': ['Royal palaces', 'Desert safari', 'Camel rides', 'Folk culture'],
-                        'hero_image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop'
-                    }
-                ]
-                
-                destination_cards = self._create_destination_cards(popular_destinations)
+                # Use LLM to generate destination options for trip planning
+                destination_cards = await self._generate_destination_cards_with_llm("plan a trip", slots)
                 
                 # Add trip planning question chips
                 planning_chips = [
@@ -222,17 +198,31 @@ class ConversationManager:
                     }
                 ]
                 
-                return {
-                    "chat_text": "I'd love to help you plan the perfect trip! ✈️ Here are some amazing destinations to consider. Choose one, or tell me about any specific place you have in mind!",
-                    "ui_actions": destination_cards + planning_chips,
-                    "metadata": {
-                        "intent": "plan",
-                        "pre_generation_mode": True,
-                        "missing_slots": missing_slots,
-                        "cards_generated": len(destination_cards),
-                        "agent": "conversation_manager"
+                if destination_cards:
+                    return {
+                        "chat_text": "I'd love to help you plan the perfect trip! ✈️ Here are some amazing destinations to consider. Choose one, or tell me about any specific place you have in mind!",
+                        "ui_actions": destination_cards + planning_chips,
+                        "metadata": {
+                            "intent": "plan",
+                            "pre_generation_mode": True,
+                            "missing_slots": missing_slots,
+                            "cards_generated": len(destination_cards),
+                            "agent": "conversation_manager",
+                            "generation_method": "llm_powered"
+                        }
                     }
-                }
+                else:
+                    # LLM generation failed, ask for destination
+                    return {
+                        "chat_text": "I'd love to help you plan an amazing trip! ✈️ What destination are you thinking about exploring?",
+                        "ui_actions": planning_chips,
+                        "metadata": {
+                            "intent": "plan",
+                            "pre_generation_mode": True,
+                            "missing_slots": missing_slots,
+                            "agent": "conversation_manager"
+                        }
+                    }
             elif "destination" in missing_slots:
                 # Still missing destination but has some other info - show destinations
                 popular_destinations = [
