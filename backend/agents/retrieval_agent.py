@@ -206,8 +206,9 @@ Generate 5 POIs, 3-5 hotels, and 8 activities maximum.
 """
     
     def _parse_llm_facts(self, facts_data: Dict, destination: str) -> List[Dict[str, Any]]:
-        """Parse LLM-generated facts into standard format"""
+        """Parse LLM-generated facts into standard format with proper metadata"""
         facts = []
+        current_time = datetime.now(timezone.utc).isoformat()
         
         # Parse POIs
         for poi in facts_data.get('pois', []):
@@ -219,12 +220,15 @@ Generate 5 POIs, 3-5 hotels, and 8 activities maximum.
                 "coords": poi.get('coordinates', {}),
                 "rating": poi.get('rating', 4.5),
                 "price_estimate": None,
-                "source": "llm_generated",
-                "availability_cache_ts": datetime.now(timezone.utc).isoformat(),
+                "provider": "llm_generated",
+                "source": "emergent_ai_travel_expert", 
+                "last_updated": current_time,
+                "availability_cache_ts": current_time,
                 "confidence": poi.get('confidence', 0.9),
                 "description": poi.get('description', ''),
                 "highlights": poi.get('highlights', []),
-                "category": poi.get('category', [])
+                "category": poi.get('category', []),
+                "freshness_score": 1.0  # New facts are maximally fresh
             }
             facts.append(fact)
         
@@ -238,12 +242,15 @@ Generate 5 POIs, 3-5 hotels, and 8 activities maximum.
                 "coords": hotel.get('coordinates', {}),
                 "rating": hotel.get('rating', 4.0),
                 "price_estimate": hotel.get('price_per_night', 5000),
-                "source": "llm_generated",
-                "availability_cache_ts": datetime.now(timezone.utc).isoformat(),
+                "provider": "llm_generated",
+                "source": "ai_hotel_recommendations",
+                "last_updated": current_time,
+                "availability_cache_ts": current_time,
                 "confidence": hotel.get('confidence', 0.9),
                 "amenities": hotel.get('amenities', []),
                 "hotel_type": hotel.get('hotel_type', 'Hotel'),
-                "description": hotel.get('description', '')
+                "description": hotel.get('description', ''),
+                "freshness_score": 1.0
             }
             facts.append(fact)
         
@@ -251,23 +258,26 @@ Generate 5 POIs, 3-5 hotels, and 8 activities maximum.
         for activity in facts_data.get('activities', []):
             fact = {
                 "type": "activity",
-                "subtype": "llm_generated",
+                "subtype": "experience",
                 "id": activity.get('id', f"activity_{hash(activity.get('name', '')) % 10000}"),
                 "name": activity.get('name', ''),
                 "address": activity.get('location', destination),
                 "coords": {},
                 "rating": activity.get('rating', 4.3),
                 "price_estimate": activity.get('price', 1500),
-                "source": "llm_generated",
-                "availability_cache_ts": datetime.now(timezone.utc).isoformat(),
+                "provider": "llm_generated",
+                "source": "ai_activity_curator",
+                "last_updated": current_time,
+                "availability_cache_ts": current_time,
                 "confidence": activity.get('confidence', 0.8),
                 "duration": activity.get('duration', '2-3 hours'),
                 "description": activity.get('description', ''),
-                "category": activity.get('category', 'Experience')
+                "category": activity.get('category', 'Experience'),
+                "freshness_score": 1.0
             }
             facts.append(fact)
         
-        print(f"✅ LLM generated {len(facts)} facts for {destination}")
+        print(f"✅ LLM generated {len(facts)} facts for {destination} with metadata")
         return facts
     
     def _get_fallback_facts(self, destination: str, slots) -> List[Dict[str, Any]]:
