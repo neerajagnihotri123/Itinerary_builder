@@ -261,7 +261,8 @@ Guidelines:
     
     async def _generate_smart_hotel_cards(self, message: str, slots: UserSlots) -> list:
         """Generate hotel cards when relevant"""
-        if not self._classify_intent(message) == "hotel_inquiry":
+        intent = self._classify_intent(message)
+        if intent not in ["accommodation_query"]:
             return []
         
         try:
