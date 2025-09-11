@@ -1331,7 +1331,25 @@ def main():
     data_consistency_success = tester.test_data_consistency()
     test_results.append((data_consistency_success, {}))
     
-    # CRITICAL TESTS FOR REVIEW REQUEST
+    # CRITICAL TESTS FOR REVIEW REQUEST - SlotAgent and ConversationManager
+    print("\n" + "🎯" * 20 + " SLOTAGENT & ROUTING TESTS " + "🎯" * 20)
+    
+    # NEW: SlotAgent Intent Detection Tests
+    slot_agent_success = tester.test_slot_agent_intent_detection()
+    test_results.append((slot_agent_success, {}))
+    
+    # NEW: Routing Flow Architecture Tests
+    routing_flow_success = tester.test_routing_flow_architecture()
+    test_results.append((routing_flow_success, {}))
+    
+    # NEW: UI Actions Generation Format Tests
+    ui_format_success = tester.test_ui_actions_generation_formats()
+    test_results.append((ui_format_success, {}))
+    
+    # NEW: Error Handling and Fallback Tests
+    error_handling_success = tester.test_error_handling_and_fallbacks()
+    test_results.append((error_handling_success, {}))
+    
     print("\n" + "🎯" * 20 + " CRITICAL REVIEW TESTS " + "🎯" * 20)
     
     # NEW: Critical scenarios from review request
