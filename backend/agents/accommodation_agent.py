@@ -479,21 +479,36 @@ class AccommodationAgent:
         return booking_result
     
     async def _generate_hotels_with_llm(self, destination: str, slots) -> List[Dict[str, Any]]:
-        """Use LLM to generate hotel recommendations"""
+        """Use LLM to generate hotel recommendations with improved error handling"""
         try:
             from emergentintegrations.llm.chat import LlmChat, UserMessage
             
-            # Create LLM client for hotel recommendations
+            # Create LLM client for hotel recommendations with timeout
             llm_client = LlmChat(
                 api_key=os.environ.get('EMERGENT_LLM_KEY'),
                 session_id=f"hotels_{hash(destination) % 10000}",
-                system_message="You are a hotel recommendation expert. Generate accurate, detailed hotel recommendations in JSON format."
+                system_message="You are a hotel recommendation expert. Generate accurate, detailed hotel recommendations in JSON format only. No explanations, just valid JSON."
             ).with_model("openai", "gpt-4o-mini")
             
-            # Create hotel recommendation context
-            context = self._prepare_hotel_context(destination, slots)
+            # Create hotel recommendation context with better error handling
+            try:
+                context = self._prepare_hotel_context(destination, slots)
+            except Exception as e:
+                print(f"❌ Context preparation failed: {e}")
+                return []
+            
             user_message = UserMessage(text=context)
-            response = await llm_client.send_message(user_message)
+            
+            # Set a timeout for LLM request to prevent hanging
+            import asyncio
+            try:
+                response = await asyncio.wait_for(
+                    llm_client.send_message(user_message), 
+                    timeout=10.0  # 10 second timeout
+                )
+            except asyncio.TimeoutError:
+                print(f"❌ LLM hotel generation timed out for {destination}")
+                return []
             
             # Handle different response types
             if hasattr(response, 'content'):
@@ -501,14 +516,29 @@ class AccommodationAgent:
             else:
                 content = str(response)
             
-            # Parse the JSON response
+            # Clean the content to ensure it's valid JSON
+            content = content.strip()
+            if content.startswith('```json'):
+                content = content.replace('```json', '').replace('```', '').strip()
+            
+            # Parse the JSON response with better error handling
             try:
                 hotels_data = json.loads(content)
+                if not isinstance(hotels_data, dict) or 'hotels' not in hotels_data:
+                    print(f"❌ Invalid JSON structure: missing 'hotels' key")
+                    return []
+                
                 parsed_hotels = self._parse_llm_hotels(hotels_data.get('hotels', []), destination, slots)
-                print(f"✅ LLM generated {len(parsed_hotels)} hotels for {destination}")
-                return parsed_hotels
-            except json.JSONDecodeError:
-                print(f"❌ Invalid JSON from LLM hotel generation")
+                if parsed_hotels:
+                    print(f"✅ LLM generated {len(parsed_hotels)} hotels for {destination}")
+                    return parsed_hotels
+                else:
+                    print(f"❌ No valid hotels parsed from LLM response")
+                    return []
+                    
+            except json.JSONDecodeError as e:
+                print(f"❌ Invalid JSON from LLM hotel generation: {e}")
+                print(f"   Raw content: {content[:200]}...")
                 return []
                 
         except Exception as e:
