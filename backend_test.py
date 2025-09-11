@@ -1393,6 +1393,10 @@ def main():
     print(f"\nCritical Features: {critical_passed}/5 passing")
     
     print(f"\n🔥 REVIEW REQUEST CRITICAL TESTS:")
+    print(f"🎯 SlotAgent Intent Detection: {'PASS' if slot_agent_success else 'FAIL'}")
+    print(f"🔄 Routing Flow Architecture: {'PASS' if routing_flow_success else 'FAIL'}")
+    print(f"🎨 UI Actions Generation Formats: {'PASS' if ui_format_success else 'FAIL'}")
+    print(f"🛡️ Error Handling & Fallbacks: {'PASS' if error_handling_success else 'FAIL'}")
     print(f"🎯 Critical Scenarios (Review Request): {'PASS' if critical_scenarios_success else 'FAIL'}")
     print(f"🏨 Accommodation Card Filtering: {'PASS' if accommodation_success else 'FAIL'}")
     print(f"💭 Question Chip Generation: {'PASS' if question_chip_success else 'FAIL'}")
@@ -1400,9 +1404,10 @@ def main():
     print(f"🇮🇳 Mock Data Integration: {'PASS' if mock_data_success else 'FAIL'}")
     
     # Update review tests count
-    review_tests = [critical_scenarios_success, accommodation_success, question_chip_success, structure_success, mock_data_success]
+    review_tests = [slot_agent_success, routing_flow_success, ui_format_success, error_handling_success, 
+                   critical_scenarios_success, accommodation_success, question_chip_success, structure_success, mock_data_success]
     review_passed = sum(review_tests)
-    print(f"\nReview Tests: {review_passed}/5 passing")
+    print(f"\nReview Tests: {review_passed}/9 passing")
     
     # Overall assessment including review-specific tests
     total_critical_score = critical_passed + review_passed
