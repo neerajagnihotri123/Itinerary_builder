@@ -2153,20 +2153,41 @@ function App() {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Process UI actions for cards
+      // Process UI actions for cards, itineraries, and question chips
       if (data.ui_actions && data.ui_actions.length > 0) {
         console.log('🎨 Processing UI actions:', data.ui_actions.length);
         
         const newRecommendations = [];
+        const newQuestionChips = [];
+        let newItinerary = null;
+        
         data.ui_actions.forEach(action => {
           if (action.type === 'card_add' && action.payload) {
             newRecommendations.push(action.payload);
             console.log('🎴 Added card:', action.payload.title);
+          } else if (action.type === 'question_chip' && action.payload) {
+            newQuestionChips.push(action.payload);
+            console.log('💬 Added question chip:', action.payload.question);
+          } else if (action.type === 'itinerary_display' && action.payload) {
+            newItinerary = action.payload;
+            console.log('🗓️ Added itinerary:', action.payload.id);
+          } else if (action.type === 'trip_planner_card' && action.payload) {
+            // Show trip planner modal
+            setShowTripPlanner(true);
+            console.log('📋 Showing trip planner form');
           }
         });
 
         if (newRecommendations.length > 0) {
           setRecommendations(prev => [...prev, ...newRecommendations]);
+        }
+        
+        if (newQuestionChips.length > 0) {
+          setQuestionChips(newQuestionChips);
+        }
+        
+        if (newItinerary) {
+          setItinerary(newItinerary);
         }
       }
 
