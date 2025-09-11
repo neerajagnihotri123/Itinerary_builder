@@ -54,94 +54,65 @@ class ConversationManager:
     
     async def process_message(self, message: str, session_id: str, current_slots: Dict[str, Any]) -> Dict[str, Any]:
         """
-        LLM-driven conversation processing - natural, free-flowing responses
+        ROUTING FLOW: conversation_agent → slot_agent → retrieval_agent → route to appropriate agent
+        Planner flow: slot_agent → retrieval_agent → planner_agent → validator_agent → conversation_agent
+        Accommodation flow: retrieval_agent → accommodation_agent → booking flow
+        Pre-generation mode: when intent = generate/plan → planner mode with trip-planner card
         """
         try:
-            print(f"🤖 ConversationManager processing: '{message}'")
+            print(f"🔄 Processing message: {message[:50]}...")
             
-            # Convert current_slots to UserSlots object
+            # STEP 1: Intent detection - conversation_agent → slot_agent
+            slot_result = await self.slot_agent.extract_intent_and_destination(message)
+            
+            intent = slot_result.get('intent', 'general')
+            destination = slot_result.get('destination_name')
+            canonical_place_id = slot_result.get('canonical_place_id')
+            confidence = slot_result.get('confidence', 0.5)
+            clarify = slot_result.get('clarify')
+            
+            print(f"🎯 Intent: {intent}, Destination: {destination}, Confidence: {confidence:.2f}")
+            
+            # Handle clarification needed
+            if clarify:
+                return await self._generate_clarification_response(clarify, slot_result)
+            
+            # Update slots with detected destination
             slots = UserSlots(**current_slots) if current_slots else UserSlots()
-            print(f"📋 Current slots: {asdict(slots)}")
+            if destination:
+                slots.destination = destination
+                slots.canonical_place_id = canonical_place_id
             
-            # Use LLM to understand intent and generate natural response
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
-            import os
+            # STEP 2: Always call retrieval_agent first (unless brief reply expected)
+            retrieval_facts = []
+            if intent != 'general' or destination:
+                try:
+                    retrieval_facts = await self.retrieval_agent.get_facts(slots)
+                    print(f"📋 Retrieved {len(retrieval_facts)} facts")
+                except Exception as e:
+                    print(f"❌ Retrieval agent error: {e}")
+                    retrieval_facts = []
             
-            # Build comprehensive context for LLM
-            context = await self._build_smart_context(message, slots, session_id)
+            # STEP 3: Route to appropriate agent based on intent
+            if intent == 'plan':
+                # Planner flow: slot_agent → retrieval_agent → planner_agent → validator_agent → conversation_agent
+                return await self._handle_planner_flow(message, slots, retrieval_facts, session_id)
             
-            # Create LLM client with travel expertise
-            llm_client = LlmChat(
-                api_key=os.environ.get('EMERGENT_LLM_KEY'),
-                session_id=session_id,
-                system_message="""You are an expert travel consultant AI assistant. Provide helpful, engaging travel advice for any query about destinations, hotels, activities, or travel planning.
-
-Guidelines:
-- Give natural, conversational responses (2-3 sentences)
-- Include specific details when available
-- Be encouraging and helpful
-- Don't ask for additional information unless absolutely necessary
-- Focus on being informative rather than asking follow-up questions"""
-            ).with_model("openai", "gpt-4o-mini")
+            elif intent == 'accommodation':
+                # Accommodation flow: retrieval_agent → accommodation_agent → booking flow
+                return await self._handle_accommodation_flow(message, slots, retrieval_facts, session_id)
             
-            # Generate LLM response
-            user_message = UserMessage(text=context)
-            llm_response = await llm_client.send_message(user_message)
+            elif intent == 'find':
+                # Find flow: retrieval_agent → conversation_agent (render cards)
+                return await self._handle_find_flow(message, slots, retrieval_facts, session_id)
             
-            # Handle different response types
-            if hasattr(llm_response, 'content'):
-                ai_text = llm_response.content
             else:
-                ai_text = str(llm_response)
-            
-            print(f"✅ Generated LLM response: {len(ai_text)} chars")
-            
-            # Generate appropriate UI elements based on query
-            ui_actions = await self._generate_smart_ui_actions(message, ai_text)
-            hotels = await self._generate_smart_hotel_cards(message, slots)
-            
-            # Generate metadata with detected destination for destination-specific queries
-            query_type = self._classify_intent(message)
-            metadata = {
-                "query_type": query_type,
-                "generated_at": datetime.now(timezone.utc).isoformat(),
-                "llm_confidence": 0.95
-            }
-            
-            # Add detected destination for destination-specific queries
-            if query_type == "destination_specific":
-                detected_destination = self._extract_destination_from_message(message)
-                if detected_destination:
-                    metadata["detected_destination"] = detected_destination
-            
-            return {
-                "human_text": ai_text.strip(),
-                "rr_payload": {
-                    "session_id": session_id,
-                    "hotels": hotels,
-                    "ui_actions": ui_actions,
-                    "metadata": metadata
-                }
-            }
+                # General conversation flow
+                return await self._handle_general_flow(message, slots, retrieval_facts, session_id)
             
         except Exception as e:
-            print(f"❌ LLM conversation failed: {e}")
-            return {
-                "human_text": "I'm here to help you discover amazing travel experiences! Tell me what you're looking for - destinations, hotels, activities, or travel advice.",
-                "rr_payload": {
-                    "session_id": session_id,
-                    "hotels": [],
-                    "ui_actions": [
-                        {"label": "🌍 Explore Destinations", "action": "destinations"},
-                        {"label": "🏨 Find Hotels", "action": "hotels"},
-                        {"label": "🎯 Plan Trip", "action": "plan"}
-                    ],
-                    "metadata": {
-                        "generated_at": datetime.now(timezone.utc).isoformat(),
-                        "llm_confidence": 0.7
-                    }
-                }
-            }
+            print(f"❌ ConversationManager error: {e}")
+            return await self._generate_error_response(str(e))
     
     async def _build_smart_context(self, message: str, slots: UserSlots, session_id: str) -> str:
         """Build intelligent context for LLM based on user query"""
