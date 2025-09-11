@@ -2870,6 +2870,23 @@ function App() {
   };
 
   const handleNewChat = () => {
+    // Save current conversation to history if it has messages
+    if (messages.length > 1) { // More than just the initial greeting
+      const currentChat = {
+        id: sessionId,
+        title: generateChatTitle(messages),
+        messages: [...messages],
+        recommendations: [...recommendations],
+        tripDetails: { ...tripDetails },
+        timestamp: new Date().toISOString(),
+        destination: tripDetails.destination || extractDestinationFromMessages(messages)
+      };
+      
+      setChatHistory(prev => [currentChat, ...prev.slice(0, 9)]); // Keep last 10 chats
+      console.log('💾 Saved current chat to history:', currentChat.title);
+    }
+    
+    // Reset current conversation
     setMessages([
       {
         id: Date.now().toString(),
@@ -2879,8 +2896,80 @@ function App() {
     ]);
     setRecommendations([]);
     setCurrentChips([]);
+    setQuestionChips([]);
     setTripDetails({});
+    setHighlightedDestinations([]);
+    setItinerary(null);
+    setGeneratedItinerary([]);
+    setRightPanelContent('default'); 
     setShowTripBar(false);
+    setIsSidebarOpen(false);
+    
+    // Generate new session ID
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Note: sessionId is a const, so we'll need to trigger a re-render differently
+    console.log('🆕 Starting new chat session');
+  };
+
+  // Helper function to generate chat title from messages
+  const generateChatTitle = (messages) => {
+    // Find first user message that's not a greeting
+    const userMessages = messages.filter(msg => msg.role === 'user');
+    if (userMessages.length > 0) {
+      const firstMessage = userMessages[0].content;
+      // Extract key destinations or trip types
+      const destinations = extractDestinationsFromText(firstMessage);
+      if (destinations.length > 0) {
+        return `Trip to ${destinations[0]}`;
+      }
+      // Return truncated first message
+      return firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage;
+    }
+    return 'Travel Planning Chat';
+  };
+
+  // Helper function to extract destination from message history
+  const extractDestinationFromMessages = (messages) => {
+    for (const message of messages) {
+      if (message.role === 'user') {
+        const destinations = extractDestinationsFromText(message.content);
+        if (destinations.length > 0) {
+          return destinations[0];
+        }
+      }
+    }
+    return null;
+  };
+
+  // Enhanced select chat handler
+  const handleSelectChat = (chat) => {
+    // Save current conversation before switching
+    if (messages.length > 1) {
+      const currentChat = {
+        id: sessionId,
+        title: generateChatTitle(messages),
+        messages: [...messages],
+        recommendations: [...recommendations],
+        tripDetails: { ...tripDetails },
+        timestamp: new Date().toISOString(),
+        destination: tripDetails.destination || extractDestinationFromMessages(messages)
+      };
+      
+      setChatHistory(prev => {
+        const filtered = prev.filter(c => c.id !== sessionId); // Remove if already exists
+        return [currentChat, ...filtered.slice(0, 9)];
+      });
+    }
+
+    // Load selected conversation
+    setMessages(chat.messages || []);
+    setRecommendations(chat.recommendations || []);
+    setTripDetails(chat.tripDetails || {});
+    if (chat.destination) {
+      setHighlightedDestinations([chat.destination]);
+    }
+    
+    console.log('📂 Loaded chat:', chat.title);
     setIsSidebarOpen(false);
   };
 
