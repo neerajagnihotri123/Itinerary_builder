@@ -114,43 +114,49 @@ const Avatar = () => (
   </motion.div>
 );
 
-// Enhanced Horizontal Carousel Component for Recommendation Cards
-const RecommendationCarousel = ({ items, onAction, title = "Recommendations" }) => {
+// Enhanced Professional Horizontal Carousel Component
+const ProfessionalCarousel = ({ items, onAction, title = "Recommendations", itemsPerView = 2 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [translateX, setTranslateX] = useState(0);
+  const [dragVelocity, setDragVelocity] = useState(0);
   const carouselRef = useRef(null);
 
-  const itemsPerView = window.innerWidth >= 1200 ? 3 : window.innerWidth >= 768 ? 2 : 1;
   const maxIndex = Math.max(0, items.length - itemsPerView);
+  const cardWidth = itemsPerView === 2 ? 450 : 340; // Wider cards for 2-item view
 
   const handleMouseDown = (e) => {
     setIsDragging(true);
     setStartX(e.clientX - translateX);
+    setDragVelocity(0);
   };
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
     e.preventDefault();
     const currentX = e.clientX - startX;
+    const velocity = currentX - translateX;
     setTranslateX(currentX);
+    setDragVelocity(velocity);
   };
 
   const handleMouseUp = () => {
     if (!isDragging) return;
     setIsDragging(false);
     
-    const cardWidth = 340; // card width + gap
     const threshold = cardWidth / 3;
+    const velocityThreshold = 5;
     
-    if (translateX > threshold && currentIndex > 0) {
+    // Use velocity for smoother interaction
+    if ((translateX > threshold || dragVelocity > velocityThreshold) && currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
-    } else if (translateX < -threshold && currentIndex < maxIndex) {
+    } else if ((translateX < -threshold || dragVelocity < -velocityThreshold) && currentIndex < maxIndex) {
       setCurrentIndex(prev => prev + 1);
     }
     
     setTranslateX(0);
+    setDragVelocity(0);
   };
 
   useEffect(() => {
@@ -163,7 +169,7 @@ const RecommendationCarousel = ({ items, onAction, title = "Recommendations" }) 
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, startX, translateX, currentIndex, maxIndex]);
+  }, [isDragging, startX, translateX, currentIndex, maxIndex, dragVelocity]);
 
   const goToPrevious = () => {
     setCurrentIndex(prev => Math.max(0, prev - 1));
@@ -173,86 +179,175 @@ const RecommendationCarousel = ({ items, onAction, title = "Recommendations" }) 
     setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
   };
 
-  const goToSlide = (index) => {
-    setCurrentIndex(Math.min(index, maxIndex));
-  };
-
   if (!items || items.length === 0) return null;
 
   return (
     <div className="mb-8">
-      {/* Header */}
+      {/* Header with new color palette */}
       <div className="flex items-center justify-between mb-6 px-6">
         <h3 className="text-xl font-bold" style={{ color: 'var(--charcoal-900)' }}>
           {title}
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <span className="text-sm" style={{ color: 'var(--accent-500)' }}>
             {currentIndex + 1} - {Math.min(currentIndex + itemsPerView, items.length)} of {items.length}
           </span>
+          <div className="flex gap-2">
+            <button
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+              style={{
+                backgroundColor: currentIndex === 0 ? 'var(--light-400)' : 'var(--primary-500)',
+                color: currentIndex === 0 ? 'var(--accent-500)' : 'var(--light-50)',
+                boxShadow: currentIndex === 0 ? 'none' : '0 4px 12px rgba(230, 149, 67, 0.3)'
+              }}
+              onClick={goToPrevious}
+              disabled={currentIndex === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+              style={{
+                backgroundColor: currentIndex >= maxIndex ? 'var(--light-400)' : 'var(--primary-500)',
+                color: currentIndex >= maxIndex ? 'var(--accent-500)' : 'var(--light-50)',
+                boxShadow: currentIndex >= maxIndex ? 'none' : '0 4px 12px rgba(230, 149, 67, 0.3)'
+              }}
+              onClick={goToNext}
+              disabled={currentIndex >= maxIndex}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Carousel Container */}
-      <div className="cards-carousel-container">
+      <div className="relative overflow-hidden px-6">
         <motion.div
           ref={carouselRef}
-          className={`cards-carousel ${isDragging ? 'dragging' : ''}`}
+          className="flex gap-6 cursor-grab active:cursor-grabbing"
           style={{
-            transform: `translateX(${-currentIndex * 340 + translateX}px)`,
+            transform: `translateX(${-currentIndex * cardWidth + translateX}px)`,
           }}
           animate={{
-            transform: `translateX(${-currentIndex * 340}px)`,
+            transform: `translateX(${-currentIndex * cardWidth}px)`,
           }}
           transition={{
             type: "spring",
-            stiffness: 300,
-            damping: 30,
+            stiffness: 400,
+            damping: 40,
+            mass: 0.8
           }}
           onMouseDown={handleMouseDown}
+          drag="x"
+          dragConstraints={{ left: -maxIndex * cardWidth, right: 0 }}
+          dragElastic={0.1}
         >
           {items.map((item, index) => (
             <motion.div
               key={item.id || index}
-              className="carousel-card"
+              className="flex-shrink-0 bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+              style={{
+                width: `${cardWidth - 24}px`,
+                border: '1px solid var(--light-300)',
+                backgroundColor: 'var(--light-50)'
+              }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -8, boxShadow: '0 25px 50px rgba(35,35,35,0.15)' }}
+              whileHover={{ 
+                y: -8, 
+                boxShadow: '0 20px 40px rgba(35,35,35,0.15)',
+                borderColor: 'var(--primary-300)'
+              }}
+              onClick={() => onAction && onAction('explore', item)}
             >
-              <RecommendationCard item={item} onAction={onAction} />
+              {/* Enhanced Card Content */}
+              <div className="relative h-48 overflow-hidden">
+                <img
+                  src={item.hero_image || item.image}
+                  alt={item.title || item.name}
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                
+                {/* Rating Badge */}
+                {item.rating && (
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded-full flex items-center gap-1"
+                       style={{ backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}>
+                    <Star className="w-3 h-3" style={{ color: 'var(--primary-500)' }} fill="currentColor" />
+                    <span className="text-xs font-bold" style={{ color: 'var(--charcoal-900)' }}>{item.rating}</span>
+                  </div>
+                )}
+                
+                {/* Title Overlay */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <h4 className="font-bold text-white text-lg mb-1">{item.title || item.name}</h4>
+                  {item.location && (
+                    <p className="text-white/80 text-sm flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      {item.location}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Card Details */}
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium px-2 py-1 rounded-full"
+                        style={{ 
+                          backgroundColor: 'var(--primary-100)', 
+                          color: 'var(--primary-700)' 
+                        }}>
+                    {item.duration || item.category || 'Experience'}
+                  </span>
+                  {item.price && (
+                    <span className="font-bold" style={{ color: 'var(--primary-600)' }}>
+                      {item.price}
+                    </span>
+                  )}
+                </div>
+                
+                <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--accent-600)' }}>
+                  {(item.description || item.pitch || '').substring(0, 100)}...
+                </p>
+                
+                <button 
+                  className="w-full py-2 px-4 rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)',
+                    color: 'var(--light-50)',
+                    boxShadow: '0 4px 12px rgba(230, 149, 67, 0.3)'
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAction && onAction('book', item);
+                  }}
+                >
+                  Book Now
+                </button>
+              </div>
             </motion.div>
           ))}
         </motion.div>
       </div>
 
-      {/* Navigation */}
-      <div className="carousel-navigation">
-        <button
-          className="carousel-nav-button"
-          onClick={goToPrevious}
-          disabled={currentIndex === 0}
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        
-        <div className="carousel-dots">
-          {Array.from({ length: Math.ceil(items.length / itemsPerView) }, (_, index) => (
-            <button
-              key={index}
-              className={`carousel-dot ${Math.floor(currentIndex / itemsPerView) === index ? 'active' : ''}`}
-              onClick={() => goToSlide(index * itemsPerView)}
-            />
-          ))}
-        </div>
-        
-        <button
-          className="carousel-nav-button"
-          onClick={goToNext}
-          disabled={currentIndex >= maxIndex}
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
+      {/* Progress Dots */}
+      <div className="flex justify-center mt-6 gap-2">
+        {Array.from({ length: Math.ceil(items.length / itemsPerView) }, (_, index) => (
+          <button
+            key={index}
+            className="w-2 h-2 rounded-full transition-all duration-300"
+            style={{
+              backgroundColor: Math.floor(currentIndex / itemsPerView) === index 
+                ? 'var(--primary-500)' 
+                : 'var(--light-400)',
+              transform: Math.floor(currentIndex / itemsPerView) === index ? 'scale(1.5)' : 'scale(1)'
+            }}
+            onClick={() => setCurrentIndex(index * itemsPerView)}
+          />
+        ))}
       </div>
     </div>
   );
