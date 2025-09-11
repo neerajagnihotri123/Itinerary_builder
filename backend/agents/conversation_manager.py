@@ -173,7 +173,69 @@ class ConversationManager:
         
         # Pre-generation mode: Present trip-planner card if missing essentials
         if missing_slots:
-            return await self._present_trip_planner_card(message, slots, missing_slots)
+            # Instead of just asking, show destinations + trip planning help
+            if not slots.destination:
+                # Show popular destinations for trip planning
+                popular_destinations = [
+                    {
+                        'name': 'Kerala, India', 
+                        'id': 'kerala_backwaters', 
+                        'description': 'Perfect for relaxing backwater cruises and hill station retreats',
+                        'highlights': ['Backwaters', 'Hill stations', 'Ayurveda', 'Spice tours'],
+                        'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
+                    },
+                    {
+                        'name': 'Manali, Himachal Pradesh', 
+                        'id': 'manali_himachal', 
+                        'description': 'Adventure lover\'s paradise with snow-capped mountains',
+                        'highlights': ['Skiing', 'Paragliding', 'Trekking', 'Mountain views'],
+                        'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
+                    },
+                    {
+                        'name': 'Rajasthan, India', 
+                        'id': 'rajasthan_india', 
+                        'description': 'Royal heritage experience with palaces and desert safaris',
+                        'highlights': ['Royal palaces', 'Desert safari', 'Camel rides', 'Folk culture'],
+                        'hero_image': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop'
+                    }
+                ]
+                
+                destination_cards = self._create_destination_cards(popular_destinations)
+                
+                # Add trip planning question chips
+                planning_chips = [
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "plan_weekend",
+                            "question": "Plan a weekend getaway",
+                            "category": "planning"
+                        }
+                    },
+                    {
+                        "type": "question_chip",
+                        "payload": {
+                            "id": "plan_week",
+                            "question": "Plan a week-long trip",
+                            "category": "planning"
+                        }
+                    }
+                ]
+                
+                return {
+                    "chat_text": "I'd love to help you plan the perfect trip! ✈️ Here are some amazing destinations to consider. Choose one, or tell me about any specific place you have in mind!",
+                    "ui_actions": destination_cards + planning_chips,
+                    "metadata": {
+                        "intent": "plan",
+                        "pre_generation_mode": True,
+                        "missing_slots": missing_slots,
+                        "cards_generated": len(destination_cards),
+                        "agent": "conversation_manager"
+                    }
+                }
+            else:
+                # Has destination but missing other details
+                return await self._present_trip_planner_card(message, slots, missing_slots)
         
         try:
             # Step 1: Generate itinerary using planner_agent
@@ -196,7 +258,8 @@ class ConversationManager:
                     "intent": "plan",
                     "planner_output": planner_output,
                     "validation": validation_result,
-                    "confidence": validation_result.get('confidence', 0.8)
+                    "confidence": validation_result.get('confidence', 0.8),
+                    "agent": "conversation_manager"
                 }
             }
             
