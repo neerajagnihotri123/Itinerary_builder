@@ -324,9 +324,12 @@ class ConversationManager:
     async def _handle_accommodation_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """Accommodation flow: retrieval_agent → accommodation_agent → booking flow"""
         print(f"🏨 Handling accommodation flow")
+        print(f"🔍 Accommodation flow debug - slots.destination: {getattr(slots, 'destination', 'NOT_FOUND')}")
+        print(f"🔍 Accommodation flow debug - slots dict: {slots.__dict__ if hasattr(slots, '__dict__') else 'NO_DICT'}")
         
         # Check for destination - first from slots, then try to extract from message
         destination = getattr(slots, 'destination', None)
+        print(f"🎯 Destination from slots: {destination}")
         
         if not destination:
             # Try to extract destination from the current message  
@@ -342,7 +345,9 @@ class ConversationManager:
                 if dest_name in message_lower:
                     destination = dest_data
                     # Update slots with found destination
-                    slots.destination = destination
+                    if hasattr(slots, 'destination'):
+                        slots.destination = destination
+                    print(f"✅ Found destination in message: {destination}")
                     break
         
         if not destination:
