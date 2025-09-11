@@ -168,8 +168,8 @@ class SlotAgent:
                     "clarification_question": question
                 }
         
-        # Step 3: Skip LLM for general recommendation queries, general planning, confirmations, and category searches
-        if any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'popular', 'give me', 'plan a trip', 'plan trip', 'yes', 'okay', 'ok', 'sure', 'proceed', 'beach destinations', 'mountain destinations', 'hill stations', 'destinations in india']):
+        # Step 3: Skip LLM for general recommendation queries, general planning, confirmations, category searches, and single-word intents
+        if any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'popular', 'give me', 'plan a trip', 'plan trip', 'yes', 'okay', 'ok', 'sure', 'proceed', 'beach destinations', 'mountain destinations', 'hill stations', 'destinations in india', 'hotels', 'accommodation', 'tips', 'advice']):
             return {
                 "destination_name": None,
                 "canonical_place_id": None,
