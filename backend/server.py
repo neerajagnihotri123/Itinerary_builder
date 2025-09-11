@@ -966,17 +966,12 @@ async def chat_endpoint(request: ChatRequest):
                     })
                 print(f"🏨 Generated {len(rr_payload.get('hotels', []))} hotel cards for accommodation query")
         
-        # Handle ui_actions from rr_payload for non-destination queries
-        elif rr_payload.get("ui_actions"):
-            for action in rr_payload.get("ui_actions", []):
-                if isinstance(action, dict) and "action" in action:
-                    # Convert button-style actions to chip format for compatibility
-                    ui_actions.append({
-                        "type": "prompt",
-                        "payload": {
-                            "chips": [{"label": action["label"], "value": action["action"]}]
-                        }
-                    })
+        # Handle ui_actions from conversation manager result
+        if result.get("ui_actions"):
+            for action in result.get("ui_actions", []):
+                if isinstance(action, dict):
+                    # Add the actions directly from conversation manager
+                    ui_actions.append(action)
         
         # Add hotel cards if itinerary contains hotels
         if rr_payload.get("hotels"):
