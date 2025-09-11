@@ -121,7 +121,7 @@ class SlotAgent:
             return 'plan'
         elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'book', 'reserve']):
             return 'accommodation'
-        elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'about', 'what', 'find']):
+        elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'about', 'what', 'find', 'destinations', 'beach destinations', 'mountain destinations']):
             return 'find'
         else:
             return 'general'
