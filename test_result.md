@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Fix accommodation card display issue - when user asks for accommodations, only accommodation cards with details should show instead of all cards. Also implement contextual question suggestions ('You might want to ask' cards) after each chatbot response based on previous user questions."
+user_problem_statement: "Integrate LLM capabilities into all downstream agents (RetrievalAgent, AccommodationAgent, ValidatorAgent, UXAgent, PlannerAgent) to move beyond mock data and generate accurate, validated, dynamic responses using the Emergent LLM Key."
 
 backend:
   - task: "Chat API endpoint functionality"
