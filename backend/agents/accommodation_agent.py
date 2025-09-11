@@ -1,20 +1,34 @@
 """
-Accommodation Agent - LLM-powered hotel recommendations and ranking
+Accommodation Agent - Hotel scoring, ranking, availability checks, and booking flow
 """
 import math
 import json
 import os
-from datetime import datetime, timezone
-from typing import List, Dict, Any
+from datetime import datetime, timezone, timedelta
+from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
 load_dotenv()
 
 class AccommodationAgent:
-    """Handles LLM-powered hotel scoring and ranking based on user preferences"""
+    """
+    Handles hotel scoring, ranking, availability checks, and booking flow.
+    Scoring factors: normalized price, rating, distance to POIs, amenity match, 
+    cancellation flexibility, recency of reviews.
+    Never returns payment credentials to frontend.
+    """
     
     def __init__(self, llm_client):
         self.llm_client = llm_client
+        # Scoring weights
+        self.scoring_weights = {
+            'price': 0.25,      # 25% - normalized price match
+            'rating': 0.20,     # 20% - hotel rating
+            'distance': 0.15,   # 15% - distance to POIs
+            'amenities': 0.20,  # 20% - amenity match
+            'flexibility': 0.10, # 10% - cancellation flexibility 
+            'reviews': 0.10     # 10% - recency of reviews
+        }
     
     async def get_hotels_for_destination(self, destination: str, slots) -> List[Dict[str, Any]]:
         """
