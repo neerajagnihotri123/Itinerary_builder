@@ -22,27 +22,88 @@ class RetrievalAgent:
     async def get_facts(self, slots) -> List[Dict[str, Any]]:
         """
         Fetch and return top-K matching facts (hotels, POIs, activities) using LLM
-        Returns: List of facts with metadata
+        Sorts by relevance + freshness; includes provider/source and last_updated
+        Returns confidence score (0–1) for each fact
+        If none found, return explainable no_facts response
         """
         facts = []
         
         # Get destination-specific data
         destination_name = slots.destination
         if not destination_name:
-            return []
+            return self._generate_no_facts_response("No destination specified")
         
         try:
             # Use LLM to generate comprehensive facts about the destination
             llm_facts = await self._generate_facts_with_llm(destination_name, slots)
-            facts.extend(llm_facts)
+            if llm_facts:
+                facts.extend(llm_facts)
+            else:
+                # Fallback to mock data if LLM returns empty
+                facts.extend(self._get_fallback_facts(destination_name, slots))
+                
         except Exception as e:
             print(f"❌ LLM fact generation failed: {e}")
             # Fallback to mock data
             facts.extend(self._get_fallback_facts(destination_name, slots))
         
-        # Sort by confidence and return top results
-        facts.sort(key=lambda x: x.get('confidence', 0), reverse=True)
-        return facts[:20]  # Return top 20 facts
+        # If no facts found at all, return explanatory response
+        if not facts:
+            return self._generate_no_facts_response(f"No facts found for {destination_name}")
+        
+        # Sort by relevance (confidence) + freshness (last_updated)
+        facts = self._sort_facts_by_relevance_and_freshness(facts)
+        
+        # Return top-K results (20 facts maximum)
+        return facts[:20]
+    
+    def _sort_facts_by_relevance_and_freshness(self, facts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Sort facts by relevance (confidence) + freshness (last_updated)"""
+        
+        def calculate_sort_score(fact):
+            # Weight: 70% relevance (confidence), 30% freshness
+            confidence = fact.get('confidence', 0.5)
+            
+            # Calculate freshness score based on availability_cache_ts
+            try:
+                if fact.get('availability_cache_ts'):
+                    fact_time = datetime.fromisoformat(fact['availability_cache_ts'].replace('Z', '+00:00'))
+                    current_time = datetime.now(timezone.utc)
+                    hours_old = (current_time - fact_time).total_seconds() / 3600
+                    
+                    # Fresher facts get higher scores (decay over 24 hours)
+                    freshness = max(0, 1 - (hours_old / 24))
+                else:
+                    freshness = 0.5  # Neutral score for unknown freshness
+            except:
+                freshness = 0.5
+            
+            # Combined score: 70% confidence + 30% freshness
+            return (confidence * 0.7) + (freshness * 0.3)
+        
+        # Sort by combined score (descending)
+        facts.sort(key=calculate_sort_score, reverse=True)
+        return facts
+    
+    def _generate_no_facts_response(self, reason: str) -> List[Dict[str, Any]]:
+        """Return explainable no_facts response when no facts found"""
+        return [{
+            "type": "no_facts_found",
+            "reason": reason,
+            "confidence": 1.0,
+            "provider": "retrieval_agent",
+            "last_updated": datetime.now(timezone.utc).isoformat(),
+            "suggestions": [
+                "Try searching for a different destination",
+                "Check spelling of destination name", 
+                "Try broader search terms"
+            ],
+            "alternative_destinations": [
+                {"name": "Kerala, India", "canonical_place_id": "kerala_backwaters"},
+                {"name": "Goa, India", "canonical_place_id": "goa_india"},
+                {"name": "Rajasthan, India", "canonical_place_id": "rajasthan_india"}
+            ]
+        }]
     
     async def _generate_facts_with_llm(self, destination: str, slots) -> List[Dict[str, Any]]:
         """Use LLM to generate comprehensive destination facts"""
