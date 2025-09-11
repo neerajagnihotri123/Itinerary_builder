@@ -17,6 +17,7 @@ import {
   DollarSign,
   X,
   ChevronRight,
+  ChevronLeft,
   Upload,
   Link,
   Menu,
