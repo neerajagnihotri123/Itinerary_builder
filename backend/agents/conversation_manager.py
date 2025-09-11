@@ -93,17 +93,27 @@ Guidelines:
             ui_actions = await self._generate_smart_ui_actions(message, ai_text)
             hotels = await self._generate_smart_hotel_cards(message, slots)
             
+            # Generate metadata with detected destination for destination-specific queries
+            query_type = self._classify_intent(message)
+            metadata = {
+                "query_type": query_type,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "llm_confidence": 0.95
+            }
+            
+            # Add detected destination for destination-specific queries
+            if query_type == "destination_specific":
+                detected_destination = self._extract_destination_from_message(message)
+                if detected_destination:
+                    metadata["detected_destination"] = detected_destination
+            
             return {
                 "human_text": ai_text.strip(),
                 "rr_payload": {
                     "session_id": session_id,
                     "hotels": hotels,
                     "ui_actions": ui_actions,
-                    "metadata": {
-                        "query_type": self._classify_intent(message),
-                        "generated_at": datetime.now(timezone.utc).isoformat(),
-                        "llm_confidence": 0.95
-                    }
+                    "metadata": metadata
                 }
             }
             
