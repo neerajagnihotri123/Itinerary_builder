@@ -1,39 +1,180 @@
 """
-UX Agent - Converts structured outputs into user-friendly text and actions
+UX Agent - LLM-powered user experience optimization and response formatting
 """
+import json
+import os
 from typing import Dict, Any, List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class UXAgent:
-    """Handles user experience optimization and response formatting"""
+    """Handles LLM-powered user experience optimization and response formatting"""
     
     def __init__(self, llm_client):
         self.llm_client = llm_client
     
     async def format_response(self, planner_output: Dict[str, Any], validation_result: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Convert planner JSON into short, friendly human_text and micro-ui actions
+        LLM-powered conversion of planner JSON into friendly human text and micro-ui actions
         Returns: {"human_text": str, "actions": [...]}
         """
         try:
-            # Generate human-friendly text
-            human_text = self._generate_human_text(planner_output, validation_result)
-            
-            # Generate micro-actions
-            actions = self._generate_actions(planner_output, validation_result)
-            
-            return {
-                "human_text": human_text,
-                "actions": actions
-            }
-            
+            # Try LLM-powered response formatting first
+            llm_response = await self._format_with_llm(planner_output, validation_result)
+            if llm_response:
+                return llm_response
         except Exception as e:
-            return {
-                "human_text": "I've created a personalized itinerary for you! Let me know if you'd like to make any changes.",
-                "actions": [
-                    {"label": "Accept", "action": "accept_itinerary"},
-                    {"label": "Modify", "action": "edit_itinerary"}
-                ]
-            }
+            print(f"❌ LLM UX formatting failed: {e}")
+        
+        # Fallback to rule-based formatting
+        return self._fallback_format_response(planner_output, validation_result)
+    
+    async def _format_with_llm(self, planner_output: Dict[str, Any], validation_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Use LLM to generate contextual, engaging user responses"""
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            # Create LLM client for UX formatting
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"ux_{hash(str(planner_output)) % 10000}",
+                system_message="You are a friendly travel assistant UX expert. Create engaging, conversational responses that excite users about their travel plans."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Create UX formatting context
+            context = self._prepare_ux_context(planner_output, validation_result)
+            user_message = UserMessage(text=context)
+            response = await llm_client.send_message(user_message)
+            
+            # Handle different response types
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+            
+            # Parse the JSON response
+            try:
+                ux_response = json.loads(content)
+                enhanced_response = self._enhance_ux_response(ux_response, planner_output, validation_result)
+                print(f"✅ LLM UX formatting completed")
+                return enhanced_response
+            except json.JSONDecodeError:
+                print(f"❌ Invalid JSON from LLM UX formatting")
+                return None
+                
+        except Exception as e:
+            print(f"❌ LLM UX formatting error: {e}")
+            return None
+    
+    def _prepare_ux_context(self, planner_output: Dict[str, Any], validation_result: Dict[str, Any]) -> str:
+        """Prepare context for LLM UX formatting"""
+        
+        itinerary = planner_output.get('itinerary', [])
+        hotels = planner_output.get('hotel_recommendations', [])
+        confidence = validation_result.get('confidence', 0.8)
+        issues = validation_result.get('issues', [])
+        
+        # Extract key details
+        days = len(itinerary)
+        total_activities = sum(len(day.get('activities', [])) for day in itinerary)
+        destination = ""
+        if itinerary and itinerary[0].get('activities'):
+            first_activity = itinerary[0]['activities'][0]
+            destination = first_activity.get('title', '').split(' in ')[-1] if ' in ' in first_activity.get('title', '') else ""
+        
+        return f"""
+Create an engaging, conversational response for this travel itinerary:
+
+ITINERARY SUMMARY:
+- Duration: {days} days
+- Total activities: {total_activities}
+- Hotels available: {len(hotels)}
+- Validation confidence: {confidence:.2f}
+- Issues found: {len(issues)}
+- Destination: {destination}
+
+VALIDATION DETAILS:
+{json.dumps(validation_result.get('recommendations', []), indent=2)}
+
+SAMPLE ACTIVITIES:
+{json.dumps([day.get('activities', [])[0] if day.get('activities') else {} for day in itinerary[:3]], indent=2)}
+
+HOTEL OPTIONS:
+{json.dumps([{'name': h.get('name'), 'rating': h.get('rating', 4.0)} for h in hotels[:2]], indent=2)}
+
+Generate JSON response:
+{{
+  "human_text": "Engaging 40-50 word response that excites the user about their trip",
+  "actions": [
+    {{
+      "label": "Action Button Text",
+      "action": "action_identifier",
+      "priority": "high/medium/low"
+    }}
+  ]
+}}
+
+GUIDELINES:
+- Keep human_text between 40-50 words, enthusiastic and personalized
+- Generate 3-4 contextual action buttons based on itinerary quality
+- If confidence > 0.9: Focus on "book now" type actions
+- If confidence 0.7-0.9: Mix of "review details" and "customize" actions  
+- If confidence < 0.7: Focus on "refine" and "improve" actions
+- Include destination-specific language and activity highlights
+- Make it sound like a knowledgeable local friend recommending the trip
+"""
+    
+    def _enhance_ux_response(self, ux_response: Dict, planner_output: Dict, validation_result: Dict) -> Dict[str, Any]:
+        """Enhance LLM UX response with additional metadata and fallback actions"""
+        
+        # Ensure required fields exist
+        if "human_text" not in ux_response:
+            ux_response["human_text"] = self._generate_human_text(planner_output, validation_result)
+        
+        if "actions" not in ux_response or not ux_response["actions"]:
+            ux_response["actions"] = self._generate_actions(planner_output, validation_result)
+        
+        # Ensure human_text is appropriate length (40-60 words)
+        human_text = ux_response["human_text"]
+        word_count = len(human_text.split())
+        if word_count > 60:
+            # Truncate if too long
+            words = human_text.split()[:60]
+            ux_response["human_text"] = " ".join(words) + "..."
+        elif word_count < 20:
+            # Add enthusiasm if too short
+            ux_response["human_text"] += " Ready to explore?"
+        
+        # Limit actions to 4 and ensure proper format
+        actions = ux_response.get("actions", [])
+        formatted_actions = []
+        for action in actions[:4]:
+            if isinstance(action, dict) and "label" in action and "action" in action:
+                formatted_actions.append({
+                    "label": action["label"],
+                    "action": action["action"],
+                    "priority": action.get("priority", "medium")
+                })
+        
+        ux_response["actions"] = formatted_actions or self._generate_actions(planner_output, validation_result)
+        
+        return ux_response
+    
+    def _fallback_format_response(self, planner_output: Dict[str, Any], validation_result: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced fallback formatting with better messaging"""
+        print(f"🔄 Using fallback UX formatting")
+        
+        # Generate human-friendly text
+        human_text = self._generate_human_text(planner_output, validation_result)
+        
+        # Generate micro-actions
+        actions = self._generate_actions(planner_output, validation_result)
+        
+        return {
+            "human_text": human_text,
+            "actions": actions
+        }
     
     def _generate_human_text(self, planner_output: Dict[str, Any], validation_result: Dict[str, Any]) -> str:
         """Generate concise, friendly human text (<=50 words)"""
