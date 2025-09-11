@@ -283,17 +283,146 @@
 
 /* Enhanced Input Styles */
 .input-professional {
-  background: white;
-  border: 2px solid var(--neutral-200);
+  background: var(--light-50);
+  border: 2px solid var(--light-300);
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 16px;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(35, 35, 35, 0.04);
+  color: var(--charcoal-900);
 }
 
 .input-professional:focus {
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(230, 149, 67, 0.1);
   outline: none;
+}
+
+/* Horizontal Swiping Carousel for Recommendation Cards */
+.cards-carousel-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  padding: 0 20px;
+}
+
+.cards-carousel {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: transform;
+}
+
+.cards-carousel.dragging {
+  transition: none;
+}
+
+.carousel-card {
+  flex: 0 0 320px;
+  max-width: 320px;
+  height: auto;
+  background: var(--light-50);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(35, 35, 35, 0.08);
+  border: 1px solid var(--light-300);
+  transition: all 0.3s ease;
+  cursor: grab;
+  user-select: none;
+}
+
+.carousel-card:active {
+  cursor: grabbing;
+}
+
+.carousel-card:hover {
+  box-shadow: 0 8px 30px rgba(35, 35, 35, 0.12);
+  transform: translateY(-4px);
+  border-color: var(--primary-200);
+}
+
+.carousel-navigation {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.carousel-nav-button {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--light-50);
+  border: 2px solid var(--light-300);
+  color: var(--charcoal-700);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(35, 35, 35, 0.1);
+}
+
+.carousel-nav-button:hover {
+  background: var(--primary-500);
+  border-color: var(--primary-500);
+  color: var(--light-50);
+  transform: scale(1.05);
+}
+
+.carousel-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.carousel-nav-button:disabled:hover {
+  background: var(--light-50);
+  border-color: var(--light-300);
+  color: var(--charcoal-700);
+}
+
+.carousel-dots {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--light-400);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.carousel-dot.active {
+  background: var(--primary-500);
+  transform: scale(1.25);
+}
+
+.carousel-dot:hover {
+  background: var(--primary-400);
+  transform: scale(1.1);
+}
+
+/* Smooth scroll for mobile */
+@media (max-width: 768px) {
+  .cards-carousel {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .cards-carousel::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .carousel-card {
+    scroll-snap-align: start;
+    flex: 0 0 280px;
+    max-width: 280px;
+  }
 }
