@@ -152,12 +152,21 @@ class SlotAgent:
                     "clarification_question": question
                 }
         
-        # Step 3: Use LLM for complex extraction
+        # Step 3: Skip LLM for general recommendation queries  
+        if any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'popular', 'give me']):
+            return {
+                "destination_name": None,
+                "canonical_place_id": None,
+                "needs_clarification": False,
+                "clarification_question": None
+            }
+        
+        # Step 4: Use LLM for complex extraction (only if not a general query)
         llm_result = await self._llm_extract_destination(message_lower)
         if llm_result:
             return llm_result
         
-        # Step 4: No destination found
+        # Step 5: No destination found
         return {
             "destination_name": None,
             "canonical_place_id": None,
