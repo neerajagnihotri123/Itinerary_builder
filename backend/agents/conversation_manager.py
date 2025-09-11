@@ -681,12 +681,14 @@ Focus on authentic experiences and practical appeal for travelers.
                     }
                 ],
                 "updated_slots": {
-                    "destination": getattr(slots, 'destination', None),
-                    "start_date": getattr(slots, 'start_date', None),
-                    "end_date": getattr(slots, 'end_date', None),
-                    "budget_per_night": getattr(slots, 'budget_per_night', None),
-                    "adults": getattr(slots, 'adults', 2),
-                    "children": getattr(slots, 'children', 0)
+                    k: v for k, v in {
+                        "destination": getattr(slots, 'destination', None),
+                        "start_date": getattr(slots, 'start_date', None),
+                        "end_date": getattr(slots, 'end_date', None),
+                        "budget_per_night": getattr(slots, 'budget_per_night', None),
+                        "adults": getattr(slots, 'adults', 2),
+                        "children": getattr(slots, 'children', 0)
+                    }.items() if v is not None
                 },
                 "metadata": {
                     "intent": "confirmation",
