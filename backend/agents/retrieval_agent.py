@@ -1,18 +1,22 @@
 """
-Retrieval Agent - Fetches and returns facts (POIs, hotels, activities)
+Retrieval Agent - Fetches and returns facts (POIs, hotels, activities) using LLM
 """
 import json
+import os
 from datetime import datetime, timezone
 from typing import List, Dict, Any
+from dotenv import load_dotenv
 import sys
-import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
 
+load_dotenv()
+
 class RetrievalAgent:
-    """Handles fact retrieval and grounding for planning"""
+    """Handles LLM-powered fact retrieval and grounding for planning"""
     
-    def __init__(self):
+    def __init__(self, llm_client):
+        self.llm_client = llm_client
         self.confidence_threshold = 0.7
         
     async def get_facts(self, slots) -> List[Dict[str, Any]]:
