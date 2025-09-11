@@ -2917,7 +2917,7 @@ function App() {
             }
           });
           if (newRecommendations.length > 0) {
-            setRecommendations(prev => [...prev, ...newRecommendations]);
+            setRecommendations(newRecommendations);
           }
         }
       } else {
