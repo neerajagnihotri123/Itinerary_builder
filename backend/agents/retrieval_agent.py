@@ -281,25 +281,157 @@ Generate 5 POIs, 3-5 hotels, and 8 activities maximum.
         return facts
     
     def _get_fallback_facts(self, destination: str, slots) -> List[Dict[str, Any]]:
-        """Enhanced fallback using mock data with better matching"""
+        """Enhanced fallback using mock data with proper metadata and freshness scoring"""
         facts = []
+        current_time = datetime.now(timezone.utc).isoformat()
         
         # Extract base destination name for matching
         base_destination = self._extract_base_destination(destination)
         
-        # Retrieve POIs (destinations)
-        poi_facts = self._get_poi_facts(base_destination)
+        # Retrieve POIs (destinations) with enhanced metadata
+        poi_facts = self._get_poi_facts_with_metadata(base_destination, current_time)
         facts.extend(poi_facts)
         
-        # Retrieve hotels
-        hotel_facts = self._get_hotel_facts(base_destination, slots)
+        # Retrieve hotels with enhanced metadata
+        hotel_facts = self._get_hotel_facts_with_metadata(base_destination, slots, current_time)
         facts.extend(hotel_facts)
         
-        # Retrieve activities/tours
-        activity_facts = self._get_activity_facts(base_destination)
+        # Retrieve activities/tours with enhanced metadata
+        activity_facts = self._get_activity_facts_with_metadata(base_destination, current_time)
         facts.extend(activity_facts)
         
-        print(f"🔄 Using fallback facts: {len(facts)} facts for {destination}")
+        print(f"🔄 Using fallback facts: {len(facts)} facts for {destination} with metadata")
+        return facts
+    
+    def _get_poi_facts_with_metadata(self, destination: str, current_time: str) -> List[Dict[str, Any]]:
+        """Retrieve POI/destination facts with proper metadata"""
+        facts = []
+        
+        for dest_data in MOCK_DESTINATIONS:
+            if destination.lower() in dest_data['name'].lower():
+                fact = {
+                    "type": "poi",
+                    "id": dest_data['id'],
+                    "name": dest_data['name'],
+                    "address": f"{dest_data['name']}, {dest_data['country']}",
+                    "coords": dest_data.get('coordinates', {}),
+                    "rating": dest_data.get('rating', 4.5),
+                    "price_estimate": None,
+                    "provider": "mock_data",
+                    "source": "internal_destinations_db",
+                    "last_updated": current_time,
+                    "availability_cache_ts": current_time,
+                    "confidence": 0.85,  # High confidence for curated mock data
+                    "description": dest_data.get('pitch', ''),
+                    "highlights": dest_data.get('highlights', []),
+                    "category": dest_data.get('category', []),
+                    "freshness_score": 0.8  # Mock data is reasonably fresh but not as fresh as LLM
+                }
+                facts.append(fact)
+        
+        return facts
+    
+    def _get_hotel_facts_with_metadata(self, destination: str, slots, current_time: str) -> List[Dict[str, Any]]:
+        """Retrieve hotel facts with enhanced metadata and budget filtering"""
+        facts = []
+        
+        # Find destination ID
+        destination_id = None
+        for dest_data in MOCK_DESTINATIONS:
+            if destination.lower() in dest_data['name'].lower():
+                destination_id = dest_data['id']
+                break
+        
+        if not destination_id:
+            return facts
+        
+        # Get hotels for this destination
+        for hotel_data in MOCK_HOTELS:
+            if hotel_data.get('destination_id') == destination_id:
+                # Check budget compatibility
+                budget_match = True
+                confidence = 0.85
+                if slots.budget_per_night:
+                    hotel_price = hotel_data.get('price_per_night', 5000)
+                    if hotel_price > slots.budget_per_night * 1.5:  # Allow 50% flexibility
+                        budget_match = False
+                        confidence = 0.6
+                
+                fact = {
+                    "type": "hotel",
+                    "id": hotel_data['id'],
+                    "name": hotel_data['name'],
+                    "address": hotel_data.get('location', f"{destination}"),
+                    "coords": hotel_data.get('coordinates', {}),
+                    "rating": hotel_data.get('rating', 4.0),
+                    "price_estimate": hotel_data.get('price_per_night', 5000),
+                    "provider": "partner_hotels",
+                    "source": "curated_accommodations_db", 
+                    "last_updated": current_time,
+                    "availability_cache_ts": current_time,
+                    "confidence": confidence,
+                    "amenities": hotel_data.get('amenities', []),
+                    "hotel_type": hotel_data.get('type', 'Hotel'),
+                    "description": hotel_data.get('description', ''),
+                    "budget_match": budget_match,
+                    "freshness_score": 0.75
+                }
+                facts.append(fact)
+        
+        return facts
+    
+    def _get_activity_facts_with_metadata(self, destination: str, current_time: str) -> List[Dict[str, Any]]:
+        """Retrieve activity/tour facts with enhanced metadata"""
+        facts = []
+        
+        # Get tours with metadata
+        for tour_data in MOCK_TOURS:
+            if destination.lower() in tour_data.get('location', '').lower():
+                fact = {
+                    "type": "activity", 
+                    "subtype": "tour",
+                    "id": tour_data['id'],
+                    "name": tour_data['title'],
+                    "address": tour_data.get('location', destination),
+                    "coords": {},
+                    "rating": tour_data.get('rating', 4.5),
+                    "price_estimate": tour_data.get('price', 2000),
+                    "provider": "tour_operators",
+                    "source": "curated_tours_db",
+                    "last_updated": current_time,
+                    "availability_cache_ts": current_time,
+                    "confidence": 0.8,
+                    "duration": tour_data.get('duration', '1 day'),
+                    "description": tour_data.get('description', ''),
+                    "highlights": tour_data.get('highlights', []),
+                    "freshness_score": 0.7
+                }
+                facts.append(fact)
+        
+        # Get activities with metadata
+        for activity_data in MOCK_ACTIVITIES:
+            if destination.lower() in activity_data.get('location', '').lower():
+                fact = {
+                    "type": "activity",
+                    "subtype": "experience", 
+                    "id": activity_data['id'],
+                    "name": activity_data['title'],
+                    "address": activity_data.get('location', destination),
+                    "coords": {},
+                    "rating": activity_data.get('rating', 4.3),
+                    "price_estimate": activity_data.get('price', 1500),
+                    "provider": "activity_providers",
+                    "source": "curated_experiences_db",
+                    "last_updated": current_time,
+                    "availability_cache_ts": current_time,
+                    "confidence": 0.8,
+                    "duration": activity_data.get('duration', '2-3 hours'),
+                    "description": activity_data.get('description', ''),
+                    "category": activity_data.get('category', 'Adventure'),
+                    "freshness_score": 0.7
+                }
+                facts.append(fact)
+        
         return facts
     
     def _extract_base_destination(self, destination_name: str) -> str:
