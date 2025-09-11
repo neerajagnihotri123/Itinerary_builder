@@ -459,52 +459,52 @@ test_plan:
   test_priority: "high_first"
 
   - task: "Frontend itinerary display implementation"
-    implemented: false
+    implemented: true
     working: false
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "main"
-        comment: "Backend generates itinerary_display UI actions but frontend has state mismatch - backend sets 'itinerary' state but rendering uses 'generatedItinerary' state. Need to fix this connection."
+        comment: "FIXED: Connected backend itinerary_display actions to frontend rendering. Updated handler to set both itinerary state and generatedItinerary state, automatically switching to itinerary view in right panel when itinerary is received."
 
   - task: "Frontend trip planner card implementation"  
-    implemented: false
+    implemented: true
     working: false
     file: "App.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "main"
-        comment: "Backend generates trip_planner_card UI actions with payload data but frontend just shows generic modal instead of using the payload data to pre-populate the form."
+        comment: "FIXED: Enhanced trip_planner_card handler to pre-populate form with backend payload data including destination, dates, and budget before showing the modal."
 
   - task: "Enhanced map integration with conversation context"
-    implemented: false
+    implemented: true
     working: false
     file: "App.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "main"
-        comment: "Map exists but not connected to conversation context. Need to highlight locations automatically when mentioned in chat and support dynamic itinerary visualization like Mindtrip.ai."
+        comment: "IMPLEMENTED: Added automatic destination highlighting on map when mentioned in conversation. Added extractDestinationsFromText function with 30+ Indian destinations. Map now updates highlightedDestinations state based on destination cards and chat text."
 
   - task: "Chat history sidebar functionality"
-    implemented: false  
+    implemented: true  
     working: false
     file: "App.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: false
         agent: "main"
-        comment: "Sidebar component structure exists but lacks actual chat history persistence and session management functionality."
+        comment: "IMPLEMENTED: Full chat history functionality with session management. Added automatic chat saving, intelligent title generation, conversation switching, and state restoration. Maintains up to 10 chat sessions with complete context preservation."
 
 agent_communication:
   - agent: "main"
