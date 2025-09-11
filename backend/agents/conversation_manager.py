@@ -233,6 +233,37 @@ class ConversationManager:
                         "agent": "conversation_manager"
                     }
                 }
+            elif "destination" in missing_slots:
+                # Still missing destination but has some other info - show destinations
+                popular_destinations = [
+                    {
+                        'name': 'Kerala, India', 
+                        'id': 'kerala_backwaters', 
+                        'description': 'Perfect for relaxing backwater cruises',
+                        'highlights': ['Backwaters', 'Hill stations', 'Ayurveda', 'Spice tours'],
+                        'hero_image': 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop'
+                    },
+                    {
+                        'name': 'Manali, Himachal Pradesh', 
+                        'id': 'manali_himachal', 
+                        'description': 'Adventure lover\'s paradise',
+                        'highlights': ['Skiing', 'Paragliding', 'Trekking', 'Mountain views'],
+                        'hero_image': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'
+                    }
+                ]
+                
+                destination_cards = self._create_destination_cards(popular_destinations)
+                
+                return {
+                    "chat_text": "Great! Let's pick a destination for your trip. Here are some popular options:",
+                    "ui_actions": destination_cards,
+                    "metadata": {
+                        "intent": "plan",
+                        "pre_generation_mode": True,
+                        "missing_slots": missing_slots,
+                        "agent": "conversation_manager"
+                    }
+                }
             else:
                 # Has destination but missing other details
                 return await self._present_trip_planner_card(message, slots, missing_slots)
