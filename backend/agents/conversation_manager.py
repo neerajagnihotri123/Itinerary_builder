@@ -439,23 +439,23 @@ class ConversationManager:
         
         return ui_actions
     
-    def _create_destination_cards(self, destinations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Create UI actions for destination cards"""
-        ui_actions = []
-        
+    def _create_destination_cards(self, destinations: List[Dict]) -> List[Dict[str, Any]]:
+        """Create destination card UI actions"""
+        cards = []
         for dest in destinations:
-            ui_actions.append({
-                "type": "destination_card",
+            cards.append({
+                "type": "card_add",
                 "payload": {
-                    "id": dest.get('id', f"dest_{hash(dest['name']) % 1000}"),
-                    "name": dest['name'],
+                    "id": dest['id'],
+                    "category": "destination",
+                    "title": dest['name'],
                     "description": dest.get('description', ''),
                     "highlights": dest.get('highlights', []),
-                    "image": dest.get('hero_image', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop')
+                    "hero_image": dest.get('hero_image', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop'),
+                    "plan_trip_button": True
                 }
             })
-        
-        return ui_actions
+        return cards
     
     def _convert_ux_actions_to_ui_actions(self, ux_actions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Convert UX agent actions to UI actions format"""
