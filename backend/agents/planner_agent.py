@@ -11,42 +11,51 @@ class PlannerAgent:
     def __init__(self, llm_client):
         self.llm_client = llm_client
     
-    async def generate_itinerary(self, slots, retrieval_candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def generate_itinerary(self, slots, retrieval_candidates: List[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
-        Generate day-by-day itinerary using retrieved facts
-        Returns: {"itinerary": [...], "hotel_recommendations": [...], "followups": [...]}
+        Generate comprehensive day-by-day itinerary using LLM and retrieval facts
+        Returns: Structured JSON response for frontend consumption
         """
+        print(f"🗓️ Generating itinerary for {slots.destination}")
+        
+        # Build context using retrieval facts
+        context = self._build_context(slots, retrieval_candidates or [])
+        
         try:
-            # Calculate trip duration
-            if slots.start_date and slots.end_date:
-                start = datetime.fromisoformat(slots.start_date)
-                end = datetime.fromisoformat(slots.end_date)
-                days = (end - start).days + 1
-            else:
-                days = 5  # Default trip length
+            # Generate using LLM
+            llm_response = await self._generate_with_llm(context)
             
-            # Prepare context for LLM
-            context = self._prepare_planning_context(slots, retrieval_candidates, days)
-            
-            # Generate itinerary using LLM
-            itinerary_response = await self._generate_with_llm(context)
-            
-            # Parse and validate response
-            result = json.loads(itinerary_response)
-            
-            # Ensure required structure
-            if "itinerary" not in result:
-                result["itinerary"] = []
-            if "hotel_recommendations" not in result:
-                result["hotel_recommendations"] = self._extract_hotels(retrieval_candidates)[:3]
-            if "followups" not in result:
-                result["followups"] = []
-            
-            return result
-            
+            # Parse and structure the response
+            try:
+                itinerary_data = json.loads(llm_response)
+                
+                # Ensure proper structure for frontend
+                structured_response = {
+                    "itinerary": itinerary_data.get('itinerary', []),
+                    "hotel_recommendations": itinerary_data.get('hotel_recommendations', []),
+                    "total_days": len(itinerary_data.get('itinerary', [])),
+                    "destination": slots.destination,
+                    "travelers": getattr(slots, 'adults', 2),
+                    "budget_estimate": self._calculate_budget_estimate(itinerary_data, slots),
+                    "highlights": self._extract_highlights(itinerary_data),
+                    "metadata": {
+                        "generated_by": "planner_agent",
+                        "generation_method": "llm_powered",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "facts_used": len(retrieval_candidates) if retrieval_candidates else 0
+                    }
+                }
+                
+                print(f"✅ Generated {len(structured_response['itinerary'])} day itinerary")
+                return structured_response
+                
+            except json.JSONDecodeError:
+                print(f"❌ LLM returned invalid JSON, using fallback")
+                return self._generate_fallback_itinerary(context)
+                
         except Exception as e:
-            print(f"Planning error: {e}")
-            return await self._fallback_itinerary(slots, retrieval_candidates)
+            print(f"❌ LLM generation failed: {e}")
+            return self._generate_fallback_itinerary(context)
     
     def _prepare_planning_context(self, slots, candidates: List[Dict[str, Any]], days: int) -> str:
         """Prepare context for LLM planning"""
