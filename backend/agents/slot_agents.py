@@ -1,11 +1,247 @@
 """
-Slot-filling agents for destination, dates, travelers, and budget
+Slot Agent - Extracts canonical destination and primary intent from user message
 """
 import json
 import re
+import os
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
+from dotenv import load_dotenv
 
+load_dotenv()
+
+class SlotAgent:
+    """
+    Extracts canonical destination and primary intent from user message.
+    Normalizes place names and attempts canonical_place_id lookup.
+    If ambiguous, returns a clarification question.
+    """
+    
+    def __init__(self, llm_client):
+        self.llm_client = llm_client
+        self.known_destinations = {
+            'rishikesh': {'canonical_place_id': 'rishikesh_uttarakhand', 'full_name': 'Rishikesh, Uttarakhand', 'country': 'India'},
+            'manali': {'canonical_place_id': 'manali_himachal', 'full_name': 'Manali, Himachal Pradesh', 'country': 'India'},
+            'andaman': {'canonical_place_id': 'andaman_islands', 'full_name': 'Andaman Islands', 'country': 'India'},
+            'andaman islands': {'canonical_place_id': 'andaman_islands', 'full_name': 'Andaman Islands', 'country': 'India'},
+            'havelock': {'canonical_place_id': 'andaman_islands', 'full_name': 'Andaman Islands', 'country': 'India'},
+            'kerala': {'canonical_place_id': 'kerala_backwaters', 'full_name': 'Kerala, India', 'country': 'India'},
+            'rajasthan': {'canonical_place_id': 'rajasthan_india', 'full_name': 'Rajasthan, India', 'country': 'India'},
+            'pondicherry': {'canonical_place_id': 'pondicherry_india', 'full_name': 'Pondicherry, India', 'country': 'India'},
+            'puducherry': {'canonical_place_id': 'pondicherry_india', 'full_name': 'Pondicherry, India', 'country': 'India'},
+            'goa': {'canonical_place_id': 'goa_india', 'full_name': 'Goa, India', 'country': 'India'},
+            'kashmir': {'canonical_place_id': 'kashmir_india', 'full_name': 'Kashmir, India', 'country': 'India'},
+            'ladakh': {'canonical_place_id': 'ladakh_india', 'full_name': 'Ladakh, India', 'country': 'India'},
+            'himachal': {'canonical_place_id': 'manali_himachal', 'full_name': 'Manali, Himachal Pradesh', 'country': 'India'},
+            'uttarakhand': {'canonical_place_id': 'rishikesh_uttarakhand', 'full_name': 'Rishikesh, Uttarakhand', 'country': 'India'}
+        }
+        
+        # Intent keywords mapping
+        self.intent_patterns = {
+            'plan': ['plan', 'generate', 'itinerary', 'trip', 'schedule', 'create itinerary', 'make plan'],
+            'accommodation': ['hotel', 'stay', 'accommodation', 'book', 'reserve', 'resort', 'lodge'],
+            'find': ['find', 'recommend', 'suggest', 'show', 'tell me about', 'what about', 'explore'],
+            'general': ['hello', 'hi', 'help', 'what can you do', 'popular destinations']
+        }
+    
+    async def extract_intent_and_destination(self, message: str) -> Dict[str, Any]:
+        """
+        Extract canonical destination and primary intent from user message.
+        
+        Returns: {
+            "destination_name": str|None,
+            "canonical_place_id": str|None, 
+            "intent": str,  # 'plan', 'accommodation', 'find', 'general'
+            "confidence": float,  # 0-1 confidence score
+            "clarify": str|None  # Clarification question if ambiguous
+        }
+        """
+        try:
+            message_lower = message.lower().strip()
+            
+            # Step 1: Detect primary intent
+            intent = self._detect_intent(message_lower)
+            
+            # Step 2: Extract destination
+            destination_result = await self._extract_destination(message_lower)
+            
+            # Step 3: Check for ambiguity and need for clarification
+            clarify = None
+            confidence = 0.9
+            
+            if destination_result['needs_clarification']:
+                clarify = destination_result['clarification_question']
+                confidence = 0.3
+            elif destination_result['destination_name'] is None and intent in ['plan', 'accommodation', 'find']:
+                clarify = "Which destination would you like to explore?"
+                confidence = 0.5
+            elif intent == 'general' and destination_result['destination_name'] is None:
+                confidence = 0.8  # General queries don't need destinations
+            
+            return {
+                "destination_name": destination_result['destination_name'],
+                "canonical_place_id": destination_result['canonical_place_id'],
+                "intent": intent,
+                "confidence": confidence,
+                "clarify": clarify
+            }
+            
+        except Exception as e:
+            print(f"❌ SlotAgent error: {e}")
+            return {
+                "destination_name": None,
+                "canonical_place_id": None,
+                "intent": "general",
+                "confidence": 0.1,
+                "clarify": "I'm having trouble understanding. Could you please rephrase your request?"
+            }
+    
+    def _detect_intent(self, message_lower: str) -> str:
+        """Detect primary intent from message"""
+        
+        # Check for explicit intent keywords
+        for intent, keywords in self.intent_patterns.items():
+            for keyword in keywords:
+                if keyword in message_lower:
+                    if intent == 'plan' and any(word in message_lower for word in ['plan', 'itinerary', 'generate', 'create']):
+                        return 'plan'
+                    elif intent == 'accommodation' and any(word in message_lower for word in ['hotel', 'stay', 'book', 'accommodation']):
+                        return 'accommodation'
+                    elif intent == 'find' and any(word in message_lower for word in ['tell me about', 'recommend', 'suggest', 'find']):
+                        return 'find'
+                    elif intent == 'general':
+                        return 'general'
+        
+        # Contextual intent detection
+        if any(word in message_lower for word in ['plan', 'trip', 'itinerary', 'generate', 'create plan']):
+            return 'plan'
+        elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'book', 'reserve']):
+            return 'accommodation'
+        elif any(word in message_lower for word in ['tell me about', 'about', 'recommend', 'suggest', 'what', 'show']):
+            return 'find'
+        else:
+            return 'general'
+    
+    async def _extract_destination(self, message_lower: str) -> Dict[str, Any]:
+        """Extract and normalize destination from message"""
+        
+        # Step 1: Direct matching for known destinations
+        for key, data in self.known_destinations.items():
+            if key in message_lower:
+                return {
+                    "destination_name": data['full_name'],
+                    "canonical_place_id": data['canonical_place_id'],
+                    "needs_clarification": False,
+                    "clarification_question": None
+                }
+        
+        # Step 2: Handle ambiguous cases
+        ambiguous_cases = {
+            'paris': "Do you mean Paris, France or Paris, Texas?",
+            'spring': "Do you mean Spring, Texas or spring season travel?",
+            'london': "Do you mean London, UK or London, Ontario?"
+        }
+        
+        for ambiguous_place, question in ambiguous_cases.items():
+            if ambiguous_place in message_lower:
+                return {
+                    "destination_name": None,
+                    "canonical_place_id": None,
+                    "needs_clarification": True,
+                    "clarification_question": question
+                }
+        
+        # Step 3: Use LLM for complex extraction
+        llm_result = await self._llm_extract_destination(message_lower)
+        if llm_result:
+            return llm_result
+        
+        # Step 4: No destination found
+        return {
+            "destination_name": None,
+            "canonical_place_id": None,
+            "needs_clarification": False,
+            "clarification_question": None
+        }
+    
+    async def _llm_extract_destination(self, message: str) -> Optional[Dict[str, Any]]:
+        """Use LLM for complex destination extraction"""
+        try:
+            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            
+            # Create LLM client for destination extraction
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=f"slot_destination_{hash(message) % 1000}",
+                system_message="You are a travel destination expert. Extract destination information from user messages with focus on Indian destinations."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            # Enhanced prompt for destination extraction
+            prompt = f"""
+Extract destination from this travel message: "{message}"
+
+Known Indian destinations: Rishikesh, Manali, Andaman Islands, Kerala, Rajasthan, Pondicherry, Goa, Kashmir, Ladakh
+
+Output JSON only:
+{{
+  "destination_name": "Full destination name or null",
+  "canonical_place_id": "normalized_id or null", 
+  "needs_clarification": true/false,
+  "clarification_question": "Question if ambiguous or null"
+}}
+
+Rules:
+- If clear Indian destination found, provide full name (e.g., "Kerala, India")
+- If ambiguous destination, set needs_clarification=true with question
+- If no destination mentioned, return nulls
+- Prefer Indian destinations when possible
+"""
+            
+            user_message = UserMessage(text=prompt)
+            response = await llm_client.send_message(user_message)
+            
+            # Handle response
+            if hasattr(response, 'content'):
+                content = response.content
+            else:
+                content = str(response)
+            
+            result = json.loads(content)
+            print(f"✅ LLM destination extraction: {result}")
+            return result
+            
+        except Exception as e:
+            print(f"❌ LLM destination extraction error: {e}")
+            return None
+    
+    def normalize_place_name(self, place_name: str) -> Dict[str, Any]:
+        """
+        Normalize place name to canonical format
+        Returns: {"canonical_place_id": str, "full_name": str, "country": str}
+        """
+        if not place_name:
+            return {"canonical_place_id": None, "full_name": None, "country": None}
+        
+        place_lower = place_name.lower()
+        
+        # Check known destinations
+        for key, data in self.known_destinations.items():
+            if key in place_lower or place_lower in data['full_name'].lower():
+                return {
+                    "canonical_place_id": data['canonical_place_id'],
+                    "full_name": data['full_name'],
+                    "country": data['country']
+                }
+        
+        # Default normalization
+        return {
+            "canonical_place_id": place_name.lower().replace(' ', '_').replace(',', ''),
+            "full_name": place_name.title(),
+            "country": "Unknown"
+        }
+
+
+# Keep existing agents for backward compatibility
 class DestinationAgent:
     """Handles destination extraction and validation"""
     
