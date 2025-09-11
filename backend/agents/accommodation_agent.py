@@ -681,14 +681,21 @@ Ensure prices are realistic for {destination} and match the budget tier.
         
         # Budget match bonus
         hotel_price = hotel.get('price_estimate', 5000)
-        if getattr(slots, 'budget_per_night', None):
-            budget = slots.budget_per_night
-            if hotel_price <= budget:
-                score += 0.15
-            elif hotel_price <= budget * 1.2:  # Within 20% of budget
-                score += 0.1
-            elif hotel_price > budget * 1.5:  # Significantly over budget
-                score -= 0.1
+        budget = getattr(slots, 'budget_per_night', None)
+        
+        if budget is not None and budget > 0:
+            try:
+                hotel_price = float(hotel_price)
+                budget = float(budget)
+                
+                if hotel_price <= budget:
+                    score += 0.15
+                elif hotel_price <= budget * 1.2:  # Within 20% of budget
+                    score += 0.1
+                elif hotel_price > budget * 1.5:  # Significantly over budget
+                    score -= 0.1
+            except (ValueError, TypeError):
+                pass  # Skip budget adjustment if values can't be compared
         
         # Family-friendly bonus
         if getattr(slots, 'children', 0) > 0:
