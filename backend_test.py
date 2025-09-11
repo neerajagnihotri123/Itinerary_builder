@@ -1689,6 +1689,11 @@ def main():
     ai_success = tester.test_ai_integration()
     test_results.append((ai_success, {}))
     
+    # NEW: RetrievalAgent Implementation Tests
+    print("\n" + "🔍" * 20 + " RETRIEVAL AGENT TESTS " + "🔍" * 20)
+    retrieval_agent_success = tester.test_retrieval_agent_implementation()
+    test_results.append((retrieval_agent_success, {}))
+    
     # Print final results
     print("\n" + "=" * 60)
     print(f"📊 FINAL RESULTS")
