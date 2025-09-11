@@ -21,6 +21,7 @@ Act like a friendly, jovial travel concierge: short, warm, and engaging replies 
 """
 import uuid
 import json
+import os
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
