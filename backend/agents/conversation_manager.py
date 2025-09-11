@@ -269,6 +269,17 @@ class ConversationManager:
                 return await self._present_trip_planner_card(message, slots, missing_slots)
         
         try:
+            # Apply default values for missing slots
+            if not slots.start_date:
+                from datetime import datetime, timedelta
+                slots.start_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+                slots.end_date = (datetime.now() + timedelta(days=10)).strftime('%Y-%m-%d')
+            
+            if not slots.budget_per_night:
+                slots.budget_per_night = 8000  # Default mid-range budget
+            
+            print(f"🗓️ Generating itinerary with slots: destination={slots.destination}, dates={slots.start_date}-{slots.end_date}, budget={slots.budget_per_night}")
+            
             # Step 1: Generate itinerary using planner_agent
             planner_output = await self.planner_agent.generate_itinerary(slots, retrieval_facts)
             
