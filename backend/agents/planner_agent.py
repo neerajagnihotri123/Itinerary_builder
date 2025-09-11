@@ -297,11 +297,12 @@ Rules:
         return context
     
     async def _generate_with_llm(self, context: str) -> str:
-        """Generate comprehensive itinerary using LLM with improved prompting"""
+        """Generate comprehensive itinerary using LLM with improved prompting and timeout"""
         try:
             # Use the same approach as in the main server - create a new LlmChat instance
             from emergentintegrations.llm.chat import LlmChat, UserMessage
             import os
+            import asyncio
             
             # Create a new LLM client for this specific call
             llm_client = LlmChat(
@@ -328,9 +329,17 @@ Additional Guidelines:
 Focus on creating an itinerary that a real traveler could actually follow.
 """
             
-            # Create and send the message
+            # Create and send the message with timeout
             user_message = UserMessage(text=enhanced_context)
-            response = await llm_client.send_message(user_message)
+            try:
+                response = await asyncio.wait_for(
+                    llm_client.send_message(user_message),
+                    timeout=15.0  # 15 second timeout
+                )
+            except asyncio.TimeoutError:
+                print(f"❌ LLM generation timed out for planner")
+                fallback_result = self._generate_fallback_itinerary(enhanced_context)
+                return json.dumps(fallback_result)
             
             # Handle different response types
             if hasattr(response, 'content'):
@@ -340,6 +349,13 @@ Focus on creating an itinerary that a real traveler could actually follow.
             
             # Validate JSON structure before returning
             try:
+                # Clean content
+                content = content.strip()
+                if content.startswith('```json'):
+                    content = content.replace('```json', '').replace('```', '').strip()
+                elif content.startswith('```'):
+                    content = content.replace('```', '').strip()
+                
                 json.loads(content)
                 print(f"✅ LLM generation successful: {len(content)} characters, valid JSON")
                 return content
