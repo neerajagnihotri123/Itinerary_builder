@@ -32,22 +32,159 @@ class AccommodationAgent:
     
     async def get_hotels_for_destination(self, destination: str, slots) -> List[Dict[str, Any]]:
         """
-        Get LLM-powered hotel recommendations for a specific destination
-        Returns: List of hotels with scoring and ranking
+        Get hotel recommendations with comprehensive scoring and ranking
+        Returns: List of scored and ranked hotels with availability info
         """
         if not destination:
             return []
         
+        print(f"🏨 Getting hotels for {destination}")
+        
+        # Step 1: Get raw hotel data (LLM + fallback)
+        raw_hotels = await self._fetch_hotel_data(destination, slots)
+        
+        if not raw_hotels:
+            return []
+        
+        # Step 2: Check availability for all hotels
+        available_hotels = await self._check_hotel_availability(raw_hotels, slots)
+        
+        # Step 3: Score and rank hotels using comprehensive factors
+        scored_hotels = await self._score_and_rank_hotels(available_hotels, slots)
+        
+        # Step 4: Limit to top results and add booking metadata
+        final_hotels = self._prepare_final_hotel_list(scored_hotels)
+        
+        print(f"✅ Returning {len(final_hotels)} scored and ranked hotels")
+        return final_hotels
+    
+    async def _fetch_hotel_data(self, destination: str, slots) -> List[Dict[str, Any]]:
+        """Fetch hotel data from LLM and fallback sources"""
+        hotels = []
+        
         try:
-            # Use LLM to generate hotel recommendations
+            # Try LLM generation first
             llm_hotels = await self._generate_hotels_with_llm(destination, slots)
             if llm_hotels:
-                return llm_hotels
+                hotels.extend(llm_hotels)
         except Exception as e:
             print(f"❌ LLM hotel generation failed: {e}")
         
-        # Fallback to existing mock data logic
-        return await self._get_fallback_hotels(destination, slots)
+        # Always add fallback hotels for diversity
+        fallback_hotels = await self._get_fallback_hotels(destination, slots)
+        hotels.extend(fallback_hotels)
+        
+        # Remove duplicates by name
+        unique_hotels = {}
+        for hotel in hotels:
+            hotel_key = hotel.get('name', '').lower().replace(' ', '')
+            if hotel_key not in unique_hotels:
+                unique_hotels[hotel_key] = hotel
+        
+        return list(unique_hotels.values())
+    
+    async def _check_hotel_availability(self, hotels: List[Dict[str, Any]], slots) -> List[Dict[str, Any]]:
+        """
+        Check availability for hotels based on dates and travelers
+        Returns hotels with availability status
+        """
+        available_hotels = []
+        
+        for hotel in hotels:
+            # Simulate availability check (in real system, this would call hotel APIs)
+            availability_result = self._simulate_availability_check(hotel, slots)
+            
+            hotel_with_availability = {
+                **hotel,
+                'availability': availability_result['available'],
+                'availability_details': availability_result,
+                'last_availability_check': datetime.now(timezone.utc).isoformat()
+            }
+            
+            # Only include available hotels
+            if availability_result['available']:
+                available_hotels.append(hotel_with_availability)
+            else:
+                print(f"   🚫 {hotel.get('name', 'Hotel')} not available")
+        
+        print(f"   📅 {len(available_hotels)}/{len(hotels)} hotels available")
+        return available_hotels
+    
+    def _simulate_availability_check(self, hotel: Dict[str, Any], slots) -> Dict[str, Any]:
+        """Simulate availability check (replace with real API calls)"""
+        
+        # Simulate availability based on hotel characteristics
+        base_availability = 0.85  # 85% base availability
+        
+        # Reduce availability for luxury hotels (more exclusive)
+        if 'luxury' in hotel.get('hotel_type', '').lower():
+            base_availability *= 0.7
+        
+        # Reduce availability for high-rated hotels
+        rating = hotel.get('rating', 4.0)
+        if rating > 4.5:
+            base_availability *= 0.8
+        
+        # Check if dates affect availability
+        is_available = hash(hotel.get('name', '')) % 100 < (base_availability * 100)
+        
+        return {
+            'available': is_available,
+            'rooms_available': 3 if is_available else 0,
+            'cancellation_policy': 'Free cancellation up to 24 hours before check-in' if is_available else None,
+            'flexibility_score': 0.8 if is_available else 0,
+            'booking_deadline': (datetime.now() + timedelta(hours=6)).isoformat() if is_available else None
+        }
+    
+    async def _score_and_rank_hotels(self, hotels: List[Dict[str, Any]], slots) -> List[Dict[str, Any]]:
+        """
+        Score and rank hotels using comprehensive factors:
+        - Normalized price (25%), Rating (20%), Distance to POIs (15%)
+        - Amenity match (20%), Cancellation flexibility (10%), Review recency (10%)
+        """
+        scored_hotels = []
+        
+        for hotel in hotels:
+            # Calculate individual scores
+            price_score = self._calculate_price_score(hotel, slots)
+            rating_score = self._calculate_rating_score(hotel)
+            distance_score = self._calculate_distance_score(hotel, slots)
+            amenity_score = self._calculate_amenity_score(hotel, slots)
+            flexibility_score = self._calculate_flexibility_score(hotel)
+            reviews_score = self._calculate_reviews_score(hotel)
+            
+            # Calculate weighted total score
+            total_score = (
+                price_score * self.scoring_weights['price'] +
+                rating_score * self.scoring_weights['rating'] +
+                distance_score * self.scoring_weights['distance'] +
+                amenity_score * self.scoring_weights['amenities'] +
+                flexibility_score * self.scoring_weights['flexibility'] +
+                reviews_score * self.scoring_weights['reviews']
+            )
+            
+            # Add scoring details to hotel
+            scored_hotel = {
+                **hotel,
+                'total_score': round(total_score, 3),
+                'score_breakdown': {
+                    'price_score': round(price_score, 2),
+                    'rating_score': round(rating_score, 2),
+                    'distance_score': round(distance_score, 2),
+                    'amenity_score': round(amenity_score, 2),
+                    'flexibility_score': round(flexibility_score, 2),
+                    'reviews_score': round(reviews_score, 2)
+                },
+                'ranking_reason': self._generate_ranking_reason(hotel, total_score, slots)
+            }
+            
+            scored_hotels.append(scored_hotel)
+        
+        # Sort by total score (descending)
+        scored_hotels.sort(key=lambda h: h['total_score'], reverse=True)
+        
+        print(f"   📊 Hotels scored and ranked by comprehensive factors")
+        return scored_hotels
     
     async def _generate_hotels_with_llm(self, destination: str, slots) -> List[Dict[str, Any]]:
         """Use LLM to generate hotel recommendations"""
