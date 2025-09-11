@@ -3809,20 +3809,25 @@ function App() {
               </div>
             </div>
           ) : rightPanelContent === 'destination' && selectedMapDestination ? (
-            /* Destination Detail View */
+            /* Destination Detail View - Updated with new color palette */
             <div className="flex-1 overflow-y-auto">
               {/* Back Button */}
-              <div className="p-4 border-b border-white/20">
-                <button
+              <div className="p-6 border-b" style={{ borderColor: 'var(--light-300)' }}>
+                <button 
                   onClick={() => setRightPanelContent('default')}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                  className="flex items-center gap-2 text-sm font-medium rounded-lg px-3 py-2 transition-colors duration-200"
+                  style={{ 
+                    color: 'var(--accent-600)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--light-200)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
-                  <X className="w-4 h-4" />
+                  <ArrowLeft className="w-4 h-4" />
                   Back to Map
                 </button>
               </div>
-              
-              {/* Destination Details */}
+
               <div className="p-6">
                 <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
                   <img
@@ -3844,39 +3849,69 @@ function App() {
                 </div>
                 
                 <div className="mb-6">
-                  <p className="text-gray-700 leading-relaxed mb-4">{selectedMapDestination.description}</p>
-                  <div className="bg-green-50 p-4 rounded-xl">
-                    <p className="text-green-700 font-medium">
+                  <p className="leading-relaxed mb-4" style={{ color: 'var(--charcoal-800)' }}>
+                    {selectedMapDestination.description}
+                  </p>
+                  <div className="p-4 rounded-xl" style={{ backgroundColor: 'var(--primary-50)' }}>
+                    <p className="font-medium" style={{ color: 'var(--primary-700)' }}>
                       <Heart className="w-4 h-4 inline mr-2" />
                       {selectedMapDestination.why_match}
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="mb-6">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">Top Highlights</h3>
+                  <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--charcoal-900)' }}>
+                    Top Highlights
+                  </h3>
                   <div className="space-y-3">
                     {selectedMapDestination.highlights.map((highlight, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-white/60 rounded-xl border border-white/30">
-                        <MapPin className="w-5 h-5 text-green-600" />
-                        <span className="font-medium text-gray-800">{highlight}</span>
+                      <div key={index} className="flex items-center gap-3 p-3 rounded-xl border"
+                           style={{ 
+                             backgroundColor: 'var(--light-50)', 
+                             borderColor: 'var(--light-300)' 
+                           }}>
+                        <MapPin className="w-5 h-5" style={{ color: 'var(--primary-600)' }} />
+                        <span className="font-medium" style={{ color: 'var(--charcoal-800)' }}>
+                          {highlight}
+                        </span>
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="flex gap-3">
                   <button 
                     onClick={() => {
                       setExploringDestination(selectedMapDestination);
                       setShowDestinationExploration(true);
                     }}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-700 hover:to-orange-700 transition-all duration-200"
+                    className="flex-1 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)',
+                      boxShadow: '0 4px 12px rgba(230, 149, 67, 0.3)'
+                    }}
                   >
-                    Explore Details
+                    Explore More
                   </button>
-                  <button className="px-6 py-3 border-2 border-gray-200 text-gray-700 font-semibold rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all duration-200">
-                    Save
+                  <button 
+                    onClick={() => setRightPanelContent('default')}
+                    className="px-6 py-3 border rounded-xl font-medium transition-all duration-200"
+                    style={{
+                      borderColor: 'var(--light-300)',
+                      color: 'var(--accent-600)',
+                      backgroundColor: 'var(--light-50)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = 'var(--light-200)';
+                      e.target.style.borderColor = 'var(--primary-300)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'var(--light-50)';
+                      e.target.style.borderColor = 'var(--light-300)';
+                    }}
+                  >
+                    Close
                   </button>
                 </div>
               </div>
