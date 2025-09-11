@@ -125,6 +125,17 @@ class AccommodationAgent:
             base_availability *= 0.8
         
         # Check if dates affect availability
+        try:
+            budget = slots.budget_per_night if hasattr(slots, 'budget_per_night') and slots.budget_per_night else None
+            
+            # Check budget compatibility if specified
+            if budget and hotel.get('price_estimate'):
+                hotel_price = int(hotel.get('price_estimate', 5000))
+                if hotel_price > budget * 1.5:  # Too expensive
+                    base_availability *= 0.6
+        except (ValueError, TypeError, AttributeError):
+            pass  # Skip budget adjustment if there are comparison issues
+        
         is_available = hash(hotel.get('name', '')) % 100 < (base_availability * 100)
         
         return {
