@@ -4038,8 +4038,6 @@ function App() {
                 </div>
               </div>
             </div>
-                          `https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=400&fit=crop`
-                        );
                       }
                       
                       return baseImages.filter(img => img).slice(0, 8);
