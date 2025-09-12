@@ -3910,44 +3910,134 @@ function App() {
               </div>
             </div>
           ) : rightPanelContent === 'tour' && selectedTour ? (
-            /* Tour Detail View */
+            /* Tour Detail View - Updated with new color palette */
             <div className="flex-1 overflow-y-auto">
               {/* Back Button */}
-              <div className="p-4 border-b border-white/20">
+              <div className="p-6 border-b" style={{ borderColor: 'var(--light-300)' }}>
                 <button
                   onClick={() => setRightPanelContent('default')}
-                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors duration-200"
+                  className="flex items-center gap-2 text-sm font-medium rounded-lg px-3 py-2 transition-colors duration-200"
+                  style={{ 
+                    color: 'var(--accent-600)',
+                    backgroundColor: 'transparent'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--light-200)'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4" />
                   <span className="font-medium">Back to Tours</span>
                 </button>
               </div>
               
               {/* Tour Details */}
               <div className="p-6">
-                {/* Image Gallery */}
-                <div className="relative h-48 rounded-2xl overflow-hidden mb-6 group">
-                  {(() => {
-                    // Enhanced gallery with multiple images per tour
-                    const getTourImages = (tour) => {
-                      const baseImages = [
-                        tour.image,
-                        `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=400&fit=crop`,
-                        `https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=400&fit=crop`,
-                        `https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=800&h=400&fit=crop`,
-                        `https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800&h=400&fit=crop`,
-                        `https://images.unsplash.com/photo-1464822759844-d150baec0494?w=800&h=400&fit=crop`,
-                      ];
-                      
-                      // Add tour-specific images
-                      if (tour.name.toLowerCase().includes('kerala')) {
-                        baseImages.push(
-                          `https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=800&h=400&fit=crop`,
-                          `https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800&h=400&fit=crop`
-                        );
-                      } else if (tour.name.toLowerCase().includes('rajasthan')) {
-                        baseImages.push(
-                          `https://images.unsplash.com/photo-1477587458883-47145ed94245?w=800&h=400&fit=crop`,
+                {/* Main Image */}
+                <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
+                  <img
+                    src={selectedTour.hero_image || selectedTour.image}
+                    alt={selectedTour.name || selectedTour.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <h2 className="text-2xl font-bold mb-2">
+                      {selectedTour.name || selectedTour.title}
+                    </h2>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="w-4 h-4" />
+                        {selectedTour.location}
+                      </span>
+                      <span>•</span>
+                      <span>{selectedTour.duration}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Rating Badge */}
+                  {selectedTour.rating && (
+                    <div className="absolute top-4 right-4 px-3 py-1 rounded-full flex items-center gap-1"
+                         style={{ backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)' }}>
+                      <Star className="w-4 h-4" style={{ color: 'var(--primary-500)' }} fill="currentColor" />
+                      <span className="font-bold" style={{ color: 'var(--charcoal-900)' }}>{selectedTour.rating}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Tour Information */}
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold mb-3" style={{ color: 'var(--charcoal-900)' }}>
+                    Tour Details
+                  </h3>
+                  <p className="leading-relaxed mb-4" style={{ color: 'var(--charcoal-800)' }}>
+                    {selectedTour.description || "Experience an amazing tour with professional guides and comfortable accommodations. This tour includes all major attractions and local cultural experiences."}
+                  </p>
+                  
+                  {/* Tour Highlights */}
+                  <div className="p-4 rounded-xl mb-4" style={{ backgroundColor: 'var(--primary-50)' }}>
+                    <h4 className="font-semibold mb-2" style={{ color: 'var(--primary-700)' }}>
+                      Tour Highlights
+                    </h4>
+                    <ul className="space-y-1" style={{ color: 'var(--primary-600)' }}>
+                      <li>• Professional local guide</li>
+                      <li>• All entrance fees included</li>
+                      <li>• Comfortable transportation</li>
+                      <li>• Small group experience</li>
+                    </ul>
+                  </div>
+                  
+                  {/* Price and Duration */}
+                  <div className="flex items-center justify-between p-4 rounded-xl border"
+                       style={{ backgroundColor: 'var(--light-50)', borderColor: 'var(--light-300)' }}>
+                    <div>
+                      <span className="text-sm" style={{ color: 'var(--accent-500)' }}>Duration</span>
+                      <p className="font-bold" style={{ color: 'var(--charcoal-900)' }}>{selectedTour.duration}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm" style={{ color: 'var(--accent-500)' }}>Price</span>
+                      <p className="text-xl font-bold" style={{ color: 'var(--primary-600)' }}>
+                        {selectedTour.price}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => {
+                      // Add booking logic here
+                      console.log('Booking tour:', selectedTour.name);
+                    }}
+                    className="flex-1 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105"
+                    style={{
+                      background: 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)',
+                      boxShadow: '0 4px 12px rgba(230, 149, 67, 0.3)'
+                    }}
+                  >
+                    Book Now
+                  </button>
+                  <button 
+                    onClick={() => setRightPanelContent('default')}
+                    className="px-6 py-3 border rounded-xl font-medium transition-all duration-200"
+                    style={{
+                      borderColor: 'var(--light-300)',
+                      color: 'var(--accent-600)',
+                      backgroundColor: 'var(--light-50)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.backgroundColor = 'var(--light-200)';
+                      e.target.style.borderColor = 'var(--primary-300)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.backgroundColor = 'var(--light-50)';
+                      e.target.style.borderColor = 'var(--light-300)';
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
                           `https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=400&fit=crop`
                         );
                       } else if (tour.name.toLowerCase().includes('rafting')) {
