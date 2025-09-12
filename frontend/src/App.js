@@ -529,19 +529,20 @@ const RecommendationCard = ({ item, onAction }) => {
           </div>
         )}
         
-        {/* Action Buttons */}
+        {/* Action Buttons - Updated with Explore and Plan buttons */}
         <div className="flex gap-3 pt-2 border-t border-slate-100">
+          {/* Explore Button - Always present */}
           <motion.button
-            onClick={() => onAction(item.cta_primary?.action, item)}
+            onClick={() => onAction('explore', item)}
             className="btn-primary flex-1 flex items-center justify-center gap-2 py-3"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            {item.cta_primary?.label || 'Explore'}
+            Explore
             <ChevronRight className="w-4 h-4" />
           </motion.button>
           
-          {/* Show Plan a Trip button only for destination cards */}
+          {/* Plan Trip button for destination cards */}
           {item.category === 'destination' && (
             <motion.button
               onClick={() => onAction('plan_trip', item)}
@@ -554,8 +555,8 @@ const RecommendationCard = ({ item, onAction }) => {
             </motion.button>
           )}
           
-          {/* Show Plan Tour button for tour cards */}
-          {(item.category === 'tour' || item.category === 'activity') && (
+          {/* Plan Tour button for tour and activity cards */}
+          {(item.category === 'tour' || item.category === 'activity' || item.category === 'hotel') && (
             <motion.button
               onClick={() => onAction('plan_tour', item)}
               className="btn-secondary flex-1 flex items-center justify-center gap-2 py-3"
@@ -566,15 +567,6 @@ const RecommendationCard = ({ item, onAction }) => {
               Plan Tour
             </motion.button>
           )}
-          
-          <motion.button
-            onClick={() => onAction(item.cta_secondary?.action, item)}
-            className="btn-outline px-4 py-3 flex items-center justify-center"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <MapPin className="w-4 h-4" />
-          </motion.button>
         </div>
       </div>
     </motion.div>
