@@ -4414,9 +4414,10 @@ function App() {
                         }
                       ]}
                       onAction={(action, item) => {
-                        if (action === 'book') {
-                          console.log('Booking tour:', item.name);
-                          // Add booking logic here
+                        if (action === 'explore') {
+                          console.log('Exploring tour:', item.name);
+                          setSelectedTour(item);
+                          setRightPanelContent('tour');
                         }
                       }}
                       title="Popular Tours for You"
