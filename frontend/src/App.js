@@ -4484,9 +4484,10 @@ function App() {
                         }
                       ]}
                       onAction={(action, item) => {
-                        if (action === 'book') {
-                          console.log('Booking activity:', item.name);
-                          // Add booking logic here
+                        if (action === 'explore') {
+                          console.log('Exploring activity:', item.name);
+                          setSelectedActivity(item);
+                          setRightPanelContent('activity');
                         }
                       }}
                       title="Activities for You"
