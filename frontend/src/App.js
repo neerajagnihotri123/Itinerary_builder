@@ -2912,27 +2912,46 @@ function App() {
   };
 
   const handleCardAction = (action, item) => {
-    console.log('🎯 Card action:', action, item.title);
+    console.log('🎯 Card action:', action, item.title || item.name);
     
     switch (action) {
       case 'explore':
-        // Find the full destination data and open modal
-        const fullDestination = destinations.find(d => 
-          d.name.toLowerCase().includes(item.title.split(',')[0].toLowerCase()) ||
-          item.title.toLowerCase().includes(d.name.toLowerCase())
-        );
-        
-        if (fullDestination) {
-          console.log('🗺️ Found destination:', fullDestination.name);
-          setSelectedDestination(fullDestination);
-          setIsDestinationModalOpen(true);
+        // Handle different card types for explore action
+        if (item.category === 'destination') {
+          // Find the full destination data and show in right panel
+          const fullDestination = destinations.find(d => 
+            d.name.toLowerCase().includes((item.title || item.name).split(',')[0].toLowerCase()) ||
+            (item.title || item.name).toLowerCase().includes(d.name.toLowerCase())
+          );
           
-          // Also update right panel
-          setSelectedMapDestination(fullDestination);
-          setRightPanelContent('destination');
-          setHighlightedDestinations([fullDestination.id]);
+          if (fullDestination) {
+            console.log('🗺️ Found destination:', fullDestination.name);
+            setSelectedMapDestination(fullDestination);
+            setRightPanelContent('destination');
+            setHighlightedDestinations([fullDestination.id]);
+          } else {
+            console.log('❌ Destination not found for:', item.title || item.name);
+          }
+        } else if (item.category === 'hotel') {
+          // Show hotel details in right panel
+          console.log('🏨 Exploring hotel:', item.title || item.name);
+          setSelectedTour(item); // Using selectedTour for hotels too
+          setRightPanelContent('tour');
+        } else if (item.category === 'tour') {
+          // Show tour details in right panel
+          console.log('🎪 Exploring tour:', item.title || item.name);
+          setSelectedTour(item);
+          setRightPanelContent('tour');
+        } else if (item.category === 'activity') {
+          // Show activity details in right panel
+          console.log('🎭 Exploring activity:', item.title || item.name);
+          setSelectedActivity(item);
+          setRightPanelContent('activity');
         } else {
-          console.log('❌ Destination not found for:', item.title);
+          // Default: show generic details in right panel
+          console.log('🔍 Exploring item:', item.title || item.name);
+          setSelectedTour(item);
+          setRightPanelContent('tour');
         }
         break;
         
@@ -2947,7 +2966,7 @@ function App() {
         const bookingMessage = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: `I'd love to help you book ${item.title}! First, let's complete your trip planning details so I can find the perfect accommodations for you.`
+          content: `I'd love to help you book ${item.title || item.name}! First, let's complete your trip planning details so I can find the perfect accommodations for you.`
         };
         setMessages(prev => [...prev, bookingMessage]);
         setShowTripBar(true);
@@ -2955,7 +2974,7 @@ function App() {
         
       case 'plan_trip':
         // Extract destination name from the item title
-        const destinationName = item.title.split(',')[0].trim();
+        const destinationName = (item.title || item.name).split(',')[0].trim();
         handlePlanTripFromModal(destinationName);
         break;
         
