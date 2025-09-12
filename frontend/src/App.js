@@ -322,10 +322,10 @@ const ProfessionalCarousel = ({ items, onAction, title = "Recommendations", item
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAction && onAction('book', item);
+                    onAction && onAction('explore', item);
                   }}
                 >
-                  Book Now
+                  Explore
                 </button>
               </div>
             </motion.div>
