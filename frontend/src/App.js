@@ -4038,11 +4038,6 @@ function App() {
                 </div>
               </div>
             </div>
-                          `https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=400&fit=crop`
-                        );
-                      } else if (tour.name.toLowerCase().includes('rafting')) {
-                        baseImages.push(
-                          `https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=400&fit=crop`,
                           `https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&h=400&fit=crop`
                         );
                       }
