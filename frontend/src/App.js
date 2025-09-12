@@ -3190,7 +3190,8 @@ function App() {
     setHighlightedDestinations([]);
     setItinerary(null);
     setGeneratedItinerary([]);
-    setRightPanelContent('default'); 
+    // Don't reset right panel content - keep it as is (especially if showing map)
+    // setRightPanelContent('default'); // REMOVED: This was causing map to disappear
     setShowTripBar(false);
     setIsSidebarOpen(false);
     
