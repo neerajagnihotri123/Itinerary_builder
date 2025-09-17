@@ -3655,7 +3655,8 @@ function App() {
                   ) : (
                     <MessageBubble
                       message={message}
-                      isUser={message.role === 'user'}
+                      isUser={message.role === 'user'}  
+                      onSelectVariant={handleVariantSelection}
                     />
                   )}
                 </div>
