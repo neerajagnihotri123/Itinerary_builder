@@ -3,9 +3,13 @@ Planner Agent - Generates day-by-day itineraries using retrieved facts
 """
 import json
 import hashlib
+import time
 from datetime import datetime, timezone
-from typing import Dict, Any, List
-from .conversation_manager import get_cached_response, cache_response
+from typing import Dict, Any, List, Optional
+
+# Simple cache for planner responses
+PLANNER_CACHE = {}
+CACHE_TTL = 1800  # 30 minutes
 
 class PlannerAgent:
     """Generates detailed itineraries using grounding facts"""
