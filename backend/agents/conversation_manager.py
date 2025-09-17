@@ -73,6 +73,10 @@ class ConversationManager:
         self.accommodation_agent = AccommodationAgent(llm_client)
         self.validator_agent = ValidatorAgent(llm_client)
         self.ux_agent = UXAgent(llm_client)
+        
+        # Enhanced agents for PRD requirements
+        self.profile_agent = ProfileAgent(llm_client)
+        self.pricing_agent = PricingAgent(llm_client)
     
     async def process_message(self, message: str, session_id: str, current_slots: Dict[str, Any]) -> Dict[str, Any]:
         """
