@@ -33,7 +33,10 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
+// Use local backend for development, production URL for deployed version
+const BACKEND_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:8001' 
+  : (process.env.REACT_APP_BACKEND_URL || '');
 const API = `${BACKEND_URL}/api`;
 
 console.log('🔍 BACKEND_URL configured as:', BACKEND_URL || 'RELATIVE URL');
