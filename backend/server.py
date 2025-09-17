@@ -1157,7 +1157,7 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "description": "Luxury resorts, fine dining, spa treatments, and exclusive experiences",
             "price": int(budget * 5.5),
             "base_highlights": ["Luxury Resorts", "Fine Dining", "Spa & Wellness", "Private Tours"],
-            "days": 4,
+            "days": trip_duration,
             "detailed_itinerary": [
                 {
                     "day": 1,
