@@ -1133,6 +1133,86 @@ RESPONSE STYLE:
             else:
                 return "I'm excited to help plan your perfect trip! Let me collect a few details to create an amazing itinerary just for you."
     
+    async def generate_personalized_itinerary_variants(self, trip_details: dict, session_id: str) -> Dict[str, Any]:
+        """
+        Generate 3 personalized itinerary variants based on completed trip planner form
+        This method is called when trip planner form is submitted with complete details
+        """
+        print(f"🎯 Generating personalized itinerary variants for {trip_details}")
+        
+        # Create slots from trip details
+        slots = UserSlots(
+            destination=trip_details.get('destination'),
+            start_date=trip_details.get('start_date'),
+            end_date=trip_details.get('end_date'),
+            adults=trip_details.get('adults', 2),
+            children=trip_details.get('children', 0),
+            budget_per_night=trip_details.get('budget_per_night', 8000)
+        )
+        
+        # Get retrieval facts for the destination
+        try:
+            retrieval_facts = await self.retrieval_agent.get_facts(
+                user_query=f"travel information for {slots.destination}",
+                user_location=slots.destination,
+                metadata={'destination': slots.destination}
+            )
+        except Exception as e:
+            print(f"⚠️ Retrieval failed: {e}")
+            retrieval_facts = []
+        
+        # Generate 3 itinerary variants with enhanced prompting
+        variants = await self._generate_enhanced_itinerary_variants(slots, retrieval_facts, trip_details)
+        
+        # Apply pricing to each variant
+        priced_variants = []
+        for variant in variants:
+            try:
+                pricing = await self.pricing_agent.calculate_dynamic_pricing(
+                    service_type="package",
+                    service_details={
+                        "name": f"{variant['type']} Package",
+                        "location": slots.destination,
+                        "category": variant['type'].lower()
+                    },
+                    user_profile=trip_details.get('user_profile', {}),
+                    booking_context={
+                        "travel_dates": {"start_date": slots.start_date, "end_date": slots.end_date},
+                        "travelers": {"adults": slots.adults, "children": slots.children}
+                    }
+                )
+                variant['pricing'] = pricing
+            except Exception as e:
+                print(f"⚠️ Pricing failed for {variant['type']}: {e}")
+                variant['pricing'] = {"final_price": variant.get('base_price', 25000), "currency": "INR"}
+            
+            priced_variants.append(variant)
+        
+        # Generate personalized response
+        response_text = await self._generate_variant_selection_response(priced_variants, trip_details)
+        
+        # Create UI actions for the variants
+        ui_actions = self._create_enhanced_variant_cards(priced_variants)
+        
+        return {
+            "chat_text": response_text,
+            "ui_actions": ui_actions,
+            "updated_slots": {
+                "destination": slots.destination,
+                "start_date": slots.start_date,
+                "end_date": slots.end_date,
+                "adults": slots.adults,
+                "children": slots.children,
+                "budget_per_night": slots.budget_per_night
+            },
+            "metadata": {
+                "intent": "itinerary_variants",
+                "variants_generated": len(priced_variants),
+                "agent": "conversation_manager",
+                "enhanced_planning": True
+            }
+        }
+    
     def _convert_ux_actions_to_ui_actions(self, ux_actions: List[Dict]) -> List[Dict[str, Any]]:
         """Convert UX agent actions to UI actions format"""
         ui_actions = []
