@@ -169,7 +169,7 @@ const ProfessionalCarousel = ({ items, onAction, title = "Recommendations", item
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, startX, translateX, currentIndex, maxIndex, dragVelocity]);
+  }, [isDragging]); // Only depend on isDragging to prevent infinite loops
 
   const goToPrevious = () => {
     setCurrentIndex(prev => Math.max(0, prev - 1));
