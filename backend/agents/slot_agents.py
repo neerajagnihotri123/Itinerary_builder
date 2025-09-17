@@ -113,40 +113,45 @@ class SlotAgent:
             }
     
     def _detect_intent(self, message_lower: str) -> str:
-        """Detect primary intent from message with better compound query handling"""
+        """Detect primary intent from message with prioritized general greetings"""
         
-        # Handle compound queries that mention multiple intents
+        # Step 1: Check for general greetings first (highest priority)
+        general_greetings = ['hello', 'hi', 'hey', 'hiya', 'good morning', 'good evening', 'good afternoon', 'help', 'what can you do', 'how are you', 'thanks', 'thank you']
+        if any(greeting == message_lower.strip() for greeting in general_greetings):
+            return 'general'
+        
+        # Step 2: Check for confirmation responses
+        if any(conf == message_lower.strip() for conf in ['yes', 'yeah', 'yep', 'okay', 'ok', 'sure', 'great', 'awesome', 'perfect']):
+            return 'confirmation'
+        
+        # Step 3: Handle compound queries that mention multiple intents
         if any(word in message_lower for word in ['tips', 'advice', 'information']) and any(word in message_lower for word in ['hotel', 'accommodation']):
-            # Travel tips + hotels = find intent (information gathering)
             return 'find'
         elif any(word in message_lower for word in ['plan', 'book']) and any(word in message_lower for word in ['hotel', 'accommodation']):
-            # Plan + hotels = accommodation intent  
             return 'accommodation'
         
-        # Check for explicit intent keywords
+        # Step 4: Check for explicit intent keywords with exact matching
         for intent, keywords in self.intent_patterns.items():
             for keyword in keywords:
                 if keyword in message_lower:
-                    if intent == 'plan' and any(word in message_lower for word in ['plan', 'itinerary', 'generate', 'create']):
+                    if intent == 'plan':
                         return 'plan'
-                    elif intent == 'accommodation' and any(word in message_lower for word in ['hotel', 'stay', 'book', 'accommodation']):
+                    elif intent == 'accommodation':
                         return 'accommodation'
-                    elif intent == 'find' and any(word in message_lower for word in ['tell me about', 'recommend', 'suggest', 'find', 'tips', 'advice']):
+                    elif intent == 'find':
                         return 'find'
                     elif intent == 'confirmation':
                         return 'confirmation'
                     elif intent == 'general':
                         return 'general'
         
-        # Contextual intent detection with enhanced patterns
-        if any(word in message_lower for word in ['plan', 'trip', 'itinerary', 'generate', 'create plan']):
+        # Step 5: Contextual intent detection for complex phrases
+        if any(word in message_lower for word in ['plan', 'trip', 'itinerary', 'generate', 'create plan', 'schedule']):
             return 'plan'
-        elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'book', 'reserve']):
+        elif any(word in message_lower for word in ['hotel', 'accommodation', 'stay', 'book', 'reserve', 'resort', 'lodge']):
             return 'accommodation'
-        elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'about', 'what', 'find', 'destinations', 'beach destinations', 'mountain destinations', 'tips', 'advice', 'information']):
+        elif any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'show me', 'popular', 'give me', 'tell me about', 'find', 'destinations', 'tips', 'advice', 'information']):
             return 'find'
-        elif any(word in message_lower for word in ['yes', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect']):
-            return 'confirmation'
         else:
             return 'general'
     
