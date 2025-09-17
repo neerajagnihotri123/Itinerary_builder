@@ -3,7 +3,7 @@ Planner Agent - Generates day-by-day itineraries using retrieved facts
 """
 import json
 import hashlib
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 from .conversation_manager import get_cached_response, cache_response
 
@@ -52,7 +52,7 @@ class PlannerAgent:
                 return structured_response
                 
             except json.JSONDecodeError:
-                print(f"❌ LLM returned invalid JSON, using fallback")
+                print("❌ LLM returned invalid JSON, using fallback")
                 return self._generate_fallback_itinerary(context)
                 
         except Exception as e:
@@ -346,7 +346,7 @@ Focus on creating an itinerary that a real traveler could actually follow.
                     timeout=15.0  # 15 second timeout
                 )
             except asyncio.TimeoutError:
-                print(f"❌ LLM generation timed out for planner")
+                print("❌ LLM generation timed out for planner")
                 return self._generate_fallback_itinerary(enhanced_context)
             
             # Handle different response types
@@ -372,7 +372,7 @@ Focus on creating an itinerary that a real traveler could actually follow.
                 
                 return content
             except json.JSONDecodeError:
-                print(f"❌ LLM generated invalid JSON, using intelligent fallback")
+                print("❌ LLM generated invalid JSON, using intelligent fallback")
                 fallback_result = self._generate_fallback_itinerary(enhanced_context)
                 return json.dumps(fallback_result)
             
