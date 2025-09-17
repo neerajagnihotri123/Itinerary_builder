@@ -96,7 +96,7 @@ class ProfileAgent:
         5. Is specific to their destination if mentioned
         
         Examples:
-        - If destination mentioned: "Exciting! {destination} is amazing for {key activities}. What draws you most to travel - the thrill of adventure, diving into local culture, luxury relaxation, or finding great value experiences?"
+        - If destination mentioned: "Exciting! [destination] is amazing for [key activities]. What draws you most to travel - the thrill of adventure, diving into local culture, luxury relaxation, or finding great value experiences?"
         - If no destination: "I love helping plan amazing trips! What kind of experiences make you most excited when you travel - adventure activities, cultural discoveries, luxury relaxation, budget-friendly authentic experiences, or eco-conscious sustainable travel?"
         
         Keep it conversational and under 2 sentences.
