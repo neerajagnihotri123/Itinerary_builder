@@ -3924,15 +3924,15 @@ function App() {
               </div>
             </div>
           ) : rightPanelContent === 'variants' ? (
-            /* Itinerary Variants View */
+            /* Itinerary Variants - Detailed View in Right Panel */
             <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
               {/* Header Section */}
               <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-6 z-10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-slate-900 mb-1">Choose Your Itinerary Style</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-1">Itinerary Details</h1>
                     <p className="text-slate-600 text-sm">
-                      3 personalized options • {tripDetails.destination || 'Your destination'}
+                      {selectedVariant?.title || 'Select a variant to view details'}
                     </p>
                   </div>
                   <button
@@ -3944,10 +3944,157 @@ function App() {
                 </div>
               </div>
 
-              {/* Rich Itinerary Variants - MindTrip Style */}
-              <div className="p-6 space-y-8">
-                {itinerary?.variants?.map((variant, index) => (
-                  <div key={index} className="bg-white rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
+              {/* Selected Variant Details */}
+              {selectedVariant ? (
+                <div className="p-6">
+                  {/* Variant Header */}
+                  <div className="relative rounded-2xl overflow-hidden mb-6">
+                    <img 
+                      src={selectedVariant.image || `https://images.unsplash.com/800x400/?${selectedVariant.destination?.toLowerCase()}`}
+                      alt={selectedVariant.title}
+                      className="w-full h-64 object-cover"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/800x400/?travel';
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <div className="absolute bottom-6 left-6 text-white">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h2 className="text-3xl font-bold">{selectedVariant.title}</h2>
+                        {selectedVariant.recommended && (
+                          <span className="px-3 py-1 bg-orange-500 text-white text-sm font-semibold rounded-full">
+                            ⭐ Recommended
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-orange-100 text-lg">{selectedVariant.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Variant Stats Grid */}
+                  <div className="grid grid-cols-4 gap-4 mb-8 p-6 bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-orange-600">{selectedVariant.days}</div>
+                      <div className="text-sm text-slate-600">Days</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-orange-600">{selectedVariant.total_activities || 0}</div>
+                      <div className="text-sm text-slate-600">Activities</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-orange-600">{selectedVariant.activity_types?.length || 0}</div>
+                      <div className="text-sm text-slate-600">Types</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold text-green-600">₹{(selectedVariant.price || 0).toLocaleString()}</div>
+                      <div className="text-sm text-slate-600">Total Cost</div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Day-by-Day Itinerary */}
+                  <div className="space-y-6">
+                    <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                      <Calendar className="w-6 h-6 text-orange-600" />
+                      Complete Itinerary
+                    </h3>
+                    
+                    {selectedVariant.detailed_itinerary?.map((day, dayIndex) => (
+                      <div key={dayIndex} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+                        <div className="flex items-center gap-4 mb-6">
+                          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
+                            {day.day}
+                          </div>
+                          <div>
+                            <h4 className="text-xl font-bold text-slate-900">{day.theme}</h4>
+                            <p className="text-slate-600">{day.activities?.length || 0} activities planned</p>
+                          </div>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {day.activities?.map((activity, actIndex) => (
+                            <div key={actIndex} className="flex gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                              <img 
+                                src={activity.image || `https://images.unsplash.com/300x300/?${activity.type}`}
+                                alt={activity.name}
+                                className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
+                                onError={(e) => {
+                                  e.target.src = 'https://images.unsplash.com/300x300/?activity';
+                                }}
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <h5 className="font-bold text-slate-900 text-lg">{activity.name}</h5>
+                                    <p className="text-slate-600 flex items-center gap-1">
+                                      <MapPin className="w-4 h-4" />
+                                      {activity.location}
+                                    </p>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-lg font-bold text-green-600">₹{activity.cost?.toLocaleString()}</div>
+                                    <div className="text-sm text-slate-500">{activity.duration}</div>
+                                  </div>
+                                </div>
+                                <p className="text-slate-700 mb-3">{activity.description}</p>
+                                <div className="flex items-center gap-3">
+                                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
+                                    {activity.time}
+                                  </span>
+                                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
+                                    {activity.type.replace('_', ' ')}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Experience Highlights */}
+                  <div className="mt-8 p-6 bg-gradient-to-r from-slate-50 to-slate-100 rounded-2xl">
+                    <h4 className="text-xl font-bold text-slate-900 mb-4">Experience Highlights</h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedVariant.highlights?.map((highlight, hIndex) => (
+                        <div key={hIndex} className="flex items-center gap-3 text-slate-700 bg-white rounded-xl p-3">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full flex-shrink-0"></div>
+                          <span className="font-medium">{highlight}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="mt-8 flex gap-4">
+                    <button 
+                      onClick={() => {
+                        const message = {
+                          id: Date.now().toString(),
+                          role: 'assistant',
+                          content: `Perfect! You've selected the ${selectedVariant.title} experience. Let me help you book this amazing ${selectedVariant.days}-day adventure!`
+                        };
+                        setMessages(prev => [...prev, message]);
+                      }}
+                      className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      🚀 Book This Experience
+                    </button>
+                    <button 
+                      onClick={() => setSelectedVariant(null)}
+                      className="px-6 py-4 border-2 border-slate-300 text-slate-700 font-bold rounded-xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-200"
+                    >
+                      Back to Options
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-6 text-center">
+                  <Calendar className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-600 mb-2">Select an itinerary variant</h3>
+                  <p className="text-slate-500">Choose from the options in the chat to view detailed itinerary</p>
+                </div>
+              )}
                     {/* Variant Header with Image */}
                     <div className="relative">
                       <img 
