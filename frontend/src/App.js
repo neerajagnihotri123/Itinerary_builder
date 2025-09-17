@@ -2724,9 +2724,9 @@ function App() {
         };
         setMessages(prev => [...prev, aiMessage]);
         
-        // Process UI actions (variant cards) and display them in right panel
+        // Process UI actions (variant cards) and display them in chat as timeline
         if (data.ui_actions && data.ui_actions.length > 0) {
-          console.log('🎯 Processing itinerary variants for right panel');
+          console.log('🎯 Processing itinerary variants for chat timeline display');
           
           // Filter out variant cards
           const variantCards = data.ui_actions.filter(action => 
@@ -2735,26 +2735,23 @@ function App() {
           );
           
           if (variantCards.length > 0) {
-            console.log('🎯 Processing', variantCards.length, 'variant cards:', variantCards);
+            console.log('🎯 Processing', variantCards.length, 'variant cards for timeline:', variantCards);
             
-            // Set variants as recommendations for the right panel
-            setRecommendations(variantCards.map(card => card.payload));
-            
-            // Switch to variants view in right panel
-            setRightPanelContent('variants');
-            setItinerary({
-              destination: targetDestination,
+            // Create timeline message with all variants
+            const variantsTimelineMessage = {
+              id: Date.now().toString() + '_timeline',
+              role: 'assistant',
+              content: 'itinerary_timeline', // Special content type for timeline rendering
               variants: variantCards.map(card => card.payload),
-              user_preferences: responses
-            });
+              destination: targetDestination
+            };
             
-            console.log('🎯 Set right panel to show', variantCards.length, 'itinerary variants');
-            console.log('🎯 Right panel content set to:', 'variants');
-            console.log('🎯 Itinerary state set:', {
-              destination: targetDestination,
-              variants: variantCards.map(card => card.payload),
-              user_preferences: responses
-            });
+            setMessages(prev => [...prev, variantsTimelineMessage]);
+            
+            // Also set right panel to show detailed view when variant is selected
+            setRightPanelContent('variant_details');
+            
+            console.log('🎯 Added timeline with', variantCards.length, 'variants to chat');
           } else {
             console.log('❌ No variant cards found in response!');
           }
