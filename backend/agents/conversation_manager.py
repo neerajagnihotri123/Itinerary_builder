@@ -113,19 +113,49 @@ class ConversationManager:
         try:
             print(f"🔄 Processing message: {message[:50]}...")
             
-            # FAST PATH: Check for obvious planning keywords to bypass LLM
+            # ULTRA FAST PATH: Instant demo mode for planning queries
             message_lower = message.lower()
             if any(keyword in message_lower for keyword in ['plan a trip', 'plan trip', 'create itinerary', 'make plan']):
-                print("⚡ Fast path: Planning query detected")
-                # Extract destination quickly without LLM
+                print("⚡ ULTRA FAST: Instant demo mode for planning")
+                
+                # Extract destination instantly
                 destination = None
-                for dest in ['goa', 'kerala', 'rajasthan', 'mumbai', 'delhi', 'bangalore']:
+                for dest in ['goa', 'kerala', 'rajasthan', 'mumbai', 'delhi', 'bangalore', 'manali', 'shimla']:
                     if dest in message_lower:
                         destination = dest.title()
                         break
                 
-                intent = 'plan'
-                slot_result = {'intent': intent, 'destination_name': destination}
+                # Return instant trip planner form without any processing
+                return {
+                    "chat_text": f"Fantastic! Let's plan your amazing {destination or 'trip'}! I'll need a few details to create your personalized itinerary with 3 amazing variants.",
+                    "ui_actions": [
+                        {
+                            "type": "trip_planner_card",
+                            "payload": {
+                                "title": "Plan Your Perfect Trip",
+                                "description": "Let's create 3 personalized itinerary variants just for you!",
+                                "current_destination": destination or "",
+                                "current_dates": "",
+                                "current_budget": 10000,
+                                "destination": destination or "",
+                                "start_date": "",
+                                "end_date": "",
+                                "adults": 2,
+                                "children": 0,
+                                "budget_per_night": 10000,
+                                "missing_slots": [],
+                                "session_id": session_id
+                            }
+                        }
+                    ],
+                    "metadata": {
+                        "intent": "plan",
+                        "requires_form": True,
+                        "form_type": "trip_planner",
+                        "agent": "conversation_manager",
+                        "ultra_fast_mode": True
+                    }
+                }
             else:
                 # STEP 1: Intent detection - conversation_agent → slot_agent
                 slot_result = await self.slot_agent.extract_intent_and_destination(message, current_slots)
