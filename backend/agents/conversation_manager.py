@@ -355,7 +355,11 @@ class ConversationManager:
             return await self._generate_error_response(f"Error generating itinerary: {str(e)}")
     
     async def _handle_accommodation_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
-        """Accommodation flow: retrieval_agent → accommodation_agent → booking flow"""
+        """
+        Enhanced accommodation flow: 
+        1. For booking queries, trigger trip planner form
+        2. For general hotel queries, show hotels with booking options
+        """
         print(f"🏨 Handling accommodation flow")
         print(f"🔍 Accommodation flow debug - slots.destination: {getattr(slots, 'destination', 'NOT_FOUND')}")
         print(f"🔍 Accommodation flow debug - slots dict: {slots.__dict__ if hasattr(slots, '__dict__') else 'NO_DICT'}")
