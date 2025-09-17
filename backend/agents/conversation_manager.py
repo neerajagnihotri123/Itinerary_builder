@@ -172,7 +172,7 @@ class ConversationManager:
         2. Once form is submitted, generate personalized LLM-based itinerary variants
         3. Apply dynamic pricing and present options
         """
-        print(f"🗓️ Handling planner flow - triggering trip planner form")
+        print("🗓️ Handling planner flow - triggering trip planner form")
         
         # STEP 1: Always show trip planner form for planning queries
         # This ensures we collect all necessary information before generating itineraries
@@ -360,7 +360,7 @@ class ConversationManager:
         1. For booking queries, trigger trip planner form
         2. For general hotel queries, show hotels with booking options
         """
-        print(f"🏨 Handling accommodation flow")
+        print("🏨 Handling accommodation flow")
         
         # Check if this is a booking request vs general hotel inquiry
         booking_keywords = ['book', 'booking', 'reserve', 'reservation', 'stay for', 'check in', 'nights']
@@ -527,7 +527,7 @@ class ConversationManager:
     
     async def _handle_find_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """Find flow: Pure LLM-generated recommendations without mock data"""
-        print(f"🔍 Handling find flow with LLM generation")
+        print("🔍 Handling find flow with LLM generation")
         
         # Check if user is asking for general recommendations
         message_lower = message.lower()
@@ -986,7 +986,7 @@ RESPONSE STYLE:
     async def _present_trip_planner_card(self, message: str, slots: UserSlots, missing_slots: List[str]) -> Dict[str, Any]:
         """Present trip planner card when essential information is missing"""
         return {
-            "chat_text": f"I'd love to help you plan your trip! To create the perfect itinerary, I need a few more details.",
+            "chat_text": "I'd love to help you plan your trip! To create the perfect itinerary, I need a few more details.",
             "ui_actions": [
                 {
                     "type": "trip_planner_card",
@@ -1613,7 +1613,7 @@ Be informative, friendly, and travel-focused in your response.
             import sys
             import os
             sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
+            from mock_data import MOCK_DESTINATIONS, MOCK_ACTIVITIES
             
             context_parts = []
             context_parts.append(f"User Query: {message}")
@@ -1894,7 +1894,7 @@ Keep response to 2-3 sentences maximum.
             import sys
             import os
             sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_TOURS, MOCK_ACTIVITIES
+            from mock_data import MOCK_DESTINATIONS, MOCK_HOTELS, MOCK_ACTIVITIES
             
             # Find destination in mock data
             dest_info = None
