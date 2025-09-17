@@ -31,6 +31,8 @@ from .planner_agent import PlannerAgent
 from .accommodation_agent import AccommodationAgent
 from .validator_agent import ValidatorAgent
 from .ux_agent import UXAgent
+from .profile_agent import ProfileAgent
+from .pricing_agent import PricingAgent
 
 @dataclass
 class UserSlots:
