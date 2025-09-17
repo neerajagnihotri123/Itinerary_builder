@@ -2659,29 +2659,47 @@ function App() {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('🎯 Trip planner response:', data);
         
         // Add AI-generated response to chat
         const aiMessage = {
           id: Date.now().toString(),
           role: 'assistant',
-          content: data.chat_text || `Here's your personalized ${tripDetails.dates || '5-day'} itinerary for ${targetDestination}!`
+          content: data.chat_text || `Here are your personalized itinerary options for ${targetDestination}!`
         };
         setMessages(prev => [...prev, aiMessage]);
         
-        // Check if backend provided structured itinerary data
-        if (data.itinerary && Array.isArray(data.itinerary)) {
-          setGeneratedItinerary(data.itinerary);
-        } else {
-          // Parse itinerary from AI response or create structured version
-          const aiGeneratedItinerary = parseItineraryFromAI(data.chat_text, tripDetails, targetDestination);
-          setGeneratedItinerary(aiGeneratedItinerary);
+        // Process UI actions (variant cards) and display them in right panel
+        if (data.ui_actions && data.ui_actions.length > 0) {
+          console.log('🎯 Processing itinerary variants for right panel');
+          
+          // Filter out variant cards
+          const variantCards = data.ui_actions.filter(action => 
+            action.type === 'card_add' && 
+            action.payload.category === 'itinerary_variant'
+          );
+          
+          if (variantCards.length > 0) {
+            // Set variants as recommendations for the right panel
+            setRecommendations(variantCards.map(card => card.payload));
+            
+            // Switch to itinerary view in right panel
+            setRightPanelContent('itinerary');
+            setItinerary({
+              destination: targetDestination,
+              variants: variantCards.map(card => card.payload),
+              user_preferences: responses
+            });
+            
+            console.log('🎯 Set right panel to show', variantCards.length, 'itinerary variants');
+          }
+          
+          // Process other UI actions (question chips, etc.)
+          const questionChips = data.ui_actions.filter(action => action.type === 'question_chip');
+          if (questionChips.length > 0) {
+            setQuestionChips(questionChips.map(chip => chip.payload));
+          }
         }
-        
-        // Process accommodations from AI response
-        if (data.hotels && Array.isArray(data.hotels)) {
-          setGeneratedAccommodations(data.hotels);
-        } else {
-          // Generate accommodations based on destination
           const accommodations = await generateAccommodationsFromAI(targetDestination, responses);
           setGeneratedAccommodations(accommodations);
         }
