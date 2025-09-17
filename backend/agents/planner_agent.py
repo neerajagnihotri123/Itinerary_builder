@@ -297,7 +297,7 @@ Rules:
         return context
     
     async def _generate_with_llm(self, context: str) -> str:
-        """Generate comprehensive itinerary using LLM with improved prompting and timeout"""
+        """Generate comprehensive itinerary using LLM with caching and optimized prompts"""
         try:
             # Use the same approach as in the main server - create a new LlmChat instance
             from emergentintegrations.llm.chat import LlmChat, UserMessage
