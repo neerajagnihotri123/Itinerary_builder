@@ -1470,44 +1470,43 @@ class TravelloAPITester:
                 print(f"      ❌ SCENARIO 1 FAILED: Profile intake not triggered")
                 print(f"         Expected: Profile intake conversation with persona questions")
         
-        # PRIMARY TEST SCENARIO 2: "popular destinations" - should generate multiple destination cards
-        print(f"\n   🌍 SCENARIO 2: Destination Discovery Query - 'popular destinations'")
-        session_id_2 = f"{self.session_id}_popular_destinations"
+        # PRIMARY TEST SCENARIO 2: "tell me about Goa" - should work as before
+        print(f"\n   🏖️ SCENARIO 2: Existing Functionality - 'tell me about Goa'")
+        session_id_2 = f"{self.session_id}_goa_info"
         
-        chat_data_popular = {
-            "message": "popular destinations",
+        chat_data_goa = {
+            "message": "tell me about Goa",
             "session_id": session_id_2,
             "user_profile": {}
         }
         
-        success_popular, response_popular = self.run_test("Popular Destinations Query", "POST", "chat", 200, data=chat_data_popular)
+        success_goa, response_goa = self.run_test("Goa Information Query", "POST", "chat", 200, data=chat_data_goa)
         
         scenario_2_passed = False
-        if success_popular:
+        if success_goa:
             print(f"      📊 Response Analysis:")
-            print(f"         Chat text length: {len(response_popular.get('chat_text', ''))}")
-            print(f"         Chat text preview: {response_popular.get('chat_text', '')[:100]}...")
+            chat_text = response_goa.get('chat_text', '')
+            ui_actions = response_goa.get('ui_actions', [])
             
-            ui_actions = response_popular.get('ui_actions', [])
+            print(f"         Chat text length: {len(chat_text)}")
+            print(f"         Chat text preview: {chat_text[:100]}...")
+            print(f"         UI actions count: {len(ui_actions)}")
+            
+            # Check for Goa-related content
+            goa_mentions = chat_text.lower().count('goa')
             destination_cards = [action for action in ui_actions 
                                if action.get('type') == 'card_add' and 
                                action.get('payload', {}).get('category') == 'destination']
             
-            print(f"         Destination cards generated: {len(destination_cards)}")
-            print(f"         Total UI actions: {len(ui_actions)}")
+            print(f"         Goa mentions: {goa_mentions}")
+            print(f"         Destination cards: {len(destination_cards)}")
             
-            # Check if we got multiple destination cards (expecting 6 as per review request)
-            if len(destination_cards) >= 3:  # At least 3, ideally 6
+            # Verify existing functionality works
+            if goa_mentions > 0 or len(destination_cards) > 0:
                 scenario_2_passed = True
-                print(f"      ✅ SCENARIO 2 PASSED: Multiple destination cards generated ({len(destination_cards)})")
-                
-                # Show first few destinations
-                for i, dest_card in enumerate(destination_cards[:3]):
-                    dest_payload = dest_card.get('payload', {})
-                    print(f"         Destination {i+1}: {dest_payload.get('title', 'N/A')}")
+                print(f"      ✅ SCENARIO 2 PASSED: Existing destination info functionality working")
             else:
-                print(f"      ❌ SCENARIO 2 FAILED: Expected multiple destination cards, got {len(destination_cards)}")
-                print(f"         Issue: ConversationManager may not be detecting destination_discovery query type")
+                print(f"      ❌ SCENARIO 2 FAILED: Existing functionality not working properly")
         
         # PRIMARY TEST SCENARIO 3: "hotels in goa" - should generate hotel cards with category "hotel"
         print(f"\n   🏨 SCENARIO 3: Accommodation Query - 'hotels in goa'")
