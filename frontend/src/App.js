@@ -2700,22 +2700,6 @@ function App() {
             setQuestionChips(questionChips.map(chip => chip.payload));
           }
         }
-          const accommodations = await generateAccommodationsFromAI(targetDestination, responses);
-          setGeneratedAccommodations(accommodations);
-        }
-        
-        // Process any UI actions (cards, recommendations)
-        if (data.ui_actions && data.ui_actions.length > 0) {
-          const newRecommendations = [];
-          data.ui_actions.forEach(action => {
-            if (action.type === 'card_add' && action.payload) {
-              newRecommendations.push(action.payload);
-            }
-          });
-          if (newRecommendations.length > 0) {
-            setRecommendations(newRecommendations);
-          }
-        }
         
       } else {
         throw new Error('Failed to generate itinerary');
