@@ -2489,6 +2489,7 @@ function App() {
       console.log('✅ Response data:', data);
       console.log('✅ Response ui_actions:', data.ui_actions);
       console.log('✅ Response chat_text:', data.chat_text);
+      console.log('✅ Processing response - checking ui_actions length:', data.ui_actions?.length);
 
       // Add assistant response
       const assistantMessage = {
