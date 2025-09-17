@@ -2733,6 +2733,8 @@ function App() {
           );
           
           if (variantCards.length > 0) {
+            console.log('🎯 Processing', variantCards.length, 'variant cards:', variantCards);
+            
             // Set variants as recommendations for the right panel
             setRecommendations(variantCards.map(card => card.payload));
             
@@ -2745,6 +2747,14 @@ function App() {
             });
             
             console.log('🎯 Set right panel to show', variantCards.length, 'itinerary variants');
+            console.log('🎯 Right panel content set to:', 'variants');
+            console.log('🎯 Itinerary state set:', {
+              destination: targetDestination,
+              variants: variantCards.map(card => card.payload),
+              user_preferences: responses
+            });
+          } else {
+            console.log('❌ No variant cards found in response!');
           }
           
           // Process other UI actions (question chips, etc.)
