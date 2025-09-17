@@ -692,6 +692,7 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
     'Himachal Pradesh': [31.1048, 77.1734]
   };
 
+  // Initialize map only once
   React.useEffect(() => {
     if (!isLoaded || map) return;
 
@@ -715,9 +716,32 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
       maxZoom: 19
     }).addTo(mapInstance);
 
-    // Add custom markers for destinations
-    if (destinations && destinations.length > 0) {
-      destinations.forEach(dest => {
+    // Add zoom controls with custom styling
+    mapInstance.zoomControl.setPosition('bottomright');
+
+    setMap(mapInstance);
+
+    // Cleanup function - only run when component unmounts
+    return () => {
+      if (mapInstance) {
+        mapInstance.remove();
+      }
+    };
+  }, [isLoaded]); // Only depend on isLoaded
+
+  // Update markers separately when destinations or highlights change
+  React.useEffect(() => {
+    if (!map || !destinations || destinations.length === 0) return;
+
+    // Clear existing markers
+    map.eachLayer((layer) => {
+      if (layer instanceof window.L.Marker) {
+        map.removeLayer(layer);
+      }
+    });
+
+    // Add updated markers
+    destinations.forEach(dest => {
       const coords = destinationCoords[dest.name] || [
         20 + (Math.random() - 0.5) * 30, // Random lat around India
         78 + (Math.random() - 0.5) * 20  // Random lng around India
@@ -747,7 +771,7 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
         popupAnchor: [0, -16]
       });
 
-      const marker = window.L.marker(coords, { icon: customIcon }).addTo(mapInstance);
+      const marker = window.L.marker(coords, { icon: customIcon }).addTo(map);
       
       marker.on('click', () => {
         onDestinationClick(dest);
@@ -765,21 +789,8 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
           </button>
         </div>
       `);
-      });
-    }
-
-    // Add zoom controls with custom styling
-    mapInstance.zoomControl.setPosition('bottomright');
-
-    setMap(mapInstance);
-
-    // Cleanup function
-    return () => {
-      if (mapInstance) {
-        mapInstance.remove();
-      }
-    };
-  }, [isLoaded, destinations, onDestinationClick, highlightedDestinations]);
+    });
+  }, [map, destinations, highlightedDestinations, onDestinationClick]);
 
   if (!isLoaded) {
     return (
