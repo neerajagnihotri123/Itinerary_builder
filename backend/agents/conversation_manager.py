@@ -397,10 +397,10 @@ class ConversationManager:
                 },
                 "metadata": {
                     "intent": "plan",
-                    "planner_output": planner_output,
-                    "validation": validation_result,
-                    "confidence": validation_result.get('confidence', 0.8),
-                    "agent": "conversation_manager"
+                    "variants_generated": len(priced_variants),
+                    "primary_persona": user_profile.get("persona_classification", {}).get("primary_persona", "unknown"),
+                    "agent": "conversation_manager",
+                    "enhanced_planning": True
                 }
             }
             
