@@ -1228,7 +1228,10 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
                 "highlights": variant["highlights"],
                 "days": variant["days"],
                 "recommended": variant.get("recommended", False),
-                "destination": destination
+                "destination": destination,
+                "detailed_itinerary": variant.get("detailed_itinerary", []),
+                "total_activities": len([act for day in variant.get("detailed_itinerary", []) for act in day.get("activities", [])]),
+                "activity_types": list(set([act["type"] for day in variant.get("detailed_itinerary", []) for act in day.get("activities", [])]))
             }
         }
         ui_actions.append(card)
