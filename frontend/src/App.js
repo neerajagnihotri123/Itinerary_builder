@@ -2555,9 +2555,9 @@ function App() {
                 budget: payload.current_budget
               }));
             }
-            console.log('🎯 About to set showTripPlanner to true');
+            console.log('🎯 Setting showTripPlanner to true NOW');
             setShowTripPlanner(true);
-            console.log('📋 Trip planner should now be showing with payload:', payload);
+            console.log('✅ setShowTripPlanner(true) called successfully');
           }
         });
 
