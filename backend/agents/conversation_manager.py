@@ -129,7 +129,7 @@ class ConversationManager:
                 return await self._handle_planner_flow(message, slots, retrieval_facts, session_id)
             
             elif intent == 'accommodation':
-                # Accommodation flow: retrieval_agent → accommodation_agent → booking flow
+                # Accommodation flow: Always trigger trip planner form for hotel bookings
                 return await self._handle_accommodation_flow(message, slots, retrieval_facts, session_id)
             
             elif intent == 'find':
