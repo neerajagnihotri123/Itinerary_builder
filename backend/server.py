@@ -1021,6 +1021,113 @@ async def chat_endpoint(request: ChatRequest):
             analytics_tags=["error"]
         )
 
+async def generate_quick_itinerary_variants(trip_details: dict, conversation_manager, session_id: str) -> dict:
+    """Generate itinerary variants quickly for demo purposes"""
+    
+    destination = trip_details.get("destination", "Unknown")
+    start_date = trip_details.get("start_date", "2024-12-15")
+    end_date = trip_details.get("end_date", "2024-12-20")
+    adults = trip_details.get("adults", 2)
+    budget = trip_details.get("budget_per_night", 8000)
+    
+    # Create 3 quick variants without complex LLM calls
+    variants = [
+        {
+            "type": "Adventurer",
+            "title": "Adventure Explorer",
+            "description": "Action-packed with water sports, hiking, and outdoor activities",
+            "price": int(budget * 3.5),
+            "highlights": ["Water Sports", "Adventure Activities", "Local Exploration", "Beach Hopping"],
+            "days": 4
+        },
+        {
+            "type": "Balanced", 
+            "title": "Perfect Balance",
+            "description": "Mix of adventure, culture, relaxation, and sightseeing",
+            "price": int(budget * 4),
+            "highlights": ["Cultural Sites", "Beach Relaxation", "Local Cuisine", "Scenic Views"],
+            "days": 4,
+            "recommended": True
+        },
+        {
+            "type": "Luxury",
+            "title": "Premium Experience", 
+            "description": "Luxury resorts, fine dining, spa treatments, and exclusive experiences",
+            "price": int(budget * 5.5),
+            "highlights": ["Luxury Resorts", "Fine Dining", "Spa & Wellness", "Private Tours"],
+            "days": 4
+        }
+    ]
+    
+    # Create variant cards
+    ui_actions = []
+    for variant in variants:
+        card = {
+            "type": "card_add",
+            "payload": {
+                "category": "itinerary_variant",
+                "id": f"variant_{variant['type'].lower()}",
+                "title": variant["title"],
+                "description": variant["description"],
+                "image": f"https://images.unsplash.com/800x400/?{destination.lower()}",
+                "price": variant["price"],
+                "currency": "INR",
+                "highlights": variant["highlights"],
+                "days": variant["days"],
+                "recommended": variant.get("recommended", False),
+                "destination": destination
+            }
+        }
+        ui_actions.append(card)
+    
+    # Add selection chips
+    ui_actions.extend([
+        {
+            "type": "question_chip",
+            "payload": {
+                "id": "select_adventurer",
+                "question": "I want the Adventure Explorer!",
+                "category": "variant_selection"
+            }
+        },
+        {
+            "type": "question_chip",
+            "payload": {
+                "id": "select_balanced",
+                "question": "Perfect Balance sounds great",
+                "category": "variant_selection"
+            }
+        },
+        {
+            "type": "question_chip",
+            "payload": {
+                "id": "select_luxury",
+                "question": "I prefer the Premium Experience",
+                "category": "variant_selection"
+            }
+        }
+    ])
+    
+    response_text = f"Fantastic! I've created 3 amazing {destination} itinerary options for you. Each one is designed for {adults} travelers from {start_date} to {end_date}. Which style excites you most?"
+    
+    return {
+        "chat_text": response_text,
+        "ui_actions": ui_actions,
+        "updated_slots": {
+            "destination": destination,
+            "start_date": start_date,
+            "end_date": end_date,
+            "adults": adults,
+            "budget_per_night": budget
+        },
+        "metadata": {
+            "intent": "itinerary_variants",
+            "variants_generated": len(variants),
+            "agent": "trip_planner",
+            "quick_generation": True
+        }
+    }
+
 @api_router.post("/trip-planner")
 async def handle_trip_planner_submission(request: dict) -> ChatResponse:
     """Handle trip planner form submission and generate itinerary variants"""
