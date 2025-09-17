@@ -2443,7 +2443,7 @@ function App() {
           })
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+          setTimeout(() => reject(new Error('Request timeout after 15 seconds')), 15000)
         )
       ]);
 
