@@ -2707,17 +2707,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          destination: tripDetails.destination,
-          start_date: tripDetails.startDate,
-          end_date: tripDetails.endDate,
-          adults: tripDetails.adults || 2,
-          children: tripDetails.children || 0,
-          budget_per_night: tripDetails.budget || 8000,
-          preferences: responses, // Include personalization responses
-          user_profile: { ...userProfile, ...responses },
-          session_id: sessionId
-        })
+        body: JSON.stringify(requestData)
       });
       
       if (response.ok) {
