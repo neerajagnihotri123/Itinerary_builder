@@ -3918,67 +3918,147 @@ function App() {
                 </div>
               </div>
 
-              {/* Variants Content */}
-              <div className="p-6 space-y-6">
+              {/* Rich Itinerary Variants - MindTrip Style */}
+              <div className="p-6 space-y-8">
                 {itinerary?.variants?.map((variant, index) => (
-                  <div key={index} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-                    {/* Variant Header */}
+                  <div key={index} className="bg-white rounded-2xl border border-slate-200 shadow-lg hover:shadow-xl transition-all duration-300">
+                    {/* Variant Header with Image */}
+                    <div className="relative">
+                      <img 
+                        src={variant.image || `https://images.unsplash.com/800x400/?${variant.destination?.toLowerCase()}`}
+                        alt={variant.title}
+                        className="w-full h-48 object-cover rounded-t-2xl"
+                        onError={(e) => {
+                          e.target.src = 'https://images.unsplash.com/800x400/?travel';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-t-2xl"></div>
+                      <div className="absolute bottom-4 left-6 text-white">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-2xl font-bold">{variant.title}</h3>
+                          {variant.recommended && (
+                            <span className="px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-full">
+                              ⭐ Recommended
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-orange-100 text-sm">{variant.description}</p>
+                      </div>
+                    </div>
+
+                    {/* Variant Stats */}
                     <div className="p-6 border-b border-slate-100">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-xl font-bold text-slate-900">{variant.title}</h3>
-                            {variant.recommended && (
-                              <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full">
-                                Recommended
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-slate-600 mb-4">{variant.description}</p>
-                          <div className="flex items-center gap-4 text-sm">
-                            <div className="flex items-center gap-1 text-slate-500">
-                              <Calendar className="w-4 h-4" />
-                              <span>{variant.days} days</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-green-600 font-semibold">
-                              <span>₹{variant.price?.toLocaleString()}</span>
-                            </div>
-                          </div>
+                      <div className="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                          <div className="text-2xl font-bold text-orange-600">{variant.days}</div>
+                          <div className="text-xs text-slate-500">Days</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-orange-600">{variant.total_activities || 0}</div>
+                          <div className="text-xs text-slate-500">Activities</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-orange-600">{variant.activity_types?.length || 0}</div>
+                          <div className="text-xs text-slate-500">Types</div>
+                        </div>
+                        <div>
+                          <div className="text-2xl font-bold text-green-600">₹{(variant.price || 0).toLocaleString()}</div>
+                          <div className="text-xs text-slate-500">Total</div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Variant Highlights */}
+                    {/* Day-by-Day Itinerary - MindTrip Style */}
                     <div className="p-6">
-                      <h4 className="font-semibold text-slate-900 mb-3">What's Included:</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {variant.highlights?.map((highlight, hIndex) => (
-                          <div key={hIndex} className="flex items-center gap-2 text-sm text-slate-700">
-                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
-                            <span>{highlight}</span>
+                      <h4 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-orange-600" />
+                        Day-by-Day Itinerary
+                      </h4>
+                      
+                      <div className="space-y-4">
+                        {variant.detailed_itinerary?.map((day, dayIndex) => (
+                          <div key={dayIndex} className="border-l-4 border-orange-200 pl-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                {day.day}
+                              </div>
+                              <div>
+                                <h5 className="font-semibold text-slate-900">{day.theme}</h5>
+                                <p className="text-xs text-slate-500">{day.activities?.length || 0} activities planned</p>
+                              </div>
+                            </div>
+                            
+                            <div className="ml-11 space-y-3">
+                              {day.activities?.map((activity, actIndex) => (
+                                <div key={actIndex} className="flex gap-3 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                                  <img 
+                                    src={activity.image || `https://images.unsplash.com/200x200/?${activity.type}`}
+                                    alt={activity.name}
+                                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                                    onError={(e) => {
+                                      e.target.src = 'https://images.unsplash.com/200x200/?activity';
+                                    }}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <h6 className="font-medium text-slate-900 text-sm">{activity.name}</h6>
+                                        <p className="text-xs text-slate-600 mb-1">{activity.location}</p>
+                                        <p className="text-xs text-slate-500">{activity.description}</p>
+                                      </div>
+                                      <div className="text-right ml-2 flex-shrink-0">
+                                        <div className="text-sm font-semibold text-green-600">₹{activity.cost?.toLocaleString()}</div>
+                                        <div className="text-xs text-slate-500">{activity.duration}</div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2">
+                                      <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                                        {activity.time}
+                                      </span>
+                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full capitalize">
+                                        {activity.type.replace('_', ' ')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         ))}
                       </div>
+
+                      {/* Highlights Grid */}
+                      <div className="mt-6 pt-6 border-t border-slate-100">
+                        <h4 className="font-semibold text-slate-900 mb-3">Experience Highlights</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {variant.highlights?.map((highlight, hIndex) => (
+                            <div key={hIndex} className="flex items-center gap-2 text-sm text-slate-700 bg-orange-50 rounded-lg p-2">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0"></div>
+                              <span className="font-medium">{highlight}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                       
-                      {/* Action Button */}
+                      {/* Enhanced Action Button */}
                       <button 
                         onClick={() => {
                           console.log('🎯 Selected variant:', variant.title);
-                          // Here we would generate the detailed itinerary for this variant
-                          // For now, show a message
+                          
+                          // Set the detailed itinerary to the generated itinerary state
+                          setGeneratedItinerary(variant.detailed_itinerary || []);
+                          setRightPanelContent('itinerary');
+                          
                           const message = {
                             id: Date.now().toString(),
                             role: 'assistant',
-                            content: `Perfect choice! You've selected the ${variant.title} experience. Let me create your detailed day-by-day itinerary...`
+                            content: `Perfect! You've chosen the ${variant.title} experience. Here's your detailed ${variant.days}-day itinerary with ${variant.total_activities} amazing activities!`
                           };
                           setMessages(prev => [...prev, message]);
-                          
-                          // Switch to detailed itinerary view
-                          // This would call the backend to generate detailed itinerary
                         }}
-                        className="w-full mt-4 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold py-3 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-200"
+                        className="w-full mt-6 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
                       >
-                        Choose {variant.title}
+                        🚀 Choose {variant.title} Experience
                       </button>
                     </div>
                   </div>
