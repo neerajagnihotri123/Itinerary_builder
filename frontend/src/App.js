@@ -2683,8 +2683,8 @@ function App() {
             // Set variants as recommendations for the right panel
             setRecommendations(variantCards.map(card => card.payload));
             
-            // Switch to itinerary view in right panel
-            setRightPanelContent('itinerary');
+            // Switch to variants view in right panel
+            setRightPanelContent('variants');
             setItinerary({
               destination: targetDestination,
               variants: variantCards.map(card => card.payload),
