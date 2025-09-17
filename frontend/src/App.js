@@ -576,62 +576,202 @@ const RecommendationCard = ({ item, onAction }) => {
   );
 };
 
-const MessageBubble = ({ message, isUser }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    transition={{ duration: 0.3 }}
-    className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
-  >
-    <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'} flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
-      {/* User Icon */}
-      {isUser && (
-        <div 
-          className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm"
-          style={{ 
-            background: 'linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%)',
-            color: 'var(--light-50)'
-          }}
-        >
-          U
+const MessageBubble = ({ message, isUser, onSelectVariant }) => {
+  // Handle special itinerary timeline message
+  if (message.content === 'itinerary_timeline') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.3 }}
+        className="flex justify-start mb-6"
+      >
+        <div className="max-w-[95%] flex flex-row items-start gap-3">
+          {/* AI Avatar */}
+          <div className="flex-shrink-0">
+            <Avatar />
+          </div>
+          
+          <div className="flex flex-col flex-1">
+            {/* Name label */}
+            <span className="text-sm font-medium mb-2 ml-1" style={{ color: 'var(--accent-500)' }}>
+              Travello.ai
+            </span>
+            
+            {/* Itinerary Timeline */}
+            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+              {/* Header */}
+              <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-4">
+                <h3 className="text-xl font-bold mb-1">Your Personalized Itinerary Options</h3>
+                <p className="text-orange-100 text-sm">
+                  3 carefully crafted experiences for {message.destination} • Choose your perfect adventure
+                </p>
+              </div>
+              
+              {/* Timeline of Variants */}
+              <div className="divide-y divide-slate-200">
+                {message.variants?.map((variant, index) => (
+                  <motion.div
+                    key={index}
+                    className="p-6 hover:bg-slate-50 transition-colors cursor-pointer group"
+                    onClick={() => onSelectVariant && onSelectVariant(variant)}
+                    whileHover={{ x: 4 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex gap-4">
+                      {/* Timeline indicator */}
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm ${
+                          variant.recommended 
+                            ? 'bg-gradient-to-r from-orange-500 to-orange-600' 
+                            : 'bg-gradient-to-r from-slate-500 to-slate-600'
+                        }`}>
+                          {index + 1}
+                        </div>
+                        {index < message.variants.length - 1 && (
+                          <div className="w-0.5 h-16 bg-slate-200 mt-2"></div>
+                        )}
+                      </div>
+                      
+                      {/* Variant Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="text-lg font-bold text-slate-900">{variant.title}</h4>
+                              {variant.recommended && (
+                                <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                                  ⭐ Recommended
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-slate-600 text-sm mb-3">{variant.description}</p>
+                          </div>
+                          <div className="text-right ml-4 flex-shrink-0">
+                            <div className="text-xl font-bold text-green-600">₹{(variant.price || 0).toLocaleString()}</div>
+                            <div className="text-xs text-slate-500">Total Cost</div>
+                          </div>
+                        </div>
+                        
+                        {/* Quick Stats */}
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <div className="text-center bg-slate-100 rounded-lg p-2">
+                            <div className="text-lg font-bold text-orange-600">{variant.days}</div>
+                            <div className="text-xs text-slate-500">Days</div>
+                          </div>
+                          <div className="text-center bg-slate-100 rounded-lg p-2">
+                            <div className="text-lg font-bold text-orange-600">{variant.total_activities || 0}</div>
+                            <div className="text-xs text-slate-500">Activities</div>
+                          </div>
+                          <div className="text-center bg-slate-100 rounded-lg p-2">
+                            <div className="text-lg font-bold text-orange-600">{variant.activity_types?.length || 0}</div>
+                            <div className="text-xs text-slate-500">Types</div>
+                          </div>
+                        </div>
+                        
+                        {/* Highlights Preview */}
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-1">
+                            {variant.highlights?.slice(0, 3).map((highlight, hIndex) => (
+                              <span key={hIndex} className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">
+                                {highlight}
+                              </span>
+                            ))}
+                            {variant.highlights?.length > 3 && (
+                              <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
+                                +{variant.highlights.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Select Button */}
+                        <button 
+                          className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold py-2 px-4 rounded-lg hover:from-orange-700 hover:to-orange-800 transition-all duration-200 group-hover:shadow-md"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectVariant && onSelectVariant(variant);
+                          }}
+                        >
+                          View Detailed Itinerary →
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              {/* Footer */}
+              <div className="bg-slate-50 p-4 text-center">
+                <p className="text-slate-600 text-sm">
+                  Select any option above to see the complete day-by-day itinerary with activities, timings, and costs
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
-      
-      {/* AI Avatar */}
-      {!isUser && (
-        <div className="flex-shrink-0">
-          <Avatar />
-        </div>
-      )}
-      
-      <div className="flex flex-col">
-        {/* Name label */}
-        {!isUser && (
-          <span className="text-sm font-medium mb-1 ml-1" style={{ color: 'var(--accent-500)' }}>
-            Travello.ai
-          </span>
+      </motion.div>
+    );
+  }
+
+  // Regular message bubble
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+    >
+      <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'} flex ${isUser ? 'flex-row-reverse' : 'flex-row'} items-end gap-3`}>
+        {/* User Icon */}
+        {isUser && (
+          <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm"
+            style={{ 
+              background: 'linear-gradient(135deg, var(--accent-500) 0%, var(--accent-600) 100%)',
+              color: 'var(--light-50)'
+            }}
+          >
+            U
+          </div>
         )}
         
-        {/* Message bubble */}
-        <div
-          className={`p-4 rounded-2xl shadow-lg ${
-            isUser
-              ? 'text-white'
-              : 'glass-morphism'
-          }`}
-          style={{
-            background: isUser 
-              ? 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)'
-              : undefined,
-            color: isUser ? 'var(--light-50)' : 'var(--charcoal-900)'
-          }}
-        >
-          <p className="leading-relaxed">{message.content}</p>
+        {/* AI Avatar */}
+        {!isUser && (
+          <div className="flex-shrink-0">
+            <Avatar />
+          </div>
+        )}
+        
+        <div className="flex flex-col">
+          {/* Name label */}
+          {!isUser && (
+            <span className="text-sm font-medium mb-1 ml-1" style={{ color: 'var(--accent-500)' }}>
+              Travello.ai
+            </span>
+          )}
+          
+          {/* Message bubble */}
+          <div
+            className={`p-4 rounded-2xl shadow-lg ${
+              isUser
+                ? 'text-white'
+                : 'glass-morphism'
+            }`}
+            style={{
+              background: isUser 
+                ? 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)'
+                : undefined,
+              color: isUser ? 'var(--light-50)' : 'var(--charcoal-900)'
+            }}
+          >
+            <p className="leading-relaxed">{message.content}</p>
+          </div>
         </div>
       </div>
-    </div>
-  </motion.div>
-);
+    </motion.div>
+  );
+};
 
 const Chip = ({ chip, onClick }) => (
   <motion.button
