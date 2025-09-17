@@ -2571,6 +2571,7 @@ function App() {
 
     } catch (error) {
       console.error('❌ API Error:', error);
+      console.error('❌ Error details:', error.message);
       
       const errorMessage = {
         id: `error_${Date.now()}`,
