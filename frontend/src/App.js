@@ -2686,6 +2686,20 @@ function App() {
     
     try {
       console.log('🎯 Calling trip-planner endpoint with personalization data');
+      console.log('🎯 Using BACKEND_URL:', BACKEND_URL);
+      
+      const requestData = {
+        destination: tripDetails.destination,
+        start_date: tripDetails.startDate,
+        end_date: tripDetails.endDate,
+        adults: tripDetails.adults || 2,
+        children: tripDetails.children || 0,
+        budget_per_night: tripDetails.budget || 8000,
+        preferences: responses,
+        user_profile: { ...userProfile, ...responses },
+        session_id: sessionId
+      };
+      console.log('🎯 Request data:', requestData);
       
       // Call the trip-planner endpoint with personalization data
       const response = await fetch(`${BACKEND_URL}/api/trip-planner`, {
