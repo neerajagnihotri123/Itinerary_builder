@@ -1588,45 +1588,41 @@ class TravelloAPITester:
             else:
                 print(f"      ❌ SCENARIO 4 FAILED: General conversation not working properly")
         
-        # BACKEND VERIFICATION: Check ConversationManager query type detection
-        print(f"\n   🔍 BACKEND VERIFICATION:")
-        print(f"      Query Type Detection Results:")
-        print(f"         Kerala query: {'destination_specific' if scenario_1_passed else 'Unknown/Failed'}")
-        print(f"         Popular destinations: {'destination_discovery' if scenario_2_passed else 'Unknown/Failed'}")
-        print(f"         Hotels in Goa: {'accommodation_query' if scenario_3_passed else 'Unknown/Failed'}")
+        # Overall assessment of enhanced chatbot system
+        enhanced_features_passed = sum([
+            profile_intake_passed, variants_passed, pricing_passed, 
+            agent_integration_passed, core_functionality_passed
+        ])
         
-        # DEBUG INFORMATION: Check for common issues
-        print(f"\n   🐛 DEBUG INFORMATION:")
-        if not scenario_1_passed:
-            print(f"      Kerala Issue: ConversationManager may be prioritizing slot-filling over content generation")
-            print(f"      Expected: Single destination card with Kerala data")
-            print(f"      Check: get_destination_data() function and query_type metadata")
+        priority_scenarios_passed = sum([
+            scenario_1_passed, scenario_2_passed, scenario_3_passed, scenario_4_passed
+        ])
         
-        if not scenario_2_passed:
-            print(f"      Popular Destinations Issue: Query type may not be detected as destination_discovery")
-            print(f"      Expected: 6 destination cards for popular destinations")
-            print(f"      Check: ConversationManager query classification logic")
+        print(f"\n   🎯 ENHANCED CHATBOT SYSTEM SUMMARY:")
+        print(f"      Profile Intake Flow: {'✅ PASS' if profile_intake_passed else '❌ FAIL'}")
+        print(f"      Itinerary Variants Generation: {'✅ PASS' if variants_passed else '❌ FAIL'}")
+        print(f"      Dynamic Pricing Integration: {'✅ PASS' if pricing_passed else '❌ FAIL'}")
+        print(f"      Agent Integration: {'✅ PASS' if agent_integration_passed else '❌ FAIL'}")
+        print(f"      Core Functionality Preservation: {'✅ PASS' if core_functionality_passed else '❌ FAIL'}")
+        print(f"      Enhanced Features: {enhanced_features_passed}/5 passed")
         
-        if not scenario_3_passed:
-            print(f"      Hotels Issue: Accommodation agent may not have Goa data")
-            print(f"      Expected: Hotel cards with category 'hotel'")
-            print(f"      Check: MOCK_HOTELS data and accommodation agent integration")
+        print(f"\n   📋 PRIORITY TEST SCENARIOS:")
+        print(f"      'plan a trip to Kerala' → Profile intake: {'✅' if scenario_1_passed else '❌'}")
+        print(f"      'tell me about Goa' → Works as before: {'✅' if scenario_2_passed else '❌'}")
+        print(f"      'hotels in Manali' → Works as before: {'✅' if scenario_3_passed else '❌'}")
+        print(f"      General conversation flow: {'✅' if scenario_4_passed else '❌'}")
+        print(f"      Priority Scenarios: {priority_scenarios_passed}/4 passed")
         
-        # Overall assessment
-        scenarios_passed = sum([scenario_1_passed, scenario_2_passed, scenario_3_passed])
-        print(f"\n   🎯 ENHANCED CHAT FUNCTIONALITY SUMMARY:")
-        print(f"      Scenario 1 (Kerala Destination): {'PASS' if scenario_1_passed else 'FAIL'}")
-        print(f"      Scenario 2 (Popular Destinations): {'PASS' if scenario_2_passed else 'FAIL'}")
-        print(f"      Scenario 3 (Hotels in Goa): {'PASS' if scenario_3_passed else 'FAIL'}")
-        print(f"      Total: {scenarios_passed}/3 primary scenarios passed")
+        # Demo readiness assessment
+        demo_ready = (enhanced_features_passed >= 3 and priority_scenarios_passed >= 3)
+        print(f"\n   🚀 DEMO READINESS: {'✅ READY' if demo_ready else '❌ NEEDS WORK'}")
         
-        # Expected results verification
-        print(f"\n   📋 EXPECTED RESULTS VERIFICATION:")
-        print(f"      ✓ 'tell me about kerala' → 1 destination card: {'✅' if scenario_1_passed else '❌'}")
-        print(f"      ✓ 'popular destinations' → 6 destination cards: {'✅' if scenario_2_passed else '❌'}")
-        print(f"      ✓ 'hotels in goa' → hotel cards: {'✅' if scenario_3_passed else '❌'}")
+        if demo_ready:
+            print(f"      System is ready for 12:30 demo with enhanced chatbot features!")
+        else:
+            print(f"      System needs attention before demo - check failed scenarios above")
         
-        return scenarios_passed >= 2  # Pass if at least 2/3 scenarios work
+        return demo_ready
 
     def test_ai_integration(self):
         """Test AI integration with multiple travel queries"""
