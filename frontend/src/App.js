@@ -2464,6 +2464,7 @@ function App() {
       // Process UI actions for cards, itineraries, and question chips
       if (data.ui_actions && data.ui_actions.length > 0) {
         console.log('🎨 Processing UI actions:', data.ui_actions.length);
+        console.log('🎨 UI Actions details:', data.ui_actions);
         
         const newRecommendations = [];
         const newQuestionChips = [];
