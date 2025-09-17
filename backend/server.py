@@ -1031,6 +1031,19 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
     budget = trip_details.get("budget_per_night", 8000)
     preferences = trip_details.get("preferences", {})
     
+    # Calculate actual trip duration from dates
+    from datetime import datetime
+    try:
+        start_dt = datetime.fromisoformat(start_date) if start_date else datetime(2024, 12, 15)
+        end_dt = datetime.fromisoformat(end_date) if end_date else datetime(2024, 12, 20)
+        actual_days = (end_dt - start_dt).days
+        # Ensure minimum 1 day
+        trip_duration = max(1, actual_days)
+        print(f"🗓️ Calculated trip duration: {trip_duration} days ({start_date} to {end_date})")
+    except Exception as e:
+        print(f"⚠️ Date calculation error: {e}, using default 4 days")
+        trip_duration = 4
+    
     # Create 3 personalized variants with rich details like MindTrip
     base_variants = [
         {
