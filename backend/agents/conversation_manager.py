@@ -1047,6 +1047,73 @@ RESPONSE STYLE:
             })
         return cards
     
+    async def _present_trip_planner_form(self, message: str, slots: UserSlots, missing_slots: List[str], session_id: str) -> Dict[str, Any]:
+        """Present trip planner form to collect user preferences and details"""
+        
+        # Generate contextual response based on the user's request
+        contextual_response = await self._generate_trip_planning_response(message, slots)
+        
+        return {
+            "chat_text": contextual_response,
+            "ui_actions": [
+                {
+                    "type": "trip_planner_card",
+                    "payload": {
+                        "title": "Plan Your Perfect Trip",
+                        "description": "Let's create an amazing itinerary tailored just for you!",
+                        "destination": slots.destination or "",
+                        "start_date": slots.start_date or "",
+                        "end_date": slots.end_date or "",
+                        "adults": slots.adults,
+                        "children": slots.children,
+                        "budget_per_night": slots.budget_per_night or 8000,
+                        "missing_slots": missing_slots,
+                        "session_id": session_id
+                    }
+                }
+            ],
+            "metadata": {
+                "intent": "plan",
+                "requires_form": True,
+                "form_type": "trip_planner",
+                "agent": "conversation_manager"
+            }
+        }
+    
+    async def _generate_trip_planning_response(self, message: str, slots: UserSlots) -> str:
+        """Generate contextual response for trip planning queries"""
+        
+        try:
+            context = f"""
+            User wants to plan a trip. Message: "{message}"
+            Current info: destination={slots.destination}, dates={slots.start_date}-{slots.end_date}
+            
+            Generate an enthusiastic, helpful response that:
+            1. Acknowledges their trip planning request
+            2. Mentions the destination if provided
+            3. Explains we need a few details to create the perfect itinerary
+            4. Sounds excited and personalized
+            5. Keep it 1-2 sentences, warm and engaging
+            
+            Examples:
+            - "Fantastic! Kerala is absolutely magical. Let me gather a few details to create your perfect Kerala adventure!"
+            - "I'd love to help plan an amazing trip for you! Just need a few details to craft the perfect itinerary."
+            """
+            
+            from emergentintegrations.llm.chat import UserMessage
+            user_message = UserMessage(text=context)
+            response = await self.llm_client.send_message(user_message)
+            
+            return response.content if hasattr(response, 'content') else str(response)
+            
+        except Exception as e:
+            print(f"Trip planning response generation failed: {e}")
+            # Fallback response
+            if slots.destination:
+                return f"Wonderful! {slots.destination} is an incredible destination. Let me gather a few details to create your perfect itinerary!"
+            else:
+                return "I'm excited to help plan your perfect trip! Let me collect a few details to create an amazing itinerary just for you."
+    
     def _convert_ux_actions_to_ui_actions(self, ux_actions: List[Dict]) -> List[Dict[str, Any]]:
         """Convert UX agent actions to UI actions format"""
         ui_actions = []
