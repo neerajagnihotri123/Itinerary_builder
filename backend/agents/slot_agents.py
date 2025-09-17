@@ -179,8 +179,22 @@ class SlotAgent:
                     "clarification_question": question
                 }
         
-        # Step 3: Skip LLM for general recommendation queries, general planning, confirmations, category searches, and single-word intents
-        if any(word in message_lower for word in ['recommend', 'recommendations', 'suggest', 'popular', 'give me', 'plan a trip', 'plan trip', 'yes', 'okay', 'ok', 'sure', 'proceed', 'beach destinations', 'mountain destinations', 'hill stations', 'destinations in india', 'hotels', 'accommodation', 'tips', 'advice']):
+        # Step 3: Skip LLM for general greetings, recommendation queries, planning, confirmations, category searches
+        skip_llm_patterns = [
+            # General greetings and conversation starters
+            'hello', 'hi', 'hey', 'hiya', 'good morning', 'good evening', 'good afternoon',
+            'help', 'what can you do', 'how are you', 'thanks', 'thank you',
+            # General queries that don't need destination extraction
+            'recommend', 'recommendations', 'suggest', 'popular', 'give me', 
+            'plan a trip', 'plan trip', 'create itinerary', 'make plan',
+            # Confirmations
+            'yes', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect',
+            # Category searches
+            'beach destinations', 'mountain destinations', 'hill stations', 'destinations in india',
+            'hotels', 'accommodation', 'tips', 'advice', 'information'
+        ]
+        
+        if any(pattern in message_lower for pattern in skip_llm_patterns):
             return {
                 "destination_name": None,
                 "canonical_place_id": None,
