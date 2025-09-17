@@ -331,6 +331,13 @@ Additional Guidelines:
 Focus on creating an itinerary that a real traveler could actually follow.
 """
             
+            # Check cache first
+            cache_key = hashlib.md5(enhanced_context.encode()).hexdigest()
+            cached_response = get_cached_response(cache_key)
+            if cached_response:
+                print("🚀 Using cached itinerary response")
+                return cached_response
+            
             # Create and send the message with timeout
             user_message = UserMessage(text=enhanced_context)
             try:
