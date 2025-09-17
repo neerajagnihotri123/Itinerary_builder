@@ -2521,7 +2521,6 @@ function App() {
   const [currentTourImageIndex, setCurrentTourImageIndex] = useState(0);
   const [currentActivityImageIndex, setCurrentActivityImageIndex] = useState(0);
   const [currentDestinationImageIndex, setCurrentDestinationImageIndex] = useState(0);
-  const [selectedVariant, setSelectedVariant] = useState(null);
 
   // Handle variant selection from timeline
   const handleVariantSelection = (variant) => {
