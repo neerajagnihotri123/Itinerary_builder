@@ -1104,7 +1104,7 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "description": "Mix of adventure, culture, relaxation, and sightseeing",
             "price": int(budget * 4),
             "base_highlights": ["Cultural Sites", "Beach Relaxation", "Local Cuisine", "Scenic Views"],
-            "days": 4,
+            "days": trip_duration,
             "recommended": True,
             "detailed_itinerary": [
                 {
