@@ -1021,6 +1021,56 @@ async def chat_endpoint(request: ChatRequest):
             analytics_tags=["error"]
         )
 
+@api_router.post("/trip-planner")
+async def handle_trip_planner_submission(request: dict) -> ChatResponse:
+    """Handle trip planner form submission and generate itinerary variants"""
+    try:
+        print(f"🎯 Trip planner form submitted: {request}")
+        
+        # Extract trip details from form submission
+        trip_details = {
+            "destination": request.get("destination"),
+            "start_date": request.get("start_date"),
+            "end_date": request.get("end_date"), 
+            "adults": request.get("adults", 2),
+            "children": request.get("children", 0),
+            "budget_per_night": request.get("budget_per_night", 8000),
+            "preferences": request.get("preferences", {}),
+            "user_profile": request.get("user_profile", {})
+        }
+        
+        session_id = request.get("session_id", str(uuid.uuid4()))
+        
+        # Initialize conversation manager with LLM client
+        chat_client = LlmChat(
+            api_key=emergent_key,
+            session_id=session_id,
+            system_message="You are a helpful travel assistant that provides personalized travel recommendations."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        conversation_manager = ConversationManager(chat_client)
+        
+        # Generate personalized itinerary variants
+        result = await conversation_manager.generate_personalized_itinerary_variants(trip_details, session_id)
+        
+        return ChatResponse(
+            chat_text=result.get("chat_text", "I've created amazing itinerary options for you!"),
+            ui_actions=result.get("ui_actions", []),
+            updated_profile=trip_details.get("user_profile", {}),
+            followup_questions=[],
+            analytics_tags=["trip_planner_submission", "itinerary_variants"]
+        )
+        
+    except Exception as e:
+        print(f"Trip planner endpoint error: {e}")
+        return ChatResponse(
+            chat_text="I encountered an issue generating your itinerary. Let me try a different approach!",
+            ui_actions=[],
+            updated_profile={},
+            followup_questions=[],
+            analytics_tags=["trip_planner_error"]
+        )
+
 async def handle_simple_slot_filling(message: str, slots: Dict[str, Any]) -> Dict[str, Any]:
     """Simple fallback slot filling when multi-agent system fails"""
     message_lower = message.lower()
