@@ -2404,6 +2404,24 @@ function App() {
     return found;
   };
 
+  const progressiveLoading = (messages, duration = 3000) => {
+    let stage = 0;
+    setLoadingStage(0);
+    setLoadingMessage(messages[0]);
+    
+    const interval = setInterval(() => {
+      stage++;
+      if (stage < messages.length) {
+        setLoadingStage(stage);
+        setLoadingMessage(messages[stage]);
+      } else {
+        clearInterval(interval);
+      }
+    }, duration / messages.length);
+    
+    return interval;
+  };
+
   const handleSendMessage = async () => {
     console.log('🚀 handleSendMessage called!');
     
