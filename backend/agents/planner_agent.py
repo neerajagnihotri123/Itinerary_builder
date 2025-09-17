@@ -366,6 +366,10 @@ Focus on creating an itinerary that a real traveler could actually follow.
                 
                 json.loads(content)
                 print(f"✅ LLM generation successful: {len(content)} characters, valid JSON")
+                
+                # Cache the response
+                cache_response(cache_key, content)
+                
                 return content
             except json.JSONDecodeError:
                 print(f"❌ LLM generated invalid JSON, using intelligent fallback")
