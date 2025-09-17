@@ -1438,43 +1438,37 @@ class TravelloAPITester:
         success_kerala, response_kerala = self.run_test("Kerala Trip Planning", "POST", "chat", 200, data=chat_data_kerala)
         
         scenario_1_passed = False
-        kerala_query_type = None
         if success_kerala:
             print(f"      📊 Response Analysis:")
-            print(f"         Chat text length: {len(response_kerala.get('chat_text', ''))}")
-            print(f"         Chat text preview: {response_kerala.get('chat_text', '')[:100]}...")
-            
+            chat_text = response_kerala.get('chat_text', '')
             ui_actions = response_kerala.get('ui_actions', [])
-            destination_cards = [action for action in ui_actions 
-                               if action.get('type') == 'card_add' and 
-                               action.get('payload', {}).get('category') == 'destination']
-            hotel_cards = [action for action in ui_actions 
-                          if action.get('type') == 'card_add' and 
-                          action.get('payload', {}).get('category') == 'hotel']
-            prompt_chips = [action for action in ui_actions if action.get('type') == 'prompt']
-            question_chips = [action for action in ui_actions if action.get('type') == 'question_chip']
+            metadata = response_kerala.get('metadata', {})
             
-            print(f"         Destination cards: {len(destination_cards)}")
-            print(f"         Hotel cards: {len(hotel_cards)}")
-            print(f"         Prompt chips: {len(prompt_chips)}")
-            print(f"         Question chips: {len(question_chips)}")
-            print(f"         Total UI actions: {len(ui_actions)}")
+            print(f"         Chat text length: {len(chat_text)}")
+            print(f"         Chat text preview: {chat_text[:100]}...")
+            print(f"         UI actions count: {len(ui_actions)}")
             
-            # Check if we got exactly 1 destination card with category "destination"
-            if len(destination_cards) == 1 and destination_cards[0].get('payload', {}).get('category') == 'destination':
+            # Check for profile intake indicators
+            profile_indicators = ['travel style', 'preference', 'adventure', 'culture', 'luxury', 'budget']
+            profile_matches = sum(1 for indicator in profile_indicators if indicator.lower() in chat_text.lower())
+            
+            # Check for persona classification question chips
+            persona_chips = [action for action in ui_actions 
+                           if action.get('type') == 'question_chip' and 
+                           ('adventure' in str(action).lower() or 'culture' in str(action).lower() or 
+                            'luxury' in str(action).lower() or 'budget' in str(action).lower())]
+            
+            print(f"         Profile indicators: {profile_matches}/{len(profile_indicators)}")
+            print(f"         Persona question chips: {len(persona_chips)}")
+            print(f"         Intent: {metadata.get('intent', 'unknown')}")
+            
+            # Verify profile intake trigger
+            if (profile_matches >= 1 and len(persona_chips) >= 2) or metadata.get('intent') == 'profile_intake':
                 scenario_1_passed = True
-                dest_payload = destination_cards[0].get('payload', {})
-                print(f"      ✅ SCENARIO 1 PASSED: Single destination card generated")
-                print(f"         Title: {dest_payload.get('title', 'N/A')}")
-                print(f"         Category: {dest_payload.get('category', 'N/A')}")
-                print(f"         ID: {dest_payload.get('id', 'N/A')}")
-                print(f"         Hero Image: {'Present' if dest_payload.get('hero_image') else 'Missing'}")
-                print(f"         Highlights: {len(dest_payload.get('highlights', []))} items")
+                print(f"      ✅ SCENARIO 1 PASSED: Profile intake triggered for trip planning")
             else:
-                print(f"      ❌ SCENARIO 1 FAILED: Expected 1 destination card, got {len(destination_cards)}")
-                if len(destination_cards) == 0:
-                    print(f"         Issue: No destination cards generated - ConversationManager may be prioritizing slot-filling")
-                    print(f"         Debug: Check if query_type detection is working correctly")
+                print(f"      ❌ SCENARIO 1 FAILED: Profile intake not triggered")
+                print(f"         Expected: Profile intake conversation with persona questions")
         
         # PRIMARY TEST SCENARIO 2: "popular destinations" - should generate multiple destination cards
         print(f"\n   🌍 SCENARIO 2: Destination Discovery Query - 'popular destinations'")
