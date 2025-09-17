@@ -2259,6 +2259,8 @@ function App() {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [loadingStage, setLoadingStage] = useState(0);
   const [recommendations, setRecommendations] = useState([]);
   const [currentChips, setCurrentChips] = useState([]);
   const [questionChips, setQuestionChips] = useState([]);
