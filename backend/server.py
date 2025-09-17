@@ -1052,7 +1052,7 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "description": "Action-packed with water sports, hiking, and outdoor activities",
             "price": int(budget * 3.5),
             "base_highlights": ["Water Sports", "Adventure Activities", "Local Exploration", "Beach Hopping"],
-            "days": 4,
+            "days": trip_duration,
             "detailed_itinerary": [
                 {
                     "day": 1,
