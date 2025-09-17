@@ -2522,6 +2522,22 @@ function App() {
   const [currentActivityImageIndex, setCurrentActivityImageIndex] = useState(0);
   const [currentDestinationImageIndex, setCurrentDestinationImageIndex] = useState(0);
   const [selectedVariant, setSelectedVariant] = useState(null);
+
+  // Handle variant selection from timeline
+  const handleVariantSelection = (variant) => {
+    console.log('🎯 Selected variant from timeline:', variant.title);
+    setSelectedVariant(variant);
+    setRightPanelContent('variant_details');
+    
+    // Add confirmation message to chat
+    const message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `Perfect choice! You've selected the ${variant.title} experience. Check the right panel for the complete day-by-day itinerary with all activities, timings, and costs. Ready to book your ${variant.days}-day adventure?`
+    };
+    setMessages(prev => [...prev, message]);
+  };
+  const [selectedVariant, setSelectedVariant] = useState(null);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
