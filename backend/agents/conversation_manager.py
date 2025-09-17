@@ -385,7 +385,7 @@ class ConversationManager:
             persona_response = await self._generate_persona_based_response(priced_variants, mock_user_profile)
             
             return {
-                "chat_text": ux_response.get('human_text', 'Here\'s your personalized itinerary!'),
+                "chat_text": persona_response,
                 "ui_actions": ui_actions,
                 "updated_slots": {
                     "destination": slots.destination,
