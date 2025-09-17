@@ -55,6 +55,25 @@ class UserSlots:
     budget_per_night: Optional[float] = None
     budget_type: str = "unknown"
 
+def get_cache_key(prompt: str, context: str = "") -> str:
+    """Generate cache key for LLM requests"""
+    combined = f"{prompt}:{context}"
+    return hashlib.md5(combined.encode()).hexdigest()
+
+def get_cached_response(cache_key: str) -> Optional[str]:
+    """Get cached LLM response if available and not expired"""
+    if cache_key in LLM_CACHE:
+        response, timestamp = LLM_CACHE[cache_key]
+        if time.time() - timestamp < CACHE_TTL:
+            return response
+        else:
+            del LLM_CACHE[cache_key]  # Clean expired cache
+    return None
+
+def cache_response(cache_key: str, response: str):
+    """Cache LLM response with timestamp"""
+    LLM_CACHE[cache_key] = (response, time.time())
+
 class ConversationManager:
     """
     Professional travel concierge assistant (persona: friendly, concise, helpful)
