@@ -2429,28 +2429,37 @@ function App() {
     try {
       console.log('📡 Making API call...');
       
-      const response = await fetch(`${BACKEND_URL}/api/chat`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: currentInput,
-          session_id: sessionId,
-          user_profile: userProfile,
-          trip_details: tripDetails
-        })
-      });
+      const response = await Promise.race([
+        fetch(`${BACKEND_URL}/api/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: currentInput,
+            session_id: sessionId,
+            user_profile: userProfile,
+            trip_details: tripDetails
+          })
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout after 30 seconds')), 30000)
+        )
+      ]);
 
       console.log('✅ Response status:', response.status);
+      console.log('✅ Response headers:', response.headers);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Response error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
 
       const data = await response.json();
       console.log('✅ Response data:', data);
       console.log('✅ Response ui_actions:', data.ui_actions);
+      console.log('✅ Response chat_text:', data.chat_text);
 
       // Add assistant response
       const assistantMessage = {
