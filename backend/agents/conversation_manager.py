@@ -148,9 +148,12 @@ class ConversationManager:
                 slots.destination = destination
                 slots.canonical_place_id = canonical_place_id
             
-            # STEP 2: Always call retrieval_agent first (unless brief reply expected)
+            # STEP 2: Retrieval agent (skip for fast planning responses)
             retrieval_facts = []
-            if intent != 'general' or destination:
+            if intent == 'plan' and any(keyword in message_lower for keyword in ['plan a trip', 'plan trip']):
+                print("⚡ Skipping retrieval for fast planning response")
+                retrieval_facts = []  # Skip retrieval for immediate trip planner form
+            elif intent != 'general' or destination:
                 try:
                     retrieval_facts = await self.retrieval_agent.get_facts(slots)
                     print(f"📋 Retrieved {len(retrieval_facts)} facts")
