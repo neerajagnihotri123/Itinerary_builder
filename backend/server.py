@@ -1031,7 +1031,7 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
     budget = trip_details.get("budget_per_night", 8000)
     preferences = trip_details.get("preferences", {})
     
-    # Create 3 personalized variants based on preferences
+    # Create 3 personalized variants with rich details like MindTrip
     base_variants = [
         {
             "type": "Adventurer",
@@ -1039,7 +1039,51 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "description": "Action-packed with water sports, hiking, and outdoor activities",
             "price": int(budget * 3.5),
             "base_highlights": ["Water Sports", "Adventure Activities", "Local Exploration", "Beach Hopping"],
-            "days": 4
+            "days": 4,
+            "detailed_itinerary": [
+                {
+                    "day": 1,
+                    "theme": "Arrive & Beach Adventures",
+                    "activities": [
+                        {
+                            "time": "09:00",
+                            "type": "arrival",
+                            "name": "Airport Transfer & Check-in",
+                            "location": f"Beach Resort, {destination}",
+                            "image": f"https://images.unsplash.com/800x400/?{destination.lower()}-resort",
+                            "duration": "2 hours",
+                            "cost": 2000,
+                            "description": "Smooth arrival and luxury resort check-in"
+                        },
+                        {
+                            "time": "14:00", 
+                            "type": "activity",
+                            "name": "Jet Skiing & Parasailing",
+                            "location": f"{destination} Beach",
+                            "image": f"https://images.unsplash.com/800x400/?jetski-{destination.lower()}",
+                            "duration": "3 hours",
+                            "cost": 4500,
+                            "description": "Thrilling water sports with professional instructors"
+                        }
+                    ]
+                },
+                {
+                    "day": 2,
+                    "theme": "Mountain & Adventure Sports",
+                    "activities": [
+                        {
+                            "time": "07:00",
+                            "type": "activity", 
+                            "name": "Trekking & Rock Climbing",
+                            "location": f"{destination} Hills",
+                            "image": f"https://images.unsplash.com/800x400/?trekking-{destination.lower()}",
+                            "duration": "6 hours",
+                            "cost": 3500,
+                            "description": "Guided mountain adventure with stunning views"
+                        }
+                    ]
+                }
+            ]
         },
         {
             "type": "Balanced", 
@@ -1048,7 +1092,51 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "price": int(budget * 4),
             "base_highlights": ["Cultural Sites", "Beach Relaxation", "Local Cuisine", "Scenic Views"],
             "days": 4,
-            "recommended": True
+            "recommended": True,
+            "detailed_itinerary": [
+                {
+                    "day": 1,
+                    "theme": "Cultural Immersion",
+                    "activities": [
+                        {
+                            "time": "10:00",
+                            "type": "cultural",
+                            "name": f"Heritage {destination} Temple Tour",
+                            "location": f"Historic {destination}",
+                            "image": f"https://images.unsplash.com/800x400/?temple-{destination.lower()}",
+                            "duration": "4 hours",
+                            "cost": 2500,
+                            "description": "Explore ancient temples and local traditions"
+                        },
+                        {
+                            "time": "16:00",
+                            "type": "dining",
+                            "name": "Traditional Cooking Class",
+                            "location": f"Local Kitchen, {destination}",
+                            "image": f"https://images.unsplash.com/800x400/?cooking-{destination.lower()}",
+                            "duration": "3 hours", 
+                            "cost": 3000,
+                            "description": "Learn authentic local cuisine from expert chefs"
+                        }
+                    ]
+                },
+                {
+                    "day": 2,
+                    "theme": "Nature & Relaxation",
+                    "activities": [
+                        {
+                            "time": "09:00",
+                            "type": "nature",
+                            "name": f"{destination} Backwater Cruise",
+                            "location": f"{destination} Backwaters",
+                            "image": f"https://images.unsplash.com/800x400/?backwater-{destination.lower()}",
+                            "duration": "5 hours",
+                            "cost": 4000,
+                            "description": "Peaceful cruise through pristine waterways"
+                        }
+                    ]
+                }
+            ]
         },
         {
             "type": "Luxury",
@@ -1056,7 +1144,51 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "description": "Luxury resorts, fine dining, spa treatments, and exclusive experiences",
             "price": int(budget * 5.5),
             "base_highlights": ["Luxury Resorts", "Fine Dining", "Spa & Wellness", "Private Tours"],
-            "days": 4
+            "days": 4,
+            "detailed_itinerary": [
+                {
+                    "day": 1,
+                    "theme": "Luxury Arrival & Spa",
+                    "activities": [
+                        {
+                            "time": "11:00",
+                            "type": "luxury",
+                            "name": "5-Star Resort Check-in & Welcome",
+                            "location": f"Luxury Resort, {destination}",
+                            "image": f"https://images.unsplash.com/800x400/?luxury-resort-{destination.lower()}",
+                            "duration": "2 hours",
+                            "cost": 8000,
+                            "description": "VIP check-in with champagne welcome and suite upgrade"
+                        },
+                        {
+                            "time": "15:00",
+                            "type": "wellness",
+                            "name": "Ayurvedic Spa Treatment",
+                            "location": f"Resort Spa, {destination}",
+                            "image": f"https://images.unsplash.com/800x400/?spa-{destination.lower()}",
+                            "duration": "3 hours",
+                            "cost": 12000,
+                            "description": "Traditional wellness treatments by expert therapists"
+                        }
+                    ]
+                },
+                {
+                    "day": 2,
+                    "theme": "Private Tours & Fine Dining",
+                    "activities": [
+                        {
+                            "time": "10:00",
+                            "type": "private_tour",
+                            "name": f"Private {destination} Heritage Tour",
+                            "location": f"{destination} Historic Sites",
+                            "image": f"https://images.unsplash.com/800x400/?heritage-{destination.lower()}",
+                            "duration": "6 hours",
+                            "cost": 15000,
+                            "description": "Exclusive guided tour with private transportation"
+                        }
+                    ]
+                }
+            ]
         }
     ]
     
