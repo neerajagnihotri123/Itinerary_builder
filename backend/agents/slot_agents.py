@@ -36,13 +36,13 @@ class SlotAgent:
             'uttarakhand': {'canonical_place_id': 'rishikesh_uttarakhand', 'full_name': 'Rishikesh, Uttarakhand', 'country': 'India'}
         }
         
-        # Intent keywords mapping
+        # Intent keywords mapping with enhanced patterns
         self.intent_patterns = {
-            'plan': ['plan', 'generate', 'itinerary', 'trip', 'schedule', 'create itinerary', 'make plan'],
-            'accommodation': ['hotel', 'stay', 'accommodation', 'book', 'reserve', 'resort', 'lodge'],
-            'find': ['find', 'recommend', 'suggest', 'show', 'tell me about', 'what about', 'explore', 'recommendations', 'popular destinations', 'give me'],
-            'confirmation': ['yes', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect'],
-            'general': ['hello', 'hi', 'help', 'what can you do', 'hey', 'good morning', 'good evening']
+            'plan': ['plan', 'generate', 'itinerary', 'trip', 'schedule', 'create itinerary', 'make plan', 'create plan', 'trip planning'],
+            'accommodation': ['hotel', 'stay', 'accommodation', 'book', 'reserve', 'resort', 'lodge', 'booking', 'reservation'],
+            'find': ['find', 'recommend', 'suggest', 'show', 'tell me about', 'what about', 'explore', 'recommendations', 'popular destinations', 'give me', 'information about'],
+            'confirmation': ['yes', 'yeah', 'yep', 'okay', 'ok', 'sure', 'proceed', 'continue', 'that works', 'sounds good', 'perfect', 'great', 'awesome'],
+            'general': ['hello', 'hi', 'hey', 'hiya', 'help', 'what can you do', 'good morning', 'good evening', 'good afternoon', 'how are you', 'thanks', 'thank you', 'bye', 'goodbye', 'what', 'who are you']
         }
     
     async def extract_intent_and_destination(self, message: str, current_slots: Dict[str, Any] = None) -> Dict[str, Any]:
