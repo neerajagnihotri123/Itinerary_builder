@@ -1977,6 +1977,231 @@ Focus on quality accommodations that match the destination and user preferences.
             print(f"❌ Error generating hotel cards: {e}")
             return []
     
+    async def _generate_three_itinerary_variants(self, slots: UserSlots, retrieval_facts: List[Dict], user_profile: dict) -> List[Dict]:
+        """Generate 3 itinerary variants: Adventurer, Balanced, Luxury"""
+        
+        variants = []
+        variant_types = [
+            {
+                "name": "Adventurer",
+                "description": "Action-packed with thrilling activities",
+                "budget_multiplier": 0.8,
+                "activity_focus": "adventure",
+                "accommodation_type": "adventure_lodges",
+                "pace": "packed"
+            },
+            {
+                "name": "Balanced", 
+                "description": "Perfect mix of activities and relaxation",
+                "budget_multiplier": 1.0,
+                "activity_focus": "mixed",
+                "accommodation_type": "mid_range",
+                "pace": "balanced"
+            },
+            {
+                "name": "Luxury",
+                "description": "Premium experiences with finest amenities",
+                "budget_multiplier": 1.5,
+                "activity_focus": "exclusive",
+                "accommodation_type": "luxury",
+                "pace": "relaxed"
+            }
+        ]
+        
+        for variant_type in variant_types:
+            # Create modified slots for this variant
+            variant_slots = UserSlots(
+                destination=slots.destination,
+                start_date=slots.start_date,
+                end_date=slots.end_date,
+                adults=slots.adults,
+                children=slots.children,
+                budget_per_night=int(slots.budget_per_night * variant_type["budget_multiplier"])
+            )
+            
+            try:
+                # Generate itinerary for this variant
+                planner_output = await self.planner_agent.generate_itinerary(variant_slots, retrieval_facts)
+                
+                # Validate the itinerary
+                validation_result = await self.validator_agent.validate(planner_output, retrieval_facts)
+                
+                variant = {
+                    "variant_type": variant_type["name"],
+                    "description": variant_type["description"],
+                    "budget_multiplier": variant_type["budget_multiplier"],
+                    "itinerary": planner_output,
+                    "validation": validation_result,
+                    "estimated_budget": variant_slots.budget_per_night,
+                    "activity_focus": variant_type["activity_focus"]
+                }
+                
+                variants.append(variant)
+                print(f"✅ Generated {variant_type['name']} variant successfully")
+                
+            except Exception as e:
+                print(f"❌ Failed to generate {variant_type['name']} variant: {e}")
+                # Add a fallback variant
+                variants.append({
+                    "variant_type": variant_type["name"],
+                    "description": variant_type["description"],
+                    "budget_multiplier": variant_type["budget_multiplier"],
+                    "itinerary": {"error": f"Failed to generate: {str(e)}"},
+                    "validation": {"status": "failed"},
+                    "estimated_budget": variant_slots.budget_per_night,
+                    "activity_focus": variant_type["activity_focus"]
+                })
+        
+        return variants
+    
+    async def _apply_dynamic_pricing(self, variant: dict, user_profile: dict, slots: UserSlots) -> dict:
+        """Apply dynamic pricing to an itinerary variant"""
+        
+        try:
+            # Create service details for pricing
+            service_details = {
+                "name": f"{variant['variant_type']} Itinerary",
+                "location": slots.destination,
+                "category": variant["activity_focus"],
+                "duration_days": 4  # Default for demo
+            }
+            
+            booking_context = {
+                "travel_dates": {
+                    "start_date": slots.start_date,
+                    "end_date": slots.end_date
+                },
+                "travelers": {
+                    "adults": slots.adults,
+                    "children": slots.children
+                }
+            }
+            
+            # Calculate dynamic pricing
+            pricing_result = await self.pricing_agent.calculate_dynamic_pricing(
+                service_type="package",
+                service_details=service_details,
+                user_profile=user_profile,
+                booking_context=booking_context
+            )
+            
+            return pricing_result
+            
+        except Exception as e:
+            print(f"❌ Pricing calculation failed for {variant['variant_type']}: {e}")
+            # Return fallback pricing
+            return {
+                "final_price": variant["estimated_budget"] * 4,  # 4 days default
+                "currency": "INR",
+                "pricing_explanation": "Standard pricing applied",
+                "discount_opportunities": [],
+                "upsell_opportunities": []
+            }
+    
+    async def _create_variant_ui_actions(self, priced_variants: List[Dict], user_profile: dict) -> List[Dict]:
+        """Create UI actions to display 3 itinerary variants"""
+        
+        ui_actions = []
+        
+        for variant in priced_variants:
+            variant_card = {
+                "type": "itinerary_variant_card",
+                "payload": {
+                    "variant_type": variant["variant_type"],
+                    "title": f"{variant['variant_type']} Experience",
+                    "description": variant["description"],
+                    "price": variant["pricing"]["final_price"],
+                    "currency": variant["pricing"]["currency"],
+                    "pricing_explanation": variant["pricing"]["pricing_explanation"],
+                    "highlights": self._extract_variant_highlights(variant),
+                    "recommended": variant["variant_type"] == "Balanced"  # Default recommendation
+                }
+            }
+            ui_actions.append(variant_card)
+        
+        # Add question chips for variant selection
+        selection_chips = [
+            {
+                "type": "question_chip",
+                "payload": {
+                    "id": "choose_adventurer",
+                    "question": "I want the Adventurer experience!",
+                    "category": "variant_selection"
+                }
+            },
+            {
+                "type": "question_chip", 
+                "payload": {
+                    "id": "choose_balanced",
+                    "question": "Balanced sounds perfect",
+                    "category": "variant_selection"
+                }
+            },
+            {
+                "type": "question_chip",
+                "payload": {
+                    "id": "choose_luxury",
+                    "question": "I prefer the Luxury experience",
+                    "category": "variant_selection"
+                }
+            }
+        ]
+        
+        ui_actions.extend(selection_chips)
+        return ui_actions
+    
+    def _extract_variant_highlights(self, variant: dict) -> List[str]:
+        """Extract key highlights from variant itinerary"""
+        
+        highlights = []
+        itinerary = variant.get("itinerary", {})
+        
+        if variant["variant_type"] == "Adventurer":
+            highlights = [
+                "🎯 Action-packed adventure activities",
+                "🏔️ Thrilling outdoor experiences", 
+                "🎪 High-energy exploration",
+                "💪 Perfect for active travelers"
+            ]
+        elif variant["variant_type"] == "Balanced":
+            highlights = [
+                "⚖️ Perfect mix of adventure & relaxation",
+                "🏛️ Cultural sites + fun activities",
+                "🍽️ Great dining experiences",
+                "👥 Ideal for most travelers"
+            ]
+        elif variant["variant_type"] == "Luxury":
+            highlights = [
+                "✨ Premium accommodations & service",
+                "🥂 Exclusive access experiences",
+                "🧘 Spa & wellness activities",
+                "👑 VIP treatment throughout"
+            ]
+        
+        return highlights
+    
+    async def _generate_persona_based_response(self, priced_variants: List[Dict], user_profile: dict) -> str:
+        """Generate personalized response based on user persona"""
+        
+        primary_persona = user_profile.get("persona_classification", {}).get("primary_persona", "cultural_explorer")
+        
+        persona_responses = {
+            "adventure_seeker": "🎯 Amazing! I've created three incredible itinerary options for you. Based on your adventurous spirit, I'd especially recommend the Adventurer variant - it's packed with thrilling activities perfect for someone who loves excitement!",
+            
+            "cultural_explorer": "🏛️ Wonderful! I've crafted three personalized itinerary options. Given your love for authentic cultural experiences, the Balanced variant offers the perfect mix of cultural immersion and memorable activities.",
+            
+            "luxury_connoisseur": "✨ Excellent! I've curated three premium itinerary experiences for you. The Luxury variant features exclusive access and finest amenities - exactly what a discerning traveler like you deserves.",
+            
+            "budget_backpacker": "🎒 Perfect! I've designed three amazing itinerary options with great value. The Adventurer variant offers incredible experiences while being budget-conscious - ideal for getting the most out of your trip!",
+            
+            "eco_conscious_traveler": "🌱 Fantastic! I've created three sustainable itinerary options. Each variant includes eco-friendly accommodations and responsible tourism activities that align with your values."
+        }
+        
+        base_message = persona_responses.get(primary_persona, 
+            "🎉 Perfect! I've created three amazing itinerary options tailored just for you.")
+        
+        return f"{base_message}\n\nChoose the experience that resonates most with you, or let me know if you'd like me to customize any of these options further!"
+
     def _extract_destination_from_message(self, message: str) -> str:
         """Extract destination from user message"""
         destinations = [
