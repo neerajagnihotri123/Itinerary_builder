@@ -4077,8 +4077,8 @@ function App() {
                 </div>
               </div>
             </div>
-          ) : rightPanelContent === 'variants' ? (
-            /* Itinerary Variants - Detailed View in Right Panel */
+          ) : rightPanelContent === 'variant_details' ? (
+            /* Selected Variant Details View */
             <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
               {/* Header Section */}
               <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-6 z-10">
