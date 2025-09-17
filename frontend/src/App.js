@@ -4727,10 +4727,22 @@ function App() {
                 };
                 setMessages(prev => [...prev, assistantMessage]);
                 
-                // Close trip planner and open personalization form
+                // Close trip planner and directly generate itinerary variants (bypass personalization for now)
                 setShowTripPlanner(false);
-                setShowPersonalizationModal(true);
-                console.log('🎯 Opening personalization form for:', tripData);
+                
+                // For debugging: directly call itinerary generation with mock preferences
+                console.log('🎯 Bypassing personalization - directly generating itineraries for:', tripData);
+                
+                setTimeout(async () => {
+                  const mockResponses = {
+                    vacation_style: 'adventurous', 
+                    experience_type: 'culture',
+                    attraction_preference: 'both'
+                  };
+                  
+                  console.log('🎯 Direct itinerary generation with mock preferences');
+                  await handlePersonalizationComplete(mockResponses);
+                }, 1000);
               } catch (error) {
                 console.error('Trip planner submission failed:', error);
               } finally {
