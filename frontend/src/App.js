@@ -2621,7 +2621,7 @@ function App() {
   };
 
   const handlePersonalizationComplete = async (responses) => {
-    console.log('Personalization completed:', responses);
+    console.log('🎯 Personalization completed:', responses);
     setShowPersonalizationModal(false);
     setIsLoading(true);
     
@@ -2631,25 +2631,29 @@ function App() {
     const initialMessage = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: `Perfect! Let me create a personalized itinerary for ${targetDestination} based on your preferences. This will take just a moment...`
+      content: `Fantastic! Based on your interests, I'm creating 3 personalized itinerary variants for ${targetDestination}. Let me show you the options...`
     };
     setMessages(prev => [...prev, initialMessage]);
     
     try {
-      // Create detailed trip planning message for AI agents
-      const itineraryRequest = `Create a detailed ${tripDetails.dates || '5-day'} itinerary for ${targetDestination} with these preferences: ${Object.entries(responses).map(([key, value]) => `${key}: ${value}`).join(', ')}. Include daily activities, accommodations, dining, and transportation.`;
+      console.log('🎯 Calling trip-planner endpoint with personalization data');
       
-      // Send to backend AI agents for real itinerary generation
-      const response = await fetch(`${BACKEND_URL}/api/chat`, {
+      // Call the trip-planner endpoint with personalization data
+      const response = await fetch(`${BACKEND_URL}/api/trip-planner`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: itineraryRequest,
-          session_id: sessionId,
+          destination: tripDetails.destination,
+          start_date: tripDetails.startDate,
+          end_date: tripDetails.endDate,
+          adults: tripDetails.adults || 2,
+          children: tripDetails.children || 0,
+          budget_per_night: tripDetails.budget || 8000,
+          preferences: responses, // Include personalization responses
           user_profile: { ...userProfile, ...responses },
-          trip_details: tripDetails
+          session_id: sessionId
         })
       });
       
