@@ -3858,6 +3858,104 @@ function App() {
                 </div>
               </div>
             </div>
+          ) : rightPanelContent === 'variants' ? (
+            /* Itinerary Variants View */
+            <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
+              {/* Header Section */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 p-6 z-10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-1">Choose Your Itinerary Style</h1>
+                    <p className="text-slate-600 text-sm">
+                      3 personalized options • {tripDetails.destination || 'Your destination'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setRightPanelContent('default')}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-slate-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Variants Content */}
+              <div className="p-6 space-y-6">
+                {itinerary?.variants?.map((variant, index) => (
+                  <div key={index} className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-200">
+                    {/* Variant Header */}
+                    <div className="p-6 border-b border-slate-100">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-xl font-bold text-slate-900">{variant.title}</h3>
+                            {variant.recommended && (
+                              <span className="px-3 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded-full">
+                                Recommended
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-slate-600 mb-4">{variant.description}</p>
+                          <div className="flex items-center gap-4 text-sm">
+                            <div className="flex items-center gap-1 text-slate-500">
+                              <Calendar className="w-4 h-4" />
+                              <span>{variant.days} days</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-green-600 font-semibold">
+                              <span>₹{variant.price?.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Variant Highlights */}
+                    <div className="p-6">
+                      <h4 className="font-semibold text-slate-900 mb-3">What's Included:</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        {variant.highlights?.map((highlight, hIndex) => (
+                          <div key={hIndex} className="flex items-center gap-2 text-sm text-slate-700">
+                            <div className="w-1.5 h-1.5 bg-orange-500 rounded-full"></div>
+                            <span>{highlight}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      {/* Action Button */}
+                      <button 
+                        onClick={() => {
+                          console.log('🎯 Selected variant:', variant.title);
+                          // Here we would generate the detailed itinerary for this variant
+                          // For now, show a message
+                          const message = {
+                            id: Date.now().toString(),
+                            role: 'assistant',
+                            content: `Perfect choice! You've selected the ${variant.title} experience. Let me create your detailed day-by-day itinerary...`
+                          };
+                          setMessages(prev => [...prev, message]);
+                          
+                          // Switch to detailed itinerary view
+                          // This would call the backend to generate detailed itinerary
+                        }}
+                        className="w-full mt-4 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-semibold py-3 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transition-all duration-200"
+                      >
+                        Choose {variant.title}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Back to personalization button */}
+                <div className="text-center pt-4">
+                  <button 
+                    onClick={() => setShowPersonalizationModal(true)}
+                    className="text-orange-600 hover:text-orange-700 font-medium text-sm"
+                  >
+                    ← Modify my preferences
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : rightPanelContent === 'destination' && selectedMapDestination ? (
             /* Destination Detail View - Updated with new color palette */
             <div className="flex-1 overflow-y-auto">
