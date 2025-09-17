@@ -1031,14 +1031,14 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
     budget = trip_details.get("budget_per_night", 8000)
     preferences = trip_details.get("preferences", {})
     
-    # Create 3 quick variants without complex LLM calls
-    variants = [
+    # Create 3 personalized variants based on preferences
+    base_variants = [
         {
             "type": "Adventurer",
             "title": "Adventure Explorer",
             "description": "Action-packed with water sports, hiking, and outdoor activities",
             "price": int(budget * 3.5),
-            "highlights": ["Water Sports", "Adventure Activities", "Local Exploration", "Beach Hopping"],
+            "base_highlights": ["Water Sports", "Adventure Activities", "Local Exploration", "Beach Hopping"],
             "days": 4
         },
         {
@@ -1046,7 +1046,7 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "title": "Perfect Balance",
             "description": "Mix of adventure, culture, relaxation, and sightseeing",
             "price": int(budget * 4),
-            "highlights": ["Cultural Sites", "Beach Relaxation", "Local Cuisine", "Scenic Views"],
+            "base_highlights": ["Cultural Sites", "Beach Relaxation", "Local Cuisine", "Scenic Views"],
             "days": 4,
             "recommended": True
         },
@@ -1055,10 +1055,30 @@ async def generate_quick_itinerary_variants(trip_details: dict, conversation_man
             "title": "Premium Experience", 
             "description": "Luxury resorts, fine dining, spa treatments, and exclusive experiences",
             "price": int(budget * 5.5),
-            "highlights": ["Luxury Resorts", "Fine Dining", "Spa & Wellness", "Private Tours"],
+            "base_highlights": ["Luxury Resorts", "Fine Dining", "Spa & Wellness", "Private Tours"],
             "days": 4
         }
     ]
+    
+    # Personalize variants based on user preferences
+    variants = []
+    for variant in base_variants:
+        personalized_highlights = variant["base_highlights"].copy()
+        
+        # Add personalized highlights based on preferences
+        if preferences.get("adventure"):
+            personalized_highlights.append("Thrilling Adventures")
+        if preferences.get("culture"):
+            personalized_highlights.append("Cultural Immersion")
+        if preferences.get("relaxation"):
+            personalized_highlights.append("Relaxation Time")
+        if preferences.get("food"):
+            personalized_highlights.append("Culinary Experiences")
+        
+        variants.append({
+            **variant,
+            "highlights": personalized_highlights[:4]  # Keep only top 4
+        })
     
     # Create variant cards
     ui_actions = []
