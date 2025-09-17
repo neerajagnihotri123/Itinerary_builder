@@ -113,8 +113,22 @@ class ConversationManager:
         try:
             print(f"🔄 Processing message: {message[:50]}...")
             
-            # STEP 1: Intent detection - conversation_agent → slot_agent
-            slot_result = await self.slot_agent.extract_intent_and_destination(message, current_slots)
+            # FAST PATH: Check for obvious planning keywords to bypass LLM
+            message_lower = message.lower()
+            if any(keyword in message_lower for keyword in ['plan a trip', 'plan trip', 'create itinerary', 'make plan']):
+                print("⚡ Fast path: Planning query detected")
+                # Extract destination quickly without LLM
+                destination = None
+                for dest in ['goa', 'kerala', 'rajasthan', 'mumbai', 'delhi', 'bangalore']:
+                    if dest in message_lower:
+                        destination = dest.title()
+                        break
+                
+                intent = 'plan'
+                slot_result = {'intent': intent, 'destination_name': destination}
+            else:
+                # STEP 1: Intent detection - conversation_agent → slot_agent
+                slot_result = await self.slot_agent.extract_intent_and_destination(message, current_slots)
             
             intent = slot_result.get('intent', 'general')
             destination = slot_result.get('destination_name')
