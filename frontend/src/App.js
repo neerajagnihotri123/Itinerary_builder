@@ -4714,8 +4714,17 @@ function App() {
                   destination: tripData.destination,
                   startDate: tripData.start_date,
                   endDate: tripData.end_date,
+                  dates: `${tripData.start_date} to ${tripData.end_date}`,
                   adults: tripData.adults,
                   children: tripData.children,
+                  budget: tripData.budget_per_night
+                });
+                
+                console.log('🎯 Trip details stored:', {
+                  destination: tripData.destination,
+                  startDate: tripData.start_date,
+                  endDate: tripData.end_date,
+                  adults: tripData.adults,
                   budget: tripData.budget_per_night
                 });
                 
