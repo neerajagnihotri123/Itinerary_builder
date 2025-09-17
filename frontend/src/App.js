@@ -4406,6 +4406,135 @@ function App() {
         </div>
       </div>
 
+      {/* Trip Planner Form */}
+      {showTripPlanner && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">Plan Your Perfect Trip</h2>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setIsLoading(true);
+              try {
+                const formData = new FormData(e.target);
+                const tripData = {
+                  destination: formData.get('destination') || tripDetails.destination,
+                  start_date: formData.get('start_date'),
+                  end_date: formData.get('end_date'),
+                  adults: parseInt(formData.get('adults')) || 2,
+                  children: parseInt(formData.get('children')) || 0,
+                  budget_per_night: parseInt(formData.get('budget_per_night')) || 8000,
+                  session_id: sessionId
+                };
+                
+                console.log('🎯 Submitting trip planner:', tripData);
+                
+                const response = await axios.post(`${API}/trip-planner`, tripData);
+                
+                // Add response to chat
+                const assistantMessage = {
+                  id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                  role: 'assistant',
+                  content: response.data.chat_text
+                };
+                setMessages(prev => [...prev, assistantMessage]);
+                
+                // Process UI actions (itinerary variants)
+                if (response.data.ui_actions) {
+                  handleUIActions(response.data.ui_actions);
+                }
+                
+                setShowTripPlanner(false);
+              } catch (error) {
+                console.error('Trip planner submission failed:', error);
+              } finally {
+                setIsLoading(false);
+              }
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Destination</label>
+                  <input 
+                    name="destination" 
+                    type="text" 
+                    defaultValue={tripDetails.destination}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Start Date</label>
+                    <input 
+                      name="start_date" 
+                      type="date" 
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">End Date</label>
+                    <input 
+                      name="end_date" 
+                      type="date" 
+                      className="w-full p-2 border rounded"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Adults</label>
+                    <input 
+                      name="adults" 
+                      type="number" 
+                      min="1" 
+                      defaultValue="2"
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Children</label>
+                    <input 
+                      name="children" 
+                      type="number" 
+                      min="0" 
+                      defaultValue="0"
+                      className="w-full p-2 border rounded"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Budget per night (₹)</label>
+                  <input 
+                    name="budget_per_night" 
+                    type="number" 
+                    min="1000" 
+                    defaultValue="8000"
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+                <div className="flex gap-4 mt-6">
+                  <button 
+                    type="submit" 
+                    disabled={isLoading}
+                    className="flex-1 bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 disabled:opacity-50"
+                  >
+                    {isLoading ? 'Creating Itineraries...' : 'Create My Itineraries'}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowTripPlanner(false)}
+                    className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Personalization Modal - Only show when explicitly triggered */}
       <PersonalizationModal
         isOpen={showPersonalizationModal}
