@@ -11,6 +11,20 @@ from typing import Dict, Any, List, Optional
 PLANNER_CACHE = {}
 CACHE_TTL = 1800  # 30 minutes
 
+def get_cached_response(cache_key: str) -> Optional[str]:
+    """Get cached response if available and not expired"""
+    if cache_key in PLANNER_CACHE:
+        response, timestamp = PLANNER_CACHE[cache_key]
+        if time.time() - timestamp < CACHE_TTL:
+            return response
+        else:
+            del PLANNER_CACHE[cache_key]
+    return None
+
+def cache_response(cache_key: str, response: str):
+    """Cache response with timestamp"""
+    PLANNER_CACHE[cache_key] = (response, time.time())
+
 class PlannerAgent:
     """Generates detailed itineraries using grounding facts"""
     
