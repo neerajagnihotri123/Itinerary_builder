@@ -8,7 +8,7 @@ def test_specific_chat_query(message, description):
     print(f"📝 Message: '{message}'")
     print(f"{'='*60}")
     
-    url = "https://tripbot-ai.preview.emergentagent.com/api/chat"
+    url = "https://ai-travel-planner-4.preview.emergentagent.com/api/chat"
     headers = {'Content-Type': 'application/json'}
     
     chat_data = {
