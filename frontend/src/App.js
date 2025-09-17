@@ -4775,6 +4775,7 @@ function App() {
                     <input 
                       name="start_date" 
                       type="date" 
+                      defaultValue="2024-12-15"
                       className="w-full p-2 border rounded"
                       required
                     />
@@ -4784,6 +4785,7 @@ function App() {
                     <input 
                       name="end_date" 
                       type="date" 
+                      defaultValue="2024-12-20"
                       className="w-full p-2 border rounded"
                       required
                     />
