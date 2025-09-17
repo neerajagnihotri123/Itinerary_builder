@@ -4234,7 +4234,17 @@ function App() {
                       </button>
                     </div>
                   </div>
-                ))}
+                </div>
+              )}
+              
+              {/* Select variant prompt if no variant selected */}
+              {!selectedVariant && (
+                <div className="p-6 text-center">
+                  <Calendar className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-slate-600 mb-2">Select an itinerary variant</h3>
+                  <p className="text-slate-500">Choose from the timeline options in the chat to view detailed itinerary</p>
+                </div>
+              )}
                 
                 {/* Back to personalization button */}
                 <div className="text-center pt-4">
