@@ -2436,6 +2436,15 @@ function App() {
     const currentInput = inputMessage;
     setInputMessage('');
     setIsLoading(true);
+    
+    // Start progressive loading messages
+    const loadingMessages = [
+      '🤖 Understanding your request...',
+      '🔍 Analyzing your preferences...',
+      '🌍 Gathering destination information...',
+      '✨ Creating personalized options...'
+    ];
+    const loadingInterval = progressiveLoading(loadingMessages, 8000);
 
     // Add user message immediately
     const userMessage = {
