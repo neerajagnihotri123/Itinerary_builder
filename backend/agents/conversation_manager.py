@@ -2314,6 +2314,211 @@ Focus on quality accommodations that match the destination and user preferences.
         
         return f"{base_message}\n\nChoose the experience that resonates most with you, or let me know if you'd like me to customize any of these options further!"
 
+    async def _generate_enhanced_itinerary_variants(self, slots: UserSlots, retrieval_facts: List[Dict], trip_details: dict) -> List[Dict]:
+        """Generate 3 enhanced itinerary variants with better LLM prompting"""
+        
+        variants_config = [
+            {
+                "type": "Adventurer",
+                "description": "Action-packed with thrilling outdoor activities",
+                "focus": "adventure sports, hiking, extreme activities, active exploration",
+                "pace": "high-energy",
+                "budget_multiplier": 0.9
+            },
+            {
+                "type": "Balanced", 
+                "description": "Perfect blend of adventure, culture, and relaxation",
+                "focus": "mix of activities, cultural sites, local experiences, some relaxation",
+                "pace": "moderate",
+                "budget_multiplier": 1.0
+            },
+            {
+                "type": "Luxury",
+                "description": "Premium experiences with finest amenities and exclusive access",
+                "focus": "luxury accommodations, fine dining, exclusive experiences, premium services",
+                "pace": "relaxed",
+                "budget_multiplier": 1.4
+            }
+        ]
+        
+        variants = []
+        
+        for config in variants_config:
+            try:
+                # Enhanced context for each variant type
+                enhanced_context = f"""
+                Generate a detailed {config['type']} itinerary for {slots.destination}.
+                
+                TRIP DETAILS:
+                - Destination: {slots.destination}
+                - Dates: {slots.start_date} to {slots.end_date}
+                - Travelers: {slots.adults} adults, {slots.children} children
+                - Budget per night: ₹{slots.budget_per_night}
+                - Variant Type: {config['type']} ({config['description']})
+                
+                VARIANT FOCUS: {config['focus']}
+                PACE: {config['pace']}
+                
+                AVAILABLE ATTRACTIONS & ACTIVITIES:
+                {json.dumps(retrieval_facts[:10], indent=2)}
+                
+                REQUIREMENTS:
+                1. Create a day-by-day itinerary matching the {config['type']} theme
+                2. Include specific timings, real places, and detailed activities
+                3. Focus on {config['focus']}
+                4. Ensure activities match the {config['pace']} pace
+                5. Include realistic travel times and meal breaks
+                6. Add estimated costs for activities
+                7. Recommend specific hotels that match the variant type
+                
+                Return ONLY valid JSON in this exact format:
+                {{
+                  "variant_type": "{config['type']}",
+                  "description": "{config['description']}",
+                  "itinerary": [
+                    {{
+                      "day": 1,
+                      "date": "{slots.start_date}",
+                      "theme": "Arrival & First Impressions",
+                      "activities": [
+                        {{
+                          "time": "10:00",
+                          "type": "arrival",
+                          "title": "Arrival and Check-in",
+                          "location": "Hotel Name",
+                          "notes": "Welcome to {slots.destination}!",
+                          "cost_estimate": 0
+                        }}
+                      ]
+                    }}
+                  ],
+                  "hotel_recommendations": [
+                    {{
+                      "name": "Specific Hotel Name",
+                      "category": "{config['type'].lower()}",
+                      "price_per_night": {int(slots.budget_per_night * config['budget_multiplier'])},
+                      "highlights": ["Feature 1", "Feature 2"],
+                      "reason": "Why this hotel fits the {config['type']} theme"
+                    }}
+                  ],
+                  "total_estimated_cost": 50000,
+                  "highlights": ["Key experience 1", "Key experience 2", "Key experience 3"]
+                }}
+                """
+                
+                # Generate using planner agent with enhanced context
+                variant_result = await self.planner_agent._generate_with_llm(enhanced_context)
+                
+                # Parse the result
+                variant_data = json.loads(variant_result)
+                variant_data['base_price'] = int(slots.budget_per_night * config['budget_multiplier'] * 4)  # 4 days estimate
+                variants.append(variant_data)
+                
+                print(f"✅ Generated {config['type']} variant successfully")
+                
+            except Exception as e:
+                print(f"❌ Failed to generate {config['type']} variant: {e}")
+                # Fallback variant
+                variants.append({
+                    "variant_type": config['type'],
+                    "description": config['description'],
+                    "itinerary": [],
+                    "hotel_recommendations": [],
+                    "base_price": int(slots.budget_per_night * config['budget_multiplier'] * 4),
+                    "highlights": [f"Amazing {config['type'].lower()} experiences await!"]
+                })
+        
+        return variants
+    
+    async def _generate_variant_selection_response(self, variants: List[Dict], trip_details: dict) -> str:
+        """Generate personalized response for variant selection"""
+        
+        destination = trip_details.get('destination', 'your destination')
+        
+        try:
+            context = f"""
+            User has completed trip planning for {destination}. We have generated 3 amazing itinerary options:
+            
+            1. {variants[0]['variant_type']}: {variants[0]['description']}
+            2. {variants[1]['variant_type']}: {variants[1]['description']}  
+            3. {variants[2]['variant_type']}: {variants[2]['description']}
+            
+            Generate an enthusiastic response that:
+            1. Congratulates them on choosing {destination}
+            2. Mentions we've created 3 personalized options
+            3. Briefly highlights what makes each variant special
+            4. Asks them to choose their preferred style
+            5. Sounds exciting and professional
+            6. Keep it 2-3 sentences maximum
+            
+            Example: "Fantastic choice! {destination} is absolutely incredible. I've crafted 3 personalized itinerary styles for you - an action-packed Adventurer experience, a perfectly balanced mix of activities and culture, and a luxurious premium getaway. Which style speaks to you most?"
+            """
+            
+            from emergentintegrations.llm.chat import UserMessage
+            user_message = UserMessage(text=context)
+            response = await self.llm_client.send_message(user_message)
+            
+            return response.content if hasattr(response, 'content') else str(response)
+            
+        except Exception as e:
+            print(f"Response generation failed: {e}")
+            return f"Fantastic! I've created 3 amazing {destination} itinerary options for you - Adventurer (action-packed), Balanced (perfect mix), and Luxury (premium experiences). Which style excites you most?"
+    
+    def _create_enhanced_variant_cards(self, variants: List[Dict]) -> List[Dict]:
+        """Create enhanced UI cards for itinerary variants"""
+        
+        ui_actions = []
+        
+        for variant in variants:
+            # Create variant card
+            card = {
+                "type": "card_add",
+                "payload": {
+                    "category": "itinerary_variant",
+                    "id": f"variant_{variant['variant_type'].lower()}",
+                    "title": f"{variant['variant_type']} Experience",
+                    "description": variant['description'],
+                    "image": f"https://images.unsplash.com/800x400/?{variant['variant_type'].lower()}",
+                    "price": variant.get('pricing', {}).get('final_price', variant.get('base_price', 25000)),
+                    "currency": "INR",
+                    "highlights": variant.get('highlights', []),
+                    "hotel_info": variant.get('hotel_recommendations', [{}])[0] if variant.get('hotel_recommendations') else {},
+                    "days": len(variant.get('itinerary', [])),
+                    "recommended": variant['variant_type'] == 'Balanced'
+                }
+            }
+            ui_actions.append(card)
+        
+        # Add selection question chips
+        ui_actions.extend([
+            {
+                "type": "question_chip",
+                "payload": {
+                    "id": "select_adventurer",
+                    "question": "I want the Adventurer experience!",
+                    "category": "variant_selection"
+                }
+            },
+            {
+                "type": "question_chip",
+                "payload": {
+                    "id": "select_balanced", 
+                    "question": "Balanced sounds perfect for me",
+                    "category": "variant_selection"
+                }
+            },
+            {
+                "type": "question_chip",
+                "payload": {
+                    "id": "select_luxury",
+                    "question": "I prefer the Luxury experience",
+                    "category": "variant_selection"
+                }
+            }
+        ])
+        
+        return ui_actions
+
     def _extract_destination_from_message(self, message: str) -> str:
         """Extract destination from user message"""
         destinations = [
