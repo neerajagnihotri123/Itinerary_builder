@@ -1022,13 +1022,14 @@ async def chat_endpoint(request: ChatRequest):
         )
 
 async def generate_quick_itinerary_variants(trip_details: dict, conversation_manager, session_id: str) -> dict:
-    """Generate itinerary variants quickly for demo purposes"""
+    """Generate itinerary variants quickly with caching and parallel processing"""
     
     destination = trip_details.get("destination", "Unknown")
     start_date = trip_details.get("start_date", "2024-12-15")
     end_date = trip_details.get("end_date", "2024-12-20")
     adults = trip_details.get("adults", 2)
     budget = trip_details.get("budget_per_night", 8000)
+    preferences = trip_details.get("preferences", {})
     
     # Create 3 quick variants without complex LLM calls
     variants = [
