@@ -167,80 +167,26 @@ class ConversationManager:
     
     async def _handle_planner_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """
-        Enhanced planner flow with profile intake and persona classification:
-        1. Profile intake (if not completed) → persona classification
-        2. Generate 3 itinerary variants (Adventurer, Balanced, Luxury)
-        3. Dynamic pricing for each variant
-        4. Present personalized options based on user persona
+        Enhanced planner flow: Always trigger trip planner form first for proper data collection
+        1. Show trip planner form for user inputs (destination, dates, travelers, budget, preferences)
+        2. Once form is submitted, generate personalized LLM-based itinerary variants
+        3. Apply dynamic pricing and present options
         """
-        print(f"🗓️ Handling enhanced planner flow with profile intake")
+        print(f"🗓️ Handling planner flow - triggering trip planner form")
         
-        # STEP 1: Check if user has completed profile intake
-        # For demo purposes, we'll simulate checking user profile completion
-        # In production, this would check a user profile database
-        user_profile_complete = False  # For demo, assume profile not complete
+        # STEP 1: Always show trip planner form for planning queries
+        # This ensures we collect all necessary information before generating itineraries
         
-        if not user_profile_complete:
-            print("👤 Starting profile intake for personalized planning")
-            
-            # Check if this is the first interaction or continuing profile intake
-            # For demo, we'll initiate profile intake conversation
-            profile_result = await self.profile_agent.initiate_intake_conversation(
-                message=message,
-                destination=slots.destination,
-                session_id=session_id
-            )
-            
-            if profile_result["status"] == "intake_started":
-                return {
-                    "chat_text": profile_result["next_question"],
-                    "ui_actions": [
-                        {
-                            "type": "question_chip",
-                            "payload": {
-                                "id": "adventure_style",
-                                "question": "I love adventure and thrills!",
-                                "category": "profile"
-                            }
-                        },
-                        {
-                            "type": "question_chip",
-                            "payload": {
-                                "id": "culture_style", 
-                                "question": "I prefer cultural experiences",
-                                "category": "profile"
-                            }
-                        },
-                        {
-                            "type": "question_chip",
-                            "payload": {
-                                "id": "luxury_style",
-                                "question": "I enjoy luxury and comfort",
-                                "category": "profile"
-                            }
-                        },
-                        {
-                            "type": "question_chip",
-                            "payload": {
-                                "id": "budget_style",
-                                "question": "I'm looking for great value",
-                                "category": "profile"
-                            }
-                        }
-                    ],
-                    "metadata": {
-                        "intent": "profile_intake",
-                        "stage": profile_result["current_stage"],
-                        "progress": profile_result["progress"],
-                        "agent": "profile_agent"
-                    }
-                }
-        
-        # Check if we have enough information to generate itinerary
-        # Only require destination - make dates and budget optional with defaults
         missing_slots = []
         if not slots.destination:
             missing_slots.append("destination")
+        if not slots.start_date:
+            missing_slots.append("dates")
+        if not slots.budget_per_night:
+            missing_slots.append("budget")
+            
+        # Always trigger trip planner form for planning queries
+        return await self._present_trip_planner_form(message, slots, missing_slots, session_id)
         
         # Pre-generation mode: Present trip-planner card only if missing critical slots
         if missing_slots:
