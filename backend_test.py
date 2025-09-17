@@ -1973,6 +1973,139 @@ class TravelloAPITester:
         
         return test_passed
 
+    def test_trip_planner_endpoint_date_persistence(self):
+        """Test the /api/trip-planner endpoint with specific dates for duration calculation fixes"""
+        print(f"\n🗓️ Testing TRIP PLANNER ENDPOINT - Date Persistence & Duration Calculation...")
+        
+        # Test data from review request
+        trip_data = {
+            "destination": "Goa",
+            "start_date": "2024-12-15",
+            "end_date": "2024-12-20",
+            "adults": 2,
+            "children": 0,
+            "budget_per_night": 8000,
+            "preferences": {
+                "vacation_style": "adventurous", 
+                "experience_type": "culture"
+            },
+            "session_id": f"{self.session_id}_trip_planner"
+        }
+        
+        print(f"   🎯 Testing with specific data:")
+        print(f"      Destination: {trip_data['destination']}")
+        print(f"      Dates: {trip_data['start_date']} to {trip_data['end_date']}")
+        print(f"      Expected Duration: 5 days")
+        print(f"      Adults: {trip_data['adults']}")
+        print(f"      Budget per night: ₹{trip_data['budget_per_night']}")
+        
+        success, response = self.run_test("Trip Planner Endpoint", "POST", "trip-planner", 200, data=trip_data)
+        
+        trip_planner_passed = False
+        if success:
+            print(f"\n      📊 Trip Planner Response Analysis:")
+            chat_text = response.get('chat_text', '')
+            ui_actions = response.get('ui_actions', [])
+            
+            print(f"         Chat text length: {len(chat_text)}")
+            print(f"         UI actions count: {len(ui_actions)}")
+            print(f"         Chat preview: {chat_text[:150]}...")
+            
+            # Check for variant cards
+            variant_cards = [action for action in ui_actions 
+                           if action.get('type') == 'card_add' and 
+                           action.get('payload', {}).get('category') == 'itinerary_variant']
+            
+            print(f"         Variant cards found: {len(variant_cards)}")
+            
+            # Verify all 3 variants exist
+            expected_variants = ["Adventure Explorer", "Perfect Balance", "Premium Experience"]
+            found_variants = []
+            duration_correct = 0
+            detailed_itinerary_count = 0
+            
+            for i, variant_card in enumerate(variant_cards):
+                payload = variant_card.get('payload', {})
+                title = payload.get('title', '')
+                days = payload.get('days', 0)
+                detailed_itinerary = payload.get('detailed_itinerary', [])
+                
+                found_variants.append(title)
+                
+                print(f"         Variant {i+1}: {title}")
+                print(f"            Days: {days}")
+                print(f"            Detailed itinerary days: {len(detailed_itinerary)}")
+                
+                # Check if duration is correct (5 days)
+                if days == 5:
+                    duration_correct += 1
+                    print(f"            ✅ Duration correct: {days} days")
+                else:
+                    print(f"            ❌ Duration incorrect: Expected 5, got {days}")
+                
+                # Check detailed itinerary structure
+                if detailed_itinerary and len(detailed_itinerary) > 0:
+                    detailed_itinerary_count += 1
+                    print(f"            ✅ Has detailed itinerary with {len(detailed_itinerary)} days")
+                    
+                    # Check first day structure
+                    if detailed_itinerary:
+                        first_day = detailed_itinerary[0]
+                        activities = first_day.get('activities', [])
+                        print(f"               Day 1 activities: {len(activities)}")
+                        
+                        # Check activity structure
+                        if activities:
+                            first_activity = activities[0]
+                            required_fields = ['time', 'type', 'name', 'location', 'duration', 'cost']
+                            missing_fields = [field for field in required_fields if field not in first_activity]
+                            if not missing_fields:
+                                print(f"               ✅ Activity structure complete")
+                            else:
+                                print(f"               ⚠️  Activity missing: {missing_fields}")
+                else:
+                    print(f"            ❌ No detailed itinerary")
+            
+            # Verify expected variants
+            variant_matches = sum(1 for expected in expected_variants 
+                                if any(expected.lower() in found.lower() for found in found_variants))
+            
+            print(f"\n      📋 Verification Results:")
+            print(f"         Expected variants found: {variant_matches}/3")
+            print(f"         Variants with correct duration (5 days): {duration_correct}/{len(variant_cards)}")
+            print(f"         Variants with detailed itinerary: {detailed_itinerary_count}/{len(variant_cards)}")
+            
+            # Check for date calculation in response text
+            date_mentions = chat_text.count('2024-12-15') + chat_text.count('2024-12-20')
+            duration_mentions = chat_text.count('5') + chat_text.lower().count('five')
+            
+            print(f"         Date mentions in response: {date_mentions}")
+            print(f"         Duration mentions: {duration_mentions}")
+            
+            # Overall evaluation
+            if (len(variant_cards) == 3 and 
+                duration_correct == 3 and 
+                detailed_itinerary_count >= 2 and
+                variant_matches >= 2):
+                trip_planner_passed = True
+                print(f"      ✅ TRIP PLANNER PASSED: All requirements met")
+                print(f"         ✅ 3 variants generated")
+                print(f"         ✅ All variants have correct 5-day duration")
+                print(f"         ✅ Variants include detailed itinerary with MindTrip-style data")
+                print(f"         ✅ Date calculation working correctly")
+            else:
+                print(f"      ❌ TRIP PLANNER FAILED: Missing requirements")
+                if len(variant_cards) != 3:
+                    print(f"         ❌ Expected 3 variants, got {len(variant_cards)}")
+                if duration_correct != 3:
+                    print(f"         ❌ Expected all variants to have 5 days, only {duration_correct} correct")
+                if detailed_itinerary_count < 2:
+                    print(f"         ❌ Expected detailed itinerary in variants, only {detailed_itinerary_count} have it")
+        else:
+            print(f"      ❌ Trip planner endpoint failed to respond")
+        
+        return trip_planner_passed
+
     def test_accommodation_agent_refined_implementation(self):
         """Test the refined AccommodationAgent implementation as specified in review request"""
         print(f"\n🏨 Testing AccommodationAgent Refined Implementation...")
