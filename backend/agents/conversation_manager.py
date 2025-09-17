@@ -210,8 +210,36 @@ class ConversationManager:
         if not slots.budget_per_night:
             missing_slots.append("budget")
             
-        # Always trigger trip planner form for planning queries
-        return await self._present_trip_planner_form(message, slots, missing_slots, session_id)
+        # Fast response - return trip planner form immediately without complex processing
+        return {
+            "chat_text": f"Perfect! Let's plan your amazing {slots.destination or 'trip'}. I'll need a few details to create your personalized itinerary!",
+            "ui_actions": [
+                {
+                    "type": "trip_planner_card",
+                    "payload": {
+                        "title": "Plan Your Perfect Trip",
+                        "description": "Let's create an amazing itinerary tailored just for you!",
+                        "current_destination": slots.destination or "",
+                        "current_dates": "",
+                        "current_budget": 8000,
+                        "destination": slots.destination or "",
+                        "start_date": "",
+                        "end_date": "",
+                        "adults": 2,
+                        "children": 0,
+                        "budget_per_night": 8000,
+                        "missing_slots": missing_slots,
+                        "session_id": session_id
+                    }
+                }
+            ],
+            "metadata": {
+                "intent": "plan",
+                "requires_form": True,
+                "form_type": "trip_planner",
+                "agent": "conversation_manager"
+            }
+        }
         
         # Pre-generation mode: Present trip-planner card only if missing critical slots
         if missing_slots:
