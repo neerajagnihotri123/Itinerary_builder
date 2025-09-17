@@ -2529,6 +2529,7 @@ function App() {
           } else if (action.type === 'trip_planner_card' && action.payload) {
             // Pre-populate trip planner with backend data
             console.log('🎯 Processing trip_planner_card action!', action.payload);
+            console.log('🎯 About to setShowTripPlanner(true)');
             const payload = action.payload;
             if (payload.current_destination) {
               setTripDetails(prev => ({
