@@ -175,6 +175,67 @@ class ConversationManager:
         """
         print(f"🗓️ Handling enhanced planner flow with profile intake")
         
+        # STEP 1: Check if user has completed profile intake
+        # For demo purposes, we'll simulate checking user profile completion
+        # In production, this would check a user profile database
+        user_profile_complete = False  # For demo, assume profile not complete
+        
+        if not user_profile_complete:
+            print("👤 Starting profile intake for personalized planning")
+            
+            # Check if this is the first interaction or continuing profile intake
+            # For demo, we'll initiate profile intake conversation
+            profile_result = await self.profile_agent.initiate_intake_conversation(
+                message=message,
+                destination=slots.destination,
+                session_id=session_id
+            )
+            
+            if profile_result["status"] == "intake_started":
+                return {
+                    "chat_text": profile_result["next_question"],
+                    "ui_actions": [
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "adventure_style",
+                                "question": "I love adventure and thrills!",
+                                "category": "profile"
+                            }
+                        },
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "culture_style", 
+                                "question": "I prefer cultural experiences",
+                                "category": "profile"
+                            }
+                        },
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "luxury_style",
+                                "question": "I enjoy luxury and comfort",
+                                "category": "profile"
+                            }
+                        },
+                        {
+                            "type": "question_chip",
+                            "payload": {
+                                "id": "budget_style",
+                                "question": "I'm looking for great value",
+                                "category": "profile"
+                            }
+                        }
+                    ],
+                    "metadata": {
+                        "intent": "profile_intake",
+                        "stage": profile_result["current_stage"],
+                        "progress": profile_result["progress"],
+                        "agent": "profile_agent"
+                    }
+                }
+        
         # Check if we have enough information to generate itinerary
         # Only require destination - make dates and budget optional with defaults
         missing_slots = []
