@@ -361,10 +361,25 @@ class ConversationManager:
         2. For general hotel queries, show hotels with booking options
         """
         print(f"🏨 Handling accommodation flow")
-        print(f"🔍 Accommodation flow debug - slots.destination: {getattr(slots, 'destination', 'NOT_FOUND')}")
-        print(f"🔍 Accommodation flow debug - slots dict: {slots.__dict__ if hasattr(slots, '__dict__') else 'NO_DICT'}")
         
-        # Check for destination - first from slots, then try to extract from message
+        # Check if this is a booking request vs general hotel inquiry
+        booking_keywords = ['book', 'booking', 'reserve', 'reservation', 'stay for', 'check in', 'nights']
+        is_booking_request = any(keyword in message.lower() for keyword in booking_keywords)
+        
+        # If it's a booking request, trigger trip planner form
+        if is_booking_request:
+            print("🎯 Booking request detected - triggering trip planner form")
+            missing_slots = []
+            if not slots.destination:
+                missing_slots.append("destination")
+            if not slots.start_date:
+                missing_slots.append("dates")
+            if not slots.budget_per_night:
+                missing_slots.append("budget")
+            
+            return await self._present_trip_planner_form(message, slots, missing_slots, session_id)
+        
+        # For general hotel queries, show available hotels
         destination = getattr(slots, 'destination', None)
         print(f"🎯 Destination from slots: {destination}")
         
