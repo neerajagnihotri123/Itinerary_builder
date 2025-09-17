@@ -4444,22 +4444,28 @@ function App() {
                 
                 console.log('🎯 Submitting trip planner:', tripData);
                 
-                const response = await axios.post(`${API}/trip-planner`, tripData);
+                // Store trip details for later use
+                setTripDetails({
+                  destination: tripData.destination,
+                  startDate: tripData.start_date,
+                  endDate: tripData.end_date,
+                  adults: tripData.adults,
+                  children: tripData.children,
+                  budget: tripData.budget_per_night
+                });
                 
-                // Add response to chat
+                // Add chat message about moving to personalization
                 const assistantMessage = {
                   id: `assistant_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                   role: 'assistant',
-                  content: response.data.chat_text
+                  content: `Perfect! I have all your trip details for ${tripData.destination}. Now let's personalize your experience based on your interests so I can create the perfect itinerary variants for you!`
                 };
                 setMessages(prev => [...prev, assistantMessage]);
                 
-                // Process UI actions (itinerary variants)
-                if (response.data.ui_actions) {
-                  handleUIActions(response.data.ui_actions);
-                }
-                
+                // Close trip planner and open personalization form
                 setShowTripPlanner(false);
+                setShowPersonalizationModal(true);
+                console.log('🎯 Opening personalization form for:', tripData);
               } catch (error) {
                 console.error('Trip planner submission failed:', error);
               } finally {
