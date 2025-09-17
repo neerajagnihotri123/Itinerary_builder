@@ -25,6 +25,12 @@ import os
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, asdict
+import hashlib
+import time
+
+# Simple in-memory cache for LLM responses
+LLM_CACHE = {}
+CACHE_TTL = 3600  # 1 hour
 from .slot_agents import DestinationAgent, DatesAgent, TravelersAgent, BudgetAgent, SlotAgent
 from .retrieval_agent import RetrievalAgent
 from .planner_agent import PlannerAgent
