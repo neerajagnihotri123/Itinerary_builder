@@ -352,20 +352,37 @@ class ConversationManager:
             if not slots.budget_per_night:
                 slots.budget_per_night = 8000  # Default mid-range budget
             
-            print(f"🗓️ Generating itinerary with slots: destination={slots.destination}, dates={slots.start_date}-{slots.end_date}, budget={slots.budget_per_night}")
+            print(f"🗓️ Generating 3 personalized itinerary variants for: destination={slots.destination}, dates={slots.start_date}-{slots.end_date}")
             
-            # Step 1: Generate itinerary using planner_agent
-            planner_output = await self.planner_agent.generate_itinerary(slots, retrieval_facts)
+            # For demo purposes, create a mock user profile for persona-based planning
+            mock_user_profile = {
+                "persona_classification": {
+                    "primary_persona": "cultural_explorer",
+                    "primary_confidence": 0.85,
+                    "secondary_persona": "adventure_seeker"
+                },
+                "structured_data": {
+                    "travel_style": ["culture", "adventure"],
+                    "budget_range": {"min": 50000, "max": 100000, "currency": "INR"},
+                    "pace_preference": "balanced",
+                    "authenticity_preference": 0.8
+                }
+            }
             
-            # Step 2: Validate using validator_agent
-            validation_result = await self.validator_agent.validate(planner_output, retrieval_facts)
+            # Step 1: Generate 3 itinerary variants (Adventurer, Balanced, Luxury)
+            variants = await self._generate_three_itinerary_variants(slots, retrieval_facts, mock_user_profile)
             
-            # Step 3: Format response using ux_agent (conversation_agent render)
-            ux_response = await self.ux_agent.format_response(planner_output, validation_result)
+            # Step 2: Apply dynamic pricing to each variant
+            priced_variants = []
+            for variant in variants:
+                pricing_result = await self._apply_dynamic_pricing(variant, mock_user_profile, slots)
+                priced_variants.append({**variant, "pricing": pricing_result})
             
-            # Step 4: Create UI actions for itinerary + hotel cards
-            ui_actions = self._create_itinerary_ui_actions(planner_output)
-            ui_actions.extend(self._create_hotel_ui_actions(planner_output.get('hotel_recommendations', [])))
+            # Step 3: Create enhanced UI response with 3 variants
+            ui_actions = await self._create_variant_ui_actions(priced_variants, mock_user_profile)
+            
+            # Step 4: Generate personalized response based on primary persona
+            persona_response = await self._generate_persona_based_response(priced_variants, mock_user_profile)
             
             return {
                 "chat_text": ux_response.get('human_text', 'Here\'s your personalized itinerary!'),
