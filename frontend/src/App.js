@@ -2611,6 +2611,11 @@ function App() {
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
+      setLoadingMessage('');
+      setLoadingStage(0);
+      if (loadingInterval) {
+        clearInterval(loadingInterval);
+      }
     }
   };
 
