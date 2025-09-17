@@ -1080,6 +1080,9 @@ RESPONSE STYLE:
                     "payload": {
                         "title": "Plan Your Perfect Trip",
                         "description": "Let's create an amazing itinerary tailored just for you!",
+                        "current_destination": slots.destination or "",
+                        "current_dates": f"{slots.start_date} to {slots.end_date}" if slots.start_date and slots.end_date else "",
+                        "current_budget": slots.budget_per_night or 8000,
                         "destination": slots.destination or "",
                         "start_date": slots.start_date or "",
                         "end_date": slots.end_date or "",
