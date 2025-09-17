@@ -167,10 +167,13 @@ class ConversationManager:
     
     async def _handle_planner_flow(self, message: str, slots: UserSlots, retrieval_facts: List[Dict], session_id: str) -> Dict[str, Any]:
         """
-        Planner flow: slot_agent → retrieval_agent → planner_agent → validator_agent → conversation_agent
-        Pre-generation mode: when intent = generate/plan → treat as planner mode with trip-planner card
+        Enhanced planner flow with profile intake and persona classification:
+        1. Profile intake (if not completed) → persona classification
+        2. Generate 3 itinerary variants (Adventurer, Balanced, Luxury)
+        3. Dynamic pricing for each variant
+        4. Present personalized options based on user persona
         """
-        print(f"🗓️ Handling planner flow")
+        print(f"🗓️ Handling enhanced planner flow with profile intake")
         
         # Check if we have enough information to generate itinerary
         # Only require destination - make dates and budget optional with defaults
