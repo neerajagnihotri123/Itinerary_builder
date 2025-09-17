@@ -2484,6 +2484,7 @@ function App() {
             console.log('🗓️ Added itinerary:', action.payload.id);
           } else if (action.type === 'trip_planner_card' && action.payload) {
             // Pre-populate trip planner with backend data
+            console.log('🎯 Processing trip_planner_card action!', action.payload);
             const payload = action.payload;
             if (payload.current_destination) {
               setTripDetails(prev => ({
@@ -2509,8 +2510,9 @@ function App() {
                 budget: payload.current_budget
               }));
             }
+            console.log('🎯 About to set showTripPlanner to true');
             setShowTripPlanner(true);
-            console.log('📋 Showing trip planner form with payload:', payload);
+            console.log('📋 Trip planner should now be showing with payload:', payload);
           }
         });
 
