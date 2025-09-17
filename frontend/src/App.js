@@ -2669,6 +2669,7 @@ function App() {
     }, 1000);
   };
 
+  // Add itinerary variants to chat as well-formatted timeline instead of right panel cards
   const handlePersonalizationComplete = async (responses) => {
     console.log('🎯 Personalization completed:', responses);
     console.log('🎯 Trip details for itinerary generation:', tripDetails);
@@ -2681,7 +2682,7 @@ function App() {
     const initialMessage = {
       id: Date.now().toString(),
       role: 'assistant',
-      content: `Fantastic! Based on your interests, I'm creating 3 personalized itinerary variants for ${targetDestination}. Let me show you the options...`
+      content: `Fantastic! Based on your interests, I've created 3 personalized itinerary variants for ${targetDestination}. Each one is designed for your travel style. Take a look at the options below and select the one that excites you most!`
     };
     setMessages(prev => [...prev, initialMessage]);
     
