@@ -28,7 +28,7 @@ app = FastAPI()
 # Configure CORS to allow frontend connection
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://ai-travel-planner-4.preview.emergentagent.com"],
+    allow_origins=["http://localhost:3000", "https://travel-persona.preview.emergentagent.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

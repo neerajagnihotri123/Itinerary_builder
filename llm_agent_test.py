@@ -5,7 +5,7 @@ from datetime import datetime
 import time
 
 class LLMAgentTester:
-    def __init__(self, base_url="https://ai-travel-planner-4.preview.emergentagent.com"):
+    def __init__(self, base_url="https://travel-persona.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.tests_run = 0
