@@ -9,7 +9,7 @@ import time
 
 def test_api_call(message, description):
     """Test a single API call"""
-    url = "https://travel-persona.preview.emergentagent.com/api/chat"
+    url = "https://ai-trip-planner-1.preview.emergentagent.com/api/chat"
     headers = {'Content-Type': 'application/json'}
     
     data = {
