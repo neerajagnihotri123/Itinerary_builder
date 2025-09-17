@@ -3596,6 +3596,24 @@ function App() {
               </div>
             )}
 
+            {/* Loading indicator */}
+            {isLoading && loadingMessage && (
+              <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div>
+                    <p className="text-orange-800 font-medium">{loadingMessage}</p>
+                    <div className="w-full bg-orange-200 h-1 rounded-full mt-2">
+                      <div 
+                        className="bg-orange-500 h-1 rounded-full transition-all duration-500"
+                        style={{ width: `${((loadingStage + 1) / 4) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Input */}
             <div className="flex gap-3">
               {/* Upload Plus Button - Moved to left */}
