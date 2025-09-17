@@ -1081,21 +1081,361 @@ class TravelloAPITester:
         print(f"\n🛡️ Error Handling Results: {error_tests_passed}/{len(error_scenarios)} scenarios handled appropriately")
         return error_tests_passed >= 3  # Pass if at least 3/4 scenarios work
 
+    def test_enhanced_chatbot_profile_intake_flow(self):
+        """Test ProfileAgent integration and profile intake conversation flow"""
+        print(f"\n👤 Testing PROFILE INTAKE FLOW - Enhanced Chatbot System...")
+        
+        # Test profile intake initiation when user requests trip planning
+        print(f"\n   🎯 SCENARIO 1: Profile Intake Initiation - 'plan a trip to Kerala'")
+        session_id_profile = f"{self.session_id}_profile_intake"
+        
+        chat_data_profile = {
+            "message": "plan a trip to Kerala",
+            "session_id": session_id_profile,
+            "user_profile": {}
+        }
+        
+        success_profile, response_profile = self.run_test("Profile Intake Initiation", "POST", "chat", 200, data=chat_data_profile)
+        
+        profile_intake_passed = False
+        if success_profile:
+            print(f"      📊 Profile Intake Response Analysis:")
+            chat_text = response_profile.get('chat_text', '')
+            ui_actions = response_profile.get('ui_actions', [])
+            metadata = response_profile.get('metadata', {})
+            
+            print(f"         Chat text length: {len(chat_text)}")
+            print(f"         Chat text preview: {chat_text[:150]}...")
+            print(f"         UI actions count: {len(ui_actions)}")
+            print(f"         Metadata: {metadata}")
+            
+            # Check for profile intake indicators
+            profile_indicators = ['travel style', 'preference', 'adventure', 'culture', 'luxury', 'budget', 'persona']
+            profile_matches = sum(1 for indicator in profile_indicators if indicator.lower() in chat_text.lower())
+            
+            # Check for persona classification question chips
+            persona_chips = [action for action in ui_actions 
+                           if action.get('type') == 'question_chip' and 
+                           action.get('payload', {}).get('category') == 'profile']
+            
+            print(f"         Profile indicators found: {profile_matches}/{len(profile_indicators)}")
+            print(f"         Persona question chips: {len(persona_chips)}")
+            
+            # Verify profile intake flow
+            if profile_matches >= 2 and len(persona_chips) >= 2:
+                profile_intake_passed = True
+                print(f"      ✅ PROFILE INTAKE PASSED: System initiated persona classification")
+                
+                # Show persona options
+                for i, chip in enumerate(persona_chips[:4]):
+                    payload = chip.get('payload', {})
+                    print(f"         Option {i+1}: {payload.get('question', 'N/A')}")
+            else:
+                print(f"      ❌ PROFILE INTAKE FAILED: Expected persona classification questions")
+                print(f"         Missing: Profile indicators or persona question chips")
+        
+        return profile_intake_passed
+
+    def test_enhanced_chatbot_itinerary_variants(self):
+        """Test generation of 3 personalized itinerary variants (Adventurer, Balanced, Luxury)"""
+        print(f"\n🗓️ Testing ITINERARY VARIANTS GENERATION - Enhanced Chatbot System...")
+        
+        # Test with mock user profile for variant generation
+        print(f"\n   🎯 SCENARIO 2: Three Itinerary Variants - 'plan a 5-day trip to Rajasthan'")
+        session_id_variants = f"{self.session_id}_itinerary_variants"
+        
+        # Mock user profile with completed persona classification
+        mock_user_profile = {
+            "persona_classification": {
+                "primary_persona": "cultural_explorer",
+                "primary_confidence": 0.85,
+                "secondary_persona": "adventure_seeker"
+            },
+            "structured_data": {
+                "travel_style": ["culture", "adventure"],
+                "budget_range": {"min": 50000, "max": 100000, "currency": "INR"}
+            }
+        }
+        
+        chat_data_variants = {
+            "message": "plan a 5-day trip to Rajasthan",
+            "session_id": session_id_variants,
+            "user_profile": mock_user_profile,
+            "trip_details": {
+                "destination": "Rajasthan",
+                "duration": "5 days",
+                "travelers": {"adults": 2, "children": 0}
+            }
+        }
+        
+        success_variants, response_variants = self.run_test("Itinerary Variants Generation", "POST", "chat", 200, data=chat_data_variants)
+        
+        variants_passed = False
+        if success_variants:
+            print(f"      📊 Itinerary Variants Response Analysis:")
+            chat_text = response_variants.get('chat_text', '')
+            ui_actions = response_variants.get('ui_actions', [])
+            metadata = response_variants.get('metadata', {})
+            
+            print(f"         Chat text length: {len(chat_text)}")
+            print(f"         Chat text preview: {chat_text[:150]}...")
+            print(f"         UI actions count: {len(ui_actions)}")
+            
+            # Check for variant indicators
+            variant_indicators = ['adventurer', 'balanced', 'luxury', 'variant', 'option', 'itinerary']
+            variant_matches = sum(1 for indicator in variant_indicators if indicator.lower() in chat_text.lower())
+            
+            # Check for itinerary display actions or trip planner cards
+            itinerary_actions = [action for action in ui_actions 
+                               if action.get('type') in ['itinerary_display', 'trip_planner_card']]
+            
+            # Check for variant-specific UI elements
+            variant_ui_elements = len([action for action in ui_actions 
+                                     if any(variant in str(action).lower() 
+                                           for variant in ['adventurer', 'balanced', 'luxury'])])
+            
+            print(f"         Variant indicators found: {variant_matches}/{len(variant_indicators)}")
+            print(f"         Itinerary actions: {len(itinerary_actions)}")
+            print(f"         Variant UI elements: {variant_ui_elements}")
+            print(f"         Enhanced planning: {metadata.get('enhanced_planning', False)}")
+            print(f"         Variants generated: {metadata.get('variants_generated', 0)}")
+            
+            # Verify variants generation
+            if (variant_matches >= 2 and 
+                (len(itinerary_actions) > 0 or variant_ui_elements > 0 or 
+                 metadata.get('variants_generated', 0) > 0)):
+                variants_passed = True
+                print(f"      ✅ ITINERARY VARIANTS PASSED: System generated personalized variants")
+            else:
+                print(f"      ❌ ITINERARY VARIANTS FAILED: Expected 3 personalized variants")
+                print(f"         Missing: Variant indicators or itinerary actions")
+        
+        return variants_passed
+
+    def test_enhanced_chatbot_dynamic_pricing(self):
+        """Test dynamic pricing integration with PricingAgent"""
+        print(f"\n💰 Testing DYNAMIC PRICING - Enhanced Chatbot System...")
+        
+        # Test pricing integration in trip planning response
+        print(f"\n   🎯 SCENARIO 3: Dynamic Pricing Integration - Trip planning with pricing")
+        session_id_pricing = f"{self.session_id}_dynamic_pricing"
+        
+        # Mock user profile for pricing calculation
+        mock_user_profile = {
+            "persona_classification": {
+                "primary_persona": "luxury_connoisseur",
+                "primary_confidence": 0.90
+            },
+            "structured_data": {
+                "budget_range": {"min": 100000, "max": 200000, "currency": "INR"}
+            }
+        }
+        
+        chat_data_pricing = {
+            "message": "show me luxury hotels in Goa with pricing",
+            "session_id": session_id_pricing,
+            "user_profile": mock_user_profile,
+            "trip_details": {
+                "destination": "Goa",
+                "budget": {"per_night": 15000, "currency": "INR"}
+            }
+        }
+        
+        success_pricing, response_pricing = self.run_test("Dynamic Pricing Integration", "POST", "chat", 200, data=chat_data_pricing)
+        
+        pricing_passed = False
+        if success_pricing:
+            print(f"      📊 Dynamic Pricing Response Analysis:")
+            chat_text = response_pricing.get('chat_text', '')
+            ui_actions = response_pricing.get('ui_actions', [])
+            
+            # Check for pricing indicators
+            pricing_indicators = ['₹', 'price', 'cost', 'budget', 'luxury', 'premium', 'per night']
+            pricing_matches = sum(1 for indicator in pricing_indicators if indicator in chat_text)
+            
+            # Check hotel cards with pricing information
+            hotel_cards = [action for action in ui_actions 
+                          if action.get('type') == 'card_add' and 
+                          action.get('payload', {}).get('category') == 'hotel']
+            
+            pricing_in_cards = 0
+            for hotel_card in hotel_cards:
+                payload = hotel_card.get('payload', {})
+                if payload.get('price_estimate') or '₹' in str(payload):
+                    pricing_in_cards += 1
+            
+            print(f"         Pricing indicators found: {pricing_matches}/{len(pricing_indicators)}")
+            print(f"         Hotel cards with pricing: {pricing_in_cards}/{len(hotel_cards)}")
+            print(f"         Total hotel cards: {len(hotel_cards)}")
+            
+            # Verify dynamic pricing
+            if pricing_matches >= 3 and pricing_in_cards > 0:
+                pricing_passed = True
+                print(f"      ✅ DYNAMIC PRICING PASSED: System integrated pricing information")
+                
+                # Show pricing details
+                for i, hotel_card in enumerate(hotel_cards[:2]):
+                    payload = hotel_card.get('payload', {})
+                    price_estimate = payload.get('price_estimate', {})
+                    if price_estimate:
+                        print(f"         Hotel {i+1}: {payload.get('title', 'N/A')} - ₹{price_estimate.get('min', 'N/A')}-{price_estimate.get('max', 'N/A')}/night")
+            else:
+                print(f"      ❌ DYNAMIC PRICING FAILED: Expected pricing information in response")
+        
+        return pricing_passed
+
+    def test_enhanced_chatbot_agent_integration(self):
+        """Test ProfileAgent and PricingAgent integration into ConversationManager"""
+        print(f"\n🤖 Testing AGENT INTEGRATION - Enhanced Chatbot System...")
+        
+        # Test agent routing and integration
+        print(f"\n   🎯 SCENARIO 4: Agent Integration - Multiple agent coordination")
+        session_id_agents = f"{self.session_id}_agent_integration"
+        
+        test_scenarios = [
+            {
+                "message": "plan a luxury trip to Kerala",
+                "expected_agents": ["profile_agent", "planner_agent", "pricing_agent"],
+                "description": "Luxury trip planning with profile and pricing"
+            },
+            {
+                "message": "I love adventure and want to explore Himachal",
+                "expected_agents": ["profile_agent", "retrieval_agent"],
+                "description": "Adventure preference with profile classification"
+            }
+        ]
+        
+        agent_integration_passed = 0
+        for i, scenario in enumerate(test_scenarios):
+            print(f"\n      Testing: {scenario['description']}")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{session_id_agents}_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Agent Integration {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                chat_text = response.get('chat_text', '')
+                metadata = response.get('metadata', {})
+                
+                # Check for agent integration indicators
+                agent_indicators = ['profile', 'persona', 'pricing', 'variant', 'enhanced']
+                agent_matches = sum(1 for indicator in agent_indicators if indicator.lower() in chat_text.lower())
+                
+                # Check metadata for agent information
+                agent_metadata = metadata.get('agent', '')
+                enhanced_planning = metadata.get('enhanced_planning', False)
+                
+                print(f"         Agent indicators: {agent_matches}/{len(agent_indicators)}")
+                print(f"         Agent metadata: {agent_metadata}")
+                print(f"         Enhanced planning: {enhanced_planning}")
+                
+                if agent_matches >= 1 or enhanced_planning:
+                    agent_integration_passed += 1
+                    print(f"         ✅ Agent integration working")
+                else:
+                    print(f"         ❌ Limited agent integration detected")
+        
+        print(f"\n   🤖 Agent Integration Results: {agent_integration_passed}/{len(test_scenarios)} scenarios passed")
+        return agent_integration_passed >= 1
+
+    def test_enhanced_chatbot_core_functionality(self):
+        """Test that existing core functionality still works with enhanced system"""
+        print(f"\n🔧 Testing CORE FUNCTIONALITY PRESERVATION - Enhanced Chatbot System...")
+        
+        # Test existing functionality scenarios
+        core_scenarios = [
+            {
+                "message": "tell me about Goa",
+                "expected_type": "destination_info",
+                "description": "Destination discovery (existing functionality)"
+            },
+            {
+                "message": "hotels in Manali", 
+                "expected_type": "accommodation_search",
+                "description": "Hotel search (existing functionality)"
+            },
+            {
+                "message": "hello, how can you help me?",
+                "expected_type": "general_conversation",
+                "description": "General conversation (existing functionality)"
+            }
+        ]
+        
+        core_functionality_passed = 0
+        for i, scenario in enumerate(core_scenarios):
+            print(f"\n   Testing: {scenario['description']}")
+            
+            chat_data = {
+                "message": scenario["message"],
+                "session_id": f"{self.session_id}_core_{i}",
+                "user_profile": {}
+            }
+            
+            success, response = self.run_test(f"Core Functionality {i+1}", "POST", "chat", 200, data=chat_data)
+            
+            if success:
+                chat_text = response.get('chat_text', '')
+                ui_actions = response.get('ui_actions', [])
+                
+                # Verify appropriate response for each scenario type
+                scenario_passed = False
+                
+                if scenario["expected_type"] == "destination_info":
+                    destination_cards = [a for a in ui_actions if a.get('payload', {}).get('category') == 'destination']
+                    if len(destination_cards) > 0 or 'goa' in chat_text.lower():
+                        scenario_passed = True
+                        print(f"      ✅ Destination info working: {len(destination_cards)} cards generated")
+                
+                elif scenario["expected_type"] == "accommodation_search":
+                    hotel_cards = [a for a in ui_actions if a.get('payload', {}).get('category') == 'hotel']
+                    if len(hotel_cards) > 0 or 'hotel' in chat_text.lower():
+                        scenario_passed = True
+                        print(f"      ✅ Hotel search working: {len(hotel_cards)} hotel cards generated")
+                
+                elif scenario["expected_type"] == "general_conversation":
+                    if len(chat_text) > 20 and any(word in chat_text.lower() for word in ['help', 'assist', 'travel']):
+                        scenario_passed = True
+                        print(f"      ✅ General conversation working: Helpful response provided")
+                
+                if scenario_passed:
+                    core_functionality_passed += 1
+                else:
+                    print(f"      ❌ Core functionality issue detected")
+                    print(f"         Response: {chat_text[:100]}...")
+                    print(f"         UI actions: {len(ui_actions)}")
+        
+        print(f"\n   🔧 Core Functionality Results: {core_functionality_passed}/{len(core_scenarios)} scenarios working")
+        return core_functionality_passed >= 2
+
     def test_review_request_critical_scenarios(self):
         """Test the exact critical scenarios from the review request"""
-        print(f"\n🎯 Testing ENHANCED CHAT FUNCTIONALITY - Review Request Scenarios...")
+        print(f"\n🎯 Testing ENHANCED CHATBOT SYSTEM - Review Request Scenarios...")
         
-        # PRIMARY TEST SCENARIO 1: "tell me about kerala" - should generate single destination card
-        print(f"\n   🌴 SCENARIO 1: Destination Specific Query - 'tell me about kerala'")
-        session_id_1 = f"{self.session_id}_kerala_destination"
+        # Run all enhanced chatbot tests
+        profile_intake_passed = self.test_enhanced_chatbot_profile_intake_flow()
+        variants_passed = self.test_enhanced_chatbot_itinerary_variants()
+        pricing_passed = self.test_enhanced_chatbot_dynamic_pricing()
+        agent_integration_passed = self.test_enhanced_chatbot_agent_integration()
+        core_functionality_passed = self.test_enhanced_chatbot_core_functionality()
+        
+        # Test priority scenarios from review request
+        print(f"\n   🎯 PRIORITY TEST SCENARIOS:")
+        
+        # PRIMARY TEST SCENARIO 1: "plan a trip to Kerala" - should trigger profile intake
+        print(f"\n   🌴 SCENARIO 1: Profile Intake Trigger - 'plan a trip to Kerala'")
+        session_id_1 = f"{self.session_id}_kerala_planning"
         
         chat_data_kerala = {
-            "message": "tell me about kerala",
+            "message": "plan a trip to Kerala",
             "session_id": session_id_1,
             "user_profile": {}
         }
         
-        success_kerala, response_kerala = self.run_test("Kerala Destination Query", "POST", "chat", 200, data=chat_data_kerala)
+        success_kerala, response_kerala = self.run_test("Kerala Trip Planning", "POST", "chat", 200, data=chat_data_kerala)
         
         scenario_1_passed = False
         kerala_query_type = None
