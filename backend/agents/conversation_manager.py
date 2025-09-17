@@ -398,7 +398,7 @@ class ConversationManager:
                 "metadata": {
                     "intent": "plan",
                     "variants_generated": len(priced_variants),
-                    "primary_persona": user_profile.get("persona_classification", {}).get("primary_persona", "unknown"),
+                    "primary_persona": mock_user_profile.get("persona_classification", {}).get("primary_persona", "unknown"),
                     "agent": "conversation_manager",
                     "enhanced_planning": True
                 }
