@@ -2381,6 +2381,7 @@ function App() {
   const [currentTourImageIndex, setCurrentTourImageIndex] = useState(0);
   const [currentActivityImageIndex, setCurrentActivityImageIndex] = useState(0);
   const [currentDestinationImageIndex, setCurrentDestinationImageIndex] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
