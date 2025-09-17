@@ -2670,6 +2670,7 @@ function App() {
 
   const handlePersonalizationComplete = async (responses) => {
     console.log('🎯 Personalization completed:', responses);
+    console.log('🎯 Trip details for itinerary generation:', tripDetails);
     setShowPersonalizationModal(false);
     setIsLoading(true);
     
