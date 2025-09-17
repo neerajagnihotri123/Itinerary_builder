@@ -1050,8 +1050,8 @@ async def handle_trip_planner_submission(request: dict) -> ChatResponse:
         
         conversation_manager = ConversationManager(chat_client)
         
-        # Generate personalized itinerary variants
-        result = await conversation_manager.generate_personalized_itinerary_variants(trip_details, session_id)
+        # Generate personalized itinerary variants (optimized for speed)
+        result = await generate_quick_itinerary_variants(trip_details, conversation_manager, session_id)
         
         return ChatResponse(
             chat_text=result.get("chat_text", "I've created amazing itinerary options for you!"),
