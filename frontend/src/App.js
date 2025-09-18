@@ -4402,6 +4402,14 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Interactive Trip Map */}
+                  <div className="mb-8">
+                    <InteractiveTripMap 
+                      selectedVariant={selectedVariant} 
+                      tripDetails={tripDetails}
+                    />
+                  </div>
+
                   {/* Detailed Day-by-Day Itinerary */}
                   <div className="space-y-6">
                     <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
