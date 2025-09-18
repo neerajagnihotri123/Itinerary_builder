@@ -334,16 +334,34 @@ Always provide helpful, specific, and engaging responses that move the conversat
     async def _handle_general_inquiry(self, session_id: str, message: str, intent_analysis: Dict) -> ChatResponse:
         """Handle general travel inquiries and greetings using LLM"""
         try:
+            # Determine query type for better LLM response
+            query_type = "general"
+            if any(word in message.lower() for word in ["destination", "place", "where to go", "suggest", "recommend"]):
+                query_type = "destination_suggestion"
+            elif any(word in message.lower() for word in ["hotel", "accommodation", "stay", "resort", "lodge"]):
+                query_type = "accommodation_suggestion"
+            elif any(word in message.lower() for word in ["beach", "beaches", "coastal", "seaside"]):
+                query_type = "beach_suggestion"
+            elif any(word in message.lower() for word in ["hello", "hi", "hey", "good morning", "good evening"]):
+                query_type = "greeting"
+            
             context = f"""
             You are Travello.ai, a friendly AI travel assistant. The user said: "{message}"
             
-            Respond naturally and helpfully. Guidelines:
-            - Be enthusiastic and helpful about travel
-            - If it's a greeting, respond warmly and introduce your capabilities
-            - If it's a general travel question, provide helpful information
-            - Always try to guide the conversation toward planning a trip
-            - Keep responses conversational and engaging (2-3 sentences)
-            - End with a question to continue the conversation
+            Query type: {query_type}
+            
+            Respond naturally and helpfully based on the query type:
+            - If greeting: Welcome them warmly and introduce your travel planning capabilities
+            - If destination suggestion: Provide 3-4 specific destination recommendations with brief descriptions
+            - If accommodation suggestion: Suggest different types of accommodations and what to look for
+            - If beach suggestion: Recommend specific beaches with their unique features
+            - If general: Answer their travel question helpfully
+            
+            Guidelines:
+            - Be enthusiastic and knowledgeable about travel
+            - Provide specific, actionable information
+            - Keep responses conversational but informative (3-4 sentences)
+            - Always end with a follow-up question to continue conversation
             
             Don't use JSON format - just respond naturally as Travello.ai.
             """
@@ -352,15 +370,29 @@ Always provide helpful, specific, and engaging responses that move the conversat
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(user_msg)
             
-            # Generate contextual follow-up questions as suggestions for user to ask
-            follow_up_questions = [
-                "Tell me about your travel services",
-                "Show me popular destinations", 
-                "How does your trip planning work?"
-            ]
-            
-            # If the message seems like a greeting, provide more welcoming follow-ups
-            if any(word in message.lower() for word in ["hello", "hi", "hey", "good morning", "good evening"]):
+            # Generate contextual follow-up questions based on query type
+            if query_type == "destination_suggestion":
+                follow_up_questions = [
+                    "Plan a trip to Kerala",
+                    "Show me adventure destinations", 
+                    "Find cultural heritage sites",
+                    "Suggest beach destinations"
+                ]
+            elif query_type == "accommodation_suggestion":
+                follow_up_questions = [
+                    "Find luxury resorts in Goa",
+                    "Show budget hotels in Delhi",
+                    "Plan a resort stay in Kerala",
+                    "Find boutique hotels"
+                ]
+            elif query_type == "beach_suggestion":
+                follow_up_questions = [
+                    "Plan a beach trip to Goa",
+                    "Show water sports destinations",
+                    "Find secluded beaches",
+                    "Plan a coastal road trip"
+                ]
+            else:
                 follow_up_questions = [
                     "Plan a trip to Goa",
                     "Show me adventure destinations",
@@ -368,9 +400,65 @@ Always provide helpful, specific, and engaging responses that move the conversat
                     "Plan a cultural tour"
                 ]
             
-            # Generate sample destination cards for general inquiries to showcase capabilities
+            # Generate dynamic recommendation cards based on query type using LLM
             ui_actions = []
-            if any(word in message.lower() for word in ["hello", "hi", "hey", "good morning", "good evening", "what can you", "help"]):
+            if query_type in ["greeting", "destination_suggestion", "beach_suggestion"]:
+                # Generate LLM-powered recommendations instead of hardcoded ones
+                recommendations_prompt = f"""
+                Generate 3 travel recommendations for a user who asked: "{message}"
+                
+                Query type: {query_type}
+                
+                Return ONLY a JSON array with 3 recommendations in this exact format:
+                [
+                  {{
+                    "category": "destination",
+                    "id": "unique_id",
+                    "title": "Destination Name",
+                    "description": "Brief engaging description (1-2 sentences)",
+                    "image": "https://images.unsplash.com/400x300/?destination_name",
+                    "rating": 4.5,
+                    "price_estimate": {{"min": 8000, "max": 15000}},
+                    "location": "State/Region",
+                    "highlights": ["Feature1", "Feature2", "Feature3", "Feature4"],
+                    "why_match": "Why this matches the user's query"
+                  }}
+                ]
+                
+                Make recommendations relevant to their query and include real Indian destinations.
+                """
+                
+                try:
+                    rec_client = self._get_llm_client(session_id)
+                    rec_response = await rec_client.send_message(UserMessage(text=recommendations_prompt))
+                    
+                    # Parse LLM recommendations
+                    import json
+                    import re
+                    json_text = rec_response
+                    if '```json' in json_text:
+                        json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                        if json_match:
+                            json_text = json_match.group(1)
+                    elif '```' in json_text:
+                        json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                        if json_match:
+                            json_text = json_match.group(1)
+                    
+                    recommendations = json.loads(json_text.strip())
+                    
+                    for rec in recommendations:
+                        ui_actions.append(
+                            UIAction(
+                                type="card_add",
+                                payload=rec
+                            ).dict()
+                        )
+                        
+                except Exception as e:
+                    logger.error(f"LLM recommendations error: {e}")
+                    # Fallback to default recommendations if LLM fails
+                    pass
                 # Add popular destination cards to showcase capabilities
                 sample_destinations = [
                     {
