@@ -126,39 +126,126 @@ class SustainabilitySeasonalityAgent:
         
         return tags
         
-        # Seasonal data for different destinations
-        self.seasonal_data = {
-            "goa": {
-                "peak_season": [(11, 3)],  # November to March
-                "monsoon": [(6, 9)],       # June to September
-                "best_weather": [(12, 2)], # December to February
-                "events": {
-                    "christmas_new_year": {"dates": [(12, 20, 1, 5)], "impact": "high_demand"},
-                    "carnival": {"dates": [(2, 15, 2, 20)], "impact": "cultural_highlight"},
-                    "monsoon_festivals": {"dates": [(8, 1, 8, 31)], "impact": "indoor_activities"}
-                }
-            },
-            "kerala": {
-                "peak_season": [(10, 3)],
-                "monsoon": [(6, 8)],
-                "best_weather": [(12, 2)],
-                "events": {
-                    "onam": {"dates": [(8, 15, 8, 25)], "impact": "cultural_highlight"},
-                    "boat_races": {"dates": [(8, 1, 9, 30)], "impact": "special_attractions"},
-                    "ayurveda_season": {"dates": [(6, 1, 8, 31)], "impact": "wellness_focus"}
-                }
-            },
-            "rajasthan": {
-                "peak_season": [(10, 3)],
-                "hot_season": [(4, 6)],
-                "best_weather": [(11, 2)],
-                "events": {
-                    "desert_festival": {"dates": [(2, 10, 2, 15)], "impact": "cultural_highlight"},
-                    "pushkar_fair": {"dates": [(11, 1, 11, 15)], "impact": "high_demand"},
-                    "holi": {"dates": [(3, 10, 3, 15)], "impact": "festive_season"}
-                }
-            }
+    async def _apply_seasonality_adjustments(self, variant: ItineraryVariant, destination: str, travel_date: str) -> ItineraryVariant:
+        """Apply seasonality adjustments to variant using LLM analysis"""
+        try:
+            if not travel_date:
+                return variant
+            
+            date_obj = datetime.fromisoformat(travel_date)
+            month_name = calendar.month_name[date_obj.month]
+            
+            # Get LLM-based seasonal analysis
+            seasonal_analysis = await self._get_seasonal_analysis_llm(destination, travel_date, month_name)
+            
+            if seasonal_analysis:
+                # Adjust activities based on seasonal analysis
+                variant = await self._adjust_activities_for_season_llm(variant, seasonal_analysis)
+                
+                # Add seasonal highlights
+                if seasonal_analysis.get("highlights"):
+                    variant.highlights.extend(seasonal_analysis["highlights"])
+                
+                # Update description with seasonal context
+                if seasonal_analysis.get("seasonal_context"):
+                    variant.description += f" - {seasonal_analysis['seasonal_context']}"
+            
+            return variant
+            
+        except Exception as e:
+            logger.error(f"Seasonality adjustment error: {e}")
+            return variant
+
+    async def _get_seasonal_analysis_llm(self, destination: str, travel_date: str, month_name: str) -> Dict[str, Any]:
+        """Get seasonal analysis using LLM"""
+        try:
+            context = f"""
+            Analyze the seasonal characteristics for traveling to {destination} in {month_name}.
+            
+            Destination: {destination}
+            Travel Date: {travel_date}
+            Month: {month_name}
+            
+            Provide seasonal analysis including:
+            1. Season type (peak/monsoon/ideal/normal/hot)
+            2. Weather characteristics
+            3. Special events or festivals during this time
+            4. Seasonal highlights and benefits
+            5. Travel recommendations and adjustments needed
+            6. Any seasonal activities to emphasize or avoid
+            
+            Respond in JSON format:
+            {{
+                "season_type": "peak|monsoon|ideal|normal|hot",
+                "weather_description": "Brief weather description",
+                "events": ["event1", "event2"],
+                "highlights": ["highlight1", "highlight2", "highlight3"],
+                "seasonal_context": "Description for variant",
+                "activity_adjustments": ["adjustment1", "adjustment2"],
+                "benefits": ["benefit1", "benefit2"]
+            }}
+            """
+            
+            user_msg = UserMessage(content=context)
+            response = await self.llm_client.send_message(user_msg)
+            
+            # Parse JSON response
+            import json
+            try:
+                analysis = json.loads(response.content)
+                return analysis
+            except json.JSONDecodeError:
+                logger.error("Failed to parse seasonal analysis JSON")
+                return self._get_fallback_seasonal_analysis(destination, month_name)
+            
+        except Exception as e:
+            logger.error(f"LLM seasonal analysis error: {e}")
+            return self._get_fallback_seasonal_analysis(destination, month_name)
+
+    def _get_fallback_seasonal_analysis(self, destination: str, month_name: str) -> Dict[str, Any]:
+        """Fallback seasonal analysis if LLM fails"""
+        return {
+            "season_type": "normal",
+            "weather_description": f"Typical {month_name} weather in {destination}",
+            "events": [],
+            "highlights": [f"Experience {destination} in {month_name}"],
+            "seasonal_context": f"tailored for {destination} in {month_name}",
+            "activity_adjustments": [],
+            "benefits": [f"Enjoy {destination}'s {month_name} atmosphere"]
         }
+
+    async def _adjust_activities_for_season_llm(self, variant: ItineraryVariant, seasonal_analysis: Dict[str, Any]) -> ItineraryVariant:
+        """Adjust activities based on LLM seasonal analysis"""
+        try:
+            season_type = seasonal_analysis.get("season_type", "normal")
+            activity_adjustments = seasonal_analysis.get("activity_adjustments", [])
+            
+            for day in variant.daily_itinerary:
+                for activity in day.activities:
+                    # Apply seasonal adjustments to activity descriptions
+                    if season_type == "monsoon" and activity.type.value in ["adventure", "sightseeing"]:
+                        if "outdoor" in activity.description.lower():
+                            activity.description += " (Weather-dependent during monsoon - indoor alternatives available)"
+                            activity.sustainability_tags.append("weather_flexible")
+                    
+                    elif season_type == "peak":
+                        activity.description += " (Advance booking recommended during peak season)"
+                        activity.sustainability_tags.append("advance_booking")
+                    
+                    elif season_type == "hot" and "outdoor" in activity.description.lower():
+                        activity.description += " (Early morning or evening timing recommended during hot season)"
+                        activity.sustainability_tags.append("timing_flexible")
+                    
+                    # Apply specific adjustments from LLM analysis
+                    for adjustment in activity_adjustments:
+                        if any(keyword in activity.name.lower() for keyword in adjustment.lower().split()):
+                            activity.sustainability_tags.append("seasonal_adapted")
+            
+            return variant
+            
+        except Exception as e:
+            logger.error(f"Activity season adjustment error: {e}")
+            return variant
     
     async def enhance_variants(self, session_id: str, variants: List[ItineraryVariant]) -> List[ItineraryVariant]:
         """Enhance variants with sustainability and seasonality data"""
