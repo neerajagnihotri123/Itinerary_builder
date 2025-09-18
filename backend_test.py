@@ -490,18 +490,17 @@ class TravelloBackendTester:
             
         return False
 
-    def test_complete_flow(self):
-        """Test the complete trip planning flow"""
-        print(f"\n🧪 Testing Complete Trip Planning Flow (Session: {self.session_id})")
+    def test_critical_llm_integration(self):
+        """Test the critical LLM integration scenarios from review request"""
+        print(f"\n🧪 Testing Critical LLM Integration Scenarios")
         print("=" * 80)
         
-        # Test sequence
+        # Test sequence focusing on the review request scenarios
         tests = [
             ("Health Check", self.test_health_check),
-            ("Chat Trip Planning", self.test_chat_endpoint_trip_planning),
-            ("Profile Intake", self.test_profile_intake_endpoint),
-            ("Persona Classification", self.test_persona_classification_endpoint),
-            ("Generate Itinerary", self.test_generate_itinerary_endpoint)
+            ("Chat Greeting Message", self.test_chat_greeting_message),
+            ("Chat Trip Planning Message", self.test_chat_trip_planning_message), 
+            ("Chat General Question", self.test_chat_general_question)
         ]
         
         passed = 0
