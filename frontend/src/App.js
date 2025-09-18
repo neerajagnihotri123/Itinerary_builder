@@ -2847,7 +2847,7 @@ function App() {
     }, 1000);
   };
 
-  // Add itinerary variants to chat as well-formatted timeline instead of right panel cards
+  // Handle personalization completion with new backend
   const handlePersonalizationComplete = async (responses) => {
     console.log('🎯 Personalization completed:', responses);
     console.log('🎯 Trip details for itinerary generation:', tripDetails);
@@ -2856,38 +2856,109 @@ function App() {
     
     const targetDestination = tripDetails.destination || 'your destination';
     
-    // Add initial itinerary message to chat
-    const initialMessage = {
-      id: Date.now().toString(),
-      role: 'assistant',
-      content: `Fantastic! Based on your interests, I've created 3 personalized itinerary variants for ${targetDestination}. Each one is designed for your travel style. Take a look at the options below and select the one that excites you most!`
-    };
-    setMessages(prev => [...prev, initialMessage]);
-    
     try {
-      console.log('🎯 Calling trip-planner endpoint with personalization data');
-      console.log('🎯 Using BACKEND_URL:', BACKEND_URL);
+      console.log('🎯 Calling new backend persona classification endpoint');
       
-      const requestData = {
-        destination: tripDetails.destination,
-        start_date: tripDetails.startDate,
-        end_date: tripDetails.endDate,
-        adults: tripDetails.adults || 2,
-        children: tripDetails.children || 0,
-        budget_per_night: tripDetails.budget || 8000,
-        preferences: responses,
-        user_profile: { ...userProfile, ...responses },
-        session_id: sessionId
-      };
-      console.log('🎯 Request data:', requestData);
-      
-      // Call the trip-planner endpoint with personalization data
-      const response = await fetch(`${BACKEND_URL}/api/trip-planner`, {
+      // Step 1: Send profile responses to profile intake endpoint
+      const profileResponse = await fetch(`${BACKEND_URL}/api/profile-intake`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify({
+          session_id: sessionId,
+          responses: responses
+        })
+      });
+      
+      if (!profileResponse.ok) {
+        throw new Error(`Profile intake failed: ${profileResponse.status}`);
+      }
+      
+      const profileResult = await profileResponse.json();
+      console.log('✅ Profile intake result:', profileResult);
+      
+      // Step 2: Trigger persona classification and itinerary generation
+      const personaResponse = await fetch(`${BACKEND_URL}/api/persona-classification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          trip_details: {
+            destination: tripDetails.destination,
+            start_date: tripDetails.startDate || '2024-12-15',
+            end_date: tripDetails.endDate || '2024-12-20',
+            adults: tripDetails.adults || 2,
+            children: tripDetails.children || 0,
+            budget_per_night: tripDetails.budget || 8000
+          },
+          profile_data: responses
+        })
+      });
+      
+      if (!personaResponse.ok) {
+        throw new Error(`Persona classification failed: ${personaResponse.status}`);
+      }
+      
+      const personaResult = await personaResponse.json();
+      console.log('✅ Persona classification result:', personaResult);
+      
+      // Step 3: Generate itinerary variants
+      const itineraryResponse = await fetch(`${BACKEND_URL}/api/generate-itinerary`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          trip_details: {
+            destination: tripDetails.destination,
+            start_date: tripDetails.startDate || '2024-12-15',
+            end_date: tripDetails.endDate || '2024-12-20',
+            adults: tripDetails.adults || 2,
+            children: tripDetails.children || 0,
+            budget_per_night: tripDetails.budget || 8000
+          },
+          persona_tags: personaResult.persona_tags || []
+        })
+      });
+      
+      if (!itineraryResponse.ok) {
+        throw new Error(`Itinerary generation failed: ${itineraryResponse.status}`);
+      }
+      
+      const itineraryResult = await itineraryResponse.json();
+      console.log('✅ Itinerary generation result:', itineraryResult);
+      
+      // Display itinerary timeline in chat
+      if (itineraryResult.variants && itineraryResult.variants.length > 0) {
+        const timelineMessage = {
+          id: Date.now().toString() + '_timeline',
+          role: 'assistant',
+          content: 'itinerary_timeline',
+          variants: itineraryResult.variants,
+          destination: targetDestination
+        };
+        
+        setMessages(prev => [...prev, timelineMessage]);
+        console.log('🎯 Added itinerary timeline to chat');
+      }
+      
+    } catch (error) {
+      console.error('❌ Personalization completion error:', error);
+      
+      const errorMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `I encountered an error while creating your personalized itinerary. Let me try a different approach. Could you tell me more about what kind of ${targetDestination} experience you're looking for?`
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
       });
       
       if (response.ok) {
