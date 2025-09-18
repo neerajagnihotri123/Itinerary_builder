@@ -287,7 +287,7 @@ Always provide helpful, specific, and engaging responses that move the conversat
             Respond as if talking directly to the user, no JSON format needed.
             """
             
-            user_msg = UserMessage(content=context)
+            user_msg = UserMessage(text=context)
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(user_msg)
             
