@@ -459,6 +459,46 @@ Always provide helpful, specific, and engaging responses that move the conversat
                     
                     recommendations = json.loads(json_text.strip())
                     
+                    # Validate and fix image URLs
+                    image_map = {
+                        "beach": "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=400&h=300&fit=crop",
+                        "goa": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop", 
+                        "kerala": "https://images.unsplash.com/photo-1580490006164-4d93fc09ea97?w=400&h=300&fit=crop",
+                        "hotel": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop",
+                        "luxury": "https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?w=400&h=300&fit=crop",
+                        "mountain": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop",
+                        "city": "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400&h=300&fit=crop",
+                        "cultural": "https://images.unsplash.com/photo-1591640140449-bfb5d00b8c3b?w=400&h=300&fit=crop",
+                        "default": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"
+                    }
+                    
+                    for rec in recommendations:
+                        # Fix invalid image URLs
+                        if rec.get("image") and not rec["image"].startswith("https://images.unsplash.com/photo-"):
+                            # Try to find appropriate image based on title/category
+                            title_lower = rec.get("title", "").lower()
+                            category_lower = rec.get("category", "").lower()
+                            
+                            if any(word in title_lower for word in ["beach", "coastal", "seaside"]):
+                                rec["image"] = image_map["beach"]
+                            elif any(word in title_lower for word in ["goa", "anjuna", "baga"]):
+                                rec["image"] = image_map["goa"]  
+                            elif any(word in title_lower for word in ["kerala", "backwater", "alleppey"]):
+                                rec["image"] = image_map["kerala"]
+                            elif any(word in title_lower for word in ["hotel", "resort", "accommodation"]):
+                                if "luxury" in title_lower or "premium" in title_lower:
+                                    rec["image"] = image_map["luxury"]
+                                else:
+                                    rec["image"] = image_map["hotel"]
+                            elif any(word in title_lower for word in ["mountain", "hill", "trek"]):
+                                rec["image"] = image_map["mountain"]
+                            elif any(word in title_lower for word in ["city", "urban", "metro"]):
+                                rec["image"] = image_map["city"]
+                            elif any(word in title_lower for word in ["temple", "heritage", "cultural"]):
+                                rec["image"] = image_map["cultural"]
+                            else:
+                                rec["image"] = image_map["default"]
+                    
                     for rec in recommendations:
                         ui_actions.append(
                             UIAction(
