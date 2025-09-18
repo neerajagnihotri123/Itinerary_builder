@@ -361,113 +361,10 @@ class AdventurerAgent(BaseItineraryAgent):
     def _get_variant_description(self) -> str:
         return "Action-packed with outdoor activities, adventure sports, and thrilling experiences"
     
-    async def _get_day_activities(self, day: int, destination: str, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[Activity]:
-        """Generate adventure-focused activities"""
-        activities = []
-        
-        if day == 1:
-            # Arrival day
-            activities.extend([
-                Activity(
-                    id=f"adv_arrival_{day}",
-                    name="Airport Transfer & Adventure Briefing",
-                    type=ActivityType.ARRIVAL,
-                    time="10:00",
-                    duration="2 hours",
-                    location=f"{destination} Airport to Adventure Base",
-                    description="Smooth arrival with adventure gear briefing and safety orientation",
-                    cost=2500,
-                    image=f"https://images.unsplash.com/800x400/?adventure-briefing-{destination.lower()}",
-                    sustainability_tags=["local_transport"]
-                ),
-                Activity(
-                    id=f"adv_activity_{day}_1",
-                    name="Rock Climbing & Rappelling",
-                    type=ActivityType.ADVENTURE,
-                    time="14:00",
-                    duration="4 hours",
-                    location=f"{destination} Adventure Park",
-                    description="Adrenaline-pumping rock climbing with professional instructors and safety gear",
-                    cost=4500,
-                    image=f"https://images.unsplash.com/800x400/?rock-climbing-{destination.lower()}",
-                    sustainability_tags=["outdoor_activity", "eco_friendly"]
-                ),
-                Activity(
-                    id=f"adv_dining_{day}",
-                    name="Adventure Camp Dinner",
-                    type=ActivityType.DINING,
-                    time="19:00",
-                    duration="2 hours",
-                    location=f"Mountain View Restaurant, {destination}",
-                    description="Hearty local cuisine with mountain views and adventure stories",
-                    cost=1800,
-                    image=f"https://images.unsplash.com/800x400/?mountain-restaurant-{destination.lower()}",
-                    sustainability_tags=["local_cuisine"]
-                )
-            ])
-        elif day == 2:
-            # Water adventures
-            activities.extend([
-                Activity(
-                    id=f"adv_activity_{day}_1",
-                    name="White Water Rafting",
-                    type=ActivityType.ADVENTURE,
-                    time="08:00",
-                    duration="5 hours",
-                    location=f"{destination} River",
-                    description="Thrilling Grade III-IV rapids with experienced guides and safety equipment",
-                    cost=6000,
-                    image=f"https://images.unsplash.com/800x400/?rafting-{destination.lower()}",
-                    sustainability_tags=["eco_friendly", "local_guides"]
-                ),
-                Activity(
-                    id=f"adv_activity_{day}_2",
-                    name="Kayaking & Cliff Jumping",
-                    type=ActivityType.ADVENTURE,
-                    time="15:00",
-                    duration="3 hours",
-                    location=f"{destination} Lake",
-                    description="Kayaking in pristine waters followed by optional cliff jumping",
-                    cost=3500,
-                    image=f"https://images.unsplash.com/800x400/?kayaking-{destination.lower()}",
-                    sustainability_tags=["water_sports", "natural_environment"]
-                )
-            ])
-        elif day == 3:
-            # Mountain adventures
-            activities.extend([
-                Activity(
-                    id=f"adv_activity_{day}_1",
-                    name="Paragliding Experience",
-                    type=ActivityType.ADVENTURE,
-                    time="09:00",
-                    duration="4 hours",
-                    location=f"{destination} Hills",
-                    description="Soar through the skies with certified pilots and breathtaking aerial views",
-                    cost=8000,
-                    image=f"https://images.unsplash.com/800x400/?paragliding-{destination.lower()}",
-                    sustainability_tags=["eco_friendly", "minimal_impact"]
-                ),
-                Activity(
-                    id=f"adv_activity_{day}_2",
-                    name="Mountain Biking Trail",
-                    type=ActivityType.ADVENTURE,
-                    time="14:00",
-                    duration="3 hours",
-                    location=f"{destination} Forest Trails",
-                    description="Challenging mountain bike trails through scenic forest paths",
-                    cost=2800,
-                    image=f"https://images.unsplash.com/800x400/?mountain-biking-{destination.lower()}",
-                    sustainability_tags=["eco_friendly", "forest_trails"]
-                )
-            ])
-        
-        return activities
-    
     def _generate_highlights(self, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[str]:
         return [
             "Extreme Sports & Adventures",
-            "Professional Safety Equipment",
+            "Professional Safety Equipment", 
             "Experienced Adventure Guides",
             "Adrenaline-Pumping Activities",
             "Mountain & Water Sports"
@@ -491,114 +388,11 @@ class BalancedAgent(BaseItineraryAgent):
     def _get_variant_description(self) -> str:
         return "Perfect mix of adventure, culture, relaxation, and sightseeing"
     
-    async def _get_day_activities(self, day: int, destination: str, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[Activity]:
-        """Generate balanced activities"""
-        activities = []
-        
-        if day == 1:
-            # Cultural immersion
-            activities.extend([
-                Activity(
-                    id=f"bal_arrival_{day}",
-                    name="Heritage Welcome & Check-in",
-                    type=ActivityType.ARRIVAL,
-                    time="10:00",
-                    duration="2 hours",
-                    location=f"Heritage Hotel, {destination}",
-                    description="Traditional welcome with local cultural orientation",
-                    cost=2000,
-                    image=f"https://images.unsplash.com/800x400/?heritage-hotel-{destination.lower()}",
-                    sustainability_tags=["local_culture", "heritage_preservation"]
-                ),
-                Activity(
-                    id=f"bal_cultural_{day}",
-                    name=f"Heritage {destination} Walking Tour",
-                    type=ActivityType.CULTURAL,
-                    time="14:00",
-                    duration="3 hours",
-                    location=f"Historic {destination} Center",
-                    description="Guided walk through ancient temples, markets, and cultural landmarks",
-                    cost=1500,
-                    image=f"https://images.unsplash.com/800x400/?heritage-walk-{destination.lower()}",
-                    sustainability_tags=["local_guides", "cultural_preservation"]
-                ),
-                Activity(
-                    id=f"bal_dining_{day}",
-                    name="Traditional Cooking Class",
-                    type=ActivityType.DINING,
-                    time="18:00",
-                    duration="3 hours",
-                    location=f"Local Kitchen, {destination}",
-                    description="Learn authentic local cuisine from expert chefs with family recipes",
-                    cost=3000,
-                    image=f"https://images.unsplash.com/800x400/?cooking-class-{destination.lower()}",
-                    sustainability_tags=["local_cuisine", "cultural_exchange"]
-                )
-            ])
-        elif day == 2:
-            # Nature and relaxation
-            activities.extend([
-                Activity(
-                    id=f"bal_nature_{day}",
-                    name=f"{destination} Scenic Cruise",
-                    type=ActivityType.SIGHTSEEING,
-                    time="09:00",
-                    duration="4 hours",
-                    location=f"{destination} Backwaters/Coast",
-                    description="Peaceful cruise through pristine natural landscapes",
-                    cost=4000,
-                    image=f"https://images.unsplash.com/800x400/?scenic-cruise-{destination.lower()}",
-                    sustainability_tags=["eco_friendly", "natural_environment"]
-                ),
-                Activity(
-                    id=f"bal_wellness_{day}",
-                    name="Ayurvedic Spa Experience",
-                    type=ActivityType.RELAXATION,
-                    time="15:00",
-                    duration="2 hours",
-                    location=f"Wellness Center, {destination}",
-                    description="Rejuvenating traditional spa treatments with natural oils",
-                    cost=3500,
-                    image=f"https://images.unsplash.com/800x400/?spa-treatment-{destination.lower()}",
-                    sustainability_tags=["wellness", "traditional_practices"]
-                )
-            ])
-        elif day == 3:
-            # Adventure and exploration
-            activities.extend([
-                Activity(
-                    id=f"bal_adventure_{day}",
-                    name="Moderate Trekking & Nature Walk",
-                    type=ActivityType.ADVENTURE,
-                    time="08:00",
-                    duration="4 hours",
-                    location=f"{destination} Hills/Forest",
-                    description="Scenic trek suitable for all fitness levels with wildlife spotting",
-                    cost=2500,
-                    image=f"https://images.unsplash.com/800x400/?nature-trek-{destination.lower()}",
-                    sustainability_tags=["eco_friendly", "wildlife_conservation"]
-                ),
-                Activity(
-                    id=f"bal_shopping_{day}",
-                    name="Local Markets & Handicrafts",
-                    type=ActivityType.SHOPPING,
-                    time="14:00",
-                    duration="3 hours",
-                    location=f"{destination} Traditional Markets",
-                    description="Explore vibrant markets with authentic handicrafts and local products",
-                    cost=2000,
-                    image=f"https://images.unsplash.com/800x400/?local-market-{destination.lower()}",
-                    sustainability_tags=["local_artisans", "community_support"]
-                )
-            ])
-        
-        return activities
-    
     def _generate_highlights(self, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[str]:
         return [
             "Cultural Heritage Sites",
             "Scenic Natural Beauty",
-            "Wellness & Relaxation",
+            "Wellness & Relaxation", 
             "Local Cuisine Experiences",
             "Moderate Adventure Activities"
         ]
@@ -620,115 +414,12 @@ class LuxuryAgent(BaseItineraryAgent):
     def _get_variant_description(self) -> str:
         return "Luxury resorts, fine dining, spa treatments, and exclusive experiences"
     
-    async def _get_day_activities(self, day: int, destination: str, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[Activity]:
-        """Generate luxury-focused activities"""
-        activities = []
-        
-        if day == 1:
-            # Luxury arrival
-            activities.extend([
-                Activity(
-                    id=f"lux_arrival_{day}",
-                    name="Premium Transfer & Luxury Check-in",
-                    type=ActivityType.ARRIVAL,
-                    time="10:00",
-                    duration="2 hours",
-                    location=f"5-Star Luxury Resort, {destination}",
-                    description="Private luxury transfer with champagne welcome and suite upgrade",
-                    cost=8000,
-                    image=f"https://images.unsplash.com/800x400/?luxury-resort-{destination.lower()}",
-                    sustainability_tags=["premium_service"]
-                ),
-                Activity(
-                    id=f"lux_spa_{day}",
-                    name="Signature Spa Treatment",
-                    type=ActivityType.RELAXATION,
-                    time="14:00",
-                    duration="3 hours",
-                    location=f"Resort Spa, {destination}",
-                    description="Exclusive spa treatment with premium oils and expert therapists",
-                    cost=12000,
-                    image=f"https://images.unsplash.com/800x400/?luxury-spa-{destination.lower()}",
-                    sustainability_tags=["wellness", "premium_service"]
-                ),
-                Activity(
-                    id=f"lux_dining_{day}",
-                    name="Fine Dining Experience",
-                    type=ActivityType.DINING,
-                    time="19:30",
-                    duration="3 hours",
-                    location=f"Michelin-Style Restaurant, {destination}",
-                    description="Multi-course gourmet meal with wine pairing and personal chef interaction",
-                    cost=15000,
-                    image=f"https://images.unsplash.com/800x400/?fine-dining-{destination.lower()}",
-                    sustainability_tags=["gourmet_cuisine", "local_ingredients"]
-                )
-            ])
-        elif day == 2:
-            # Exclusive experiences
-            activities.extend([
-                Activity(
-                    id=f"lux_private_{day}",
-                    name="Private Yacht Charter",
-                    type=ActivityType.SIGHTSEEING,
-                    time="10:00",
-                    duration="6 hours",
-                    location=f"{destination} Coast/Lake",
-                    description="Exclusive yacht charter with private crew, gourmet lunch, and water activities",
-                    cost=25000,
-                    image=f"https://images.unsplash.com/800x400/?private-yacht-{destination.lower()}",
-                    sustainability_tags=["exclusive_access", "premium_service"]
-                ),
-                Activity(
-                    id=f"lux_helicopter_{day}",
-                    name="Helicopter Scenic Tour",
-                    type=ActivityType.SIGHTSEEING,
-                    time="17:00",
-                    duration="1 hour",
-                    location=f"{destination} Helipad",
-                    description="Private helicopter tour with aerial photography and champagne service",
-                    cost=18000,
-                    image=f"https://images.unsplash.com/800x400/?helicopter-tour-{destination.lower()}",
-                    sustainability_tags=["scenic_views", "exclusive_access"]
-                )
-            ])
-        elif day == 3:
-            # Cultural luxury
-            activities.extend([
-                Activity(
-                    id=f"lux_private_tour_{day}",
-                    name="Private Heritage Tour with Expert",
-                    type=ActivityType.CULTURAL,
-                    time="09:00",
-                    duration="4 hours",
-                    location=f"Premium {destination} Attractions",
-                    description="Exclusive private tour with renowned local historian and VIP access",
-                    cost=8000,
-                    image=f"https://images.unsplash.com/800x400/?private-tour-{destination.lower()}",
-                    sustainability_tags=["cultural_preservation", "expert_guides"]
-                ),
-                Activity(
-                    id=f"lux_shopping_{day}",
-                    name="Personal Shopping Experience",
-                    type=ActivityType.SHOPPING,
-                    time="14:00",
-                    duration="3 hours",
-                    location=f"Luxury Boutiques, {destination}",
-                    description="Personal shopper service at premium boutiques and designer stores",
-                    cost=5000,
-                    image=f"https://images.unsplash.com/800x400/?luxury-shopping-{destination.lower()}",
-                    sustainability_tags=["premium_service", "local_artisans"]
-                )
-            ])
-        
-        return activities
-    
     def _generate_highlights(self, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[str]:
         return [
             "5-Star Luxury Resorts",
             "Private & Exclusive Experiences",
             "Gourmet Fine Dining",
-            "Premium Spa & Wellness",
+            "Premium Spa & Wellness", 
             "Personal Concierge Service"
         ]
     
