@@ -3021,7 +3021,7 @@ function App() {
   };
   
   // Enhanced mock itinerary generator as fallback
-  const generateEnhancedMockItinerary = (tripDetails, preferences, destination) => {
+  const generateMockItineraryAdvanced = (tripDetails, preferences, destination) => {
     // Get destination-specific data
     const destData = destinations.find(d => 
       d.name.toLowerCase() === destination.toLowerCase() || 
