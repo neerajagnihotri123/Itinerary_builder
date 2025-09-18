@@ -416,7 +416,7 @@ Always provide helpful, specific, and engaging responses that move the conversat
                     "id": "unique_id",
                     "title": "Destination Name",
                     "description": "Brief engaging description (1-2 sentences)",
-                    "image": "https://images.unsplash.com/400x300/?destination_name",
+                    "image": "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=400&h=300&fit=crop",
                     "rating": 4.5,
                     "price_estimate": {{"min": 8000, "max": 15000}},
                     "location": "State/Region",
@@ -424,6 +424,12 @@ Always provide helpful, specific, and engaging responses that move the conversat
                     "why_match": "Why this matches the user's query"
                   }}
                 ]
+                
+                IMPORTANT: Use real Unsplash photo IDs for images. Examples:
+                - Beaches: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=400&h=300&fit=crop"
+                - Mountains: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop"
+                - Cities: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400&h=300&fit=crop"
+                - Hotels: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"
                 
                 Make recommendations relevant to their query and include real Indian destinations.
                 """
