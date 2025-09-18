@@ -667,6 +667,43 @@ const MessageBubble = ({ message, isUser, onSelectVariant }) => {
                           </div>
                         </div>
                         
+                        {/* Daily Activities Preview - Show first few days with activities */}
+                        <div className="mb-4">
+                          <h5 className="text-sm font-semibold text-slate-700 mb-2">Sample Daily Plan:</h5>
+                          <div className="space-y-2">
+                            {variant.itinerary?.slice(0, 2).map((day, dayIdx) => (
+                              <div key={dayIdx} className="bg-white rounded-lg p-3 border border-slate-200">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                    {day.day}
+                                  </div>
+                                  <h6 className="font-semibold text-slate-800 text-sm">{day.title}</h6>
+                                </div>
+                                <div className="space-y-1">
+                                  {day.activities?.slice(0, 3).map((activity, actIdx) => (
+                                    <div key={actIdx} className="flex items-center gap-2 text-xs text-slate-600">
+                                      <span className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-xs font-medium">
+                                        {activity.time}
+                                      </span>
+                                      <span className="truncate">{activity.title}</span>
+                                    </div>
+                                  ))}
+                                  {day.activities?.length > 3 && (
+                                    <div className="text-xs text-slate-500 italic">
+                                      +{day.activities.length - 3} more activities
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                            {variant.itinerary?.length > 2 && (
+                              <div className="text-xs text-slate-500 text-center py-2">
+                                +{variant.itinerary.length - 2} more days with full activities
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         {/* Highlights Preview */}
                         <div className="mb-4">
                           <div className="flex flex-wrap gap-1">
