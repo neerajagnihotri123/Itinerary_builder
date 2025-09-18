@@ -28,29 +28,103 @@ class SustainabilitySeasonalityAgent:
             system_message="You are a sustainability and seasonality expert for travel planning. You analyze activities for eco-friendliness and provide seasonal recommendations."
         ).with_model("openai", "gpt-4o-mini")
         
-        # Sustainability criteria
-        self.sustainability_criteria = {
-            "eco_friendly": {
-                "keywords": ["nature", "wildlife", "conservation", "organic", "local", "walking", "cycling"],
-                "activity_types": ["sightseeing", "cultural", "relaxation"],
-                "score_weight": 1.0
-            },
-            "local_community": {
-                "keywords": ["local", "artisan", "community", "traditional", "heritage", "village"],
-                "activity_types": ["cultural", "dining", "shopping"],
-                "score_weight": 0.8
-            },
-            "minimal_impact": {
-                "keywords": ["small_group", "private", "guided", "educational", "respectful"],
-                "activity_types": ["sightseeing", "cultural", "adventure"],
-                "score_weight": 0.6
-            },
-            "sustainable_transport": {
-                "keywords": ["walking", "cycling", "local_transport", "shared", "electric"],
-                "activity_types": ["transportation"],
-                "score_weight": 0.9
-            }
-        }
+    async def _apply_sustainability_tags(self, variant: ItineraryVariant) -> ItineraryVariant:
+        """Apply sustainability tags to activities using LLM analysis"""
+        try:
+            for day in variant.daily_itinerary:
+                # Analyze all activities for the day at once for better context
+                activities_context = []
+                for activity in day.activities:
+                    activities_context.append({
+                        "name": activity.name,
+                        "type": activity.type.value,
+                        "location": activity.location,
+                        "description": activity.description
+                    })
+                
+                # Get LLM analysis for all activities
+                sustainability_analysis = await self._analyze_activities_sustainability(activities_context)
+                
+                # Apply tags based on LLM analysis
+                for i, activity in enumerate(day.activities):
+                    if i < len(sustainability_analysis):
+                        activity.sustainability_tags = sustainability_analysis[i].get("tags", [])
+                    else:
+                        # Fallback if analysis is incomplete
+                        activity.sustainability_tags = await self._get_fallback_sustainability_tags(activity)
+            
+            return variant
+            
+        except Exception as e:
+            logger.error(f"Sustainability tagging error: {e}")
+            return variant
+
+    async def _analyze_activities_sustainability(self, activities: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Analyze activities for sustainability using LLM"""
+        try:
+            context = f"""
+            Analyze these travel activities for sustainability and eco-friendliness:
+            
+            Activities: {activities}
+            
+            For each activity, determine appropriate sustainability tags from these categories:
+            - eco_friendly: Activities that don't harm the environment
+            - local_community: Activities that support local communities and economies
+            - minimal_impact: Activities with low environmental impact
+            - sustainable_transport: Walking, cycling, public/local transport
+            - organic_certified: Organic or natural products/experiences  
+            - carbon_conscious: Low carbon footprint activities
+            - waste_reduction: Activities that minimize waste
+            - social_impact: Activities that benefit local society
+            - wildlife_conservation: Activities that support wildlife protection
+            - clean_energy: Activities using renewable energy
+            - nature_immersion: Nature-based activities
+            - rural_tourism: Activities in rural/village areas
+            - cultural_preservation: Activities that preserve local culture
+            - traditional_practices: Activities using traditional methods
+            
+            Respond in JSON array format (one object per activity):
+            [
+                {{
+                    "activity_index": 0,
+                    "tags": ["eco_friendly", "local_community", "minimal_impact"],
+                    "reasoning": "Brief explanation of why these tags apply"
+                }}
+            ]
+            """
+            
+            user_msg = UserMessage(content=context)
+            response = await self.llm_client.send_message(user_msg)
+            
+            # Parse JSON response
+            import json
+            try:
+                analysis = json.loads(response.content)
+                return analysis
+            except json.JSONDecodeError:
+                logger.error("Failed to parse sustainability analysis JSON")
+                return [{"tags": []} for _ in activities]
+            
+        except Exception as e:
+            logger.error(f"LLM sustainability analysis error: {e}")
+            return [{"tags": []} for _ in activities]
+
+    async def _get_fallback_sustainability_tags(self, activity: Activity) -> List[str]:
+        """Fallback sustainability tags if LLM analysis fails"""
+        tags = []
+        activity_text = f"{activity.name} {activity.description}".lower()
+        
+        # Basic keyword matching as fallback
+        if any(word in activity_text for word in ["local", "traditional", "community"]):
+            tags.append("local_community")
+        
+        if any(word in activity_text for word in ["nature", "natural", "organic"]):
+            tags.append("eco_friendly")
+        
+        if any(word in activity_text for word in ["walking", "hiking", "cycling"]):
+            tags.append("minimal_impact")
+        
+        return tags
         
         # Seasonal data for different destinations
         self.seasonal_data = {
