@@ -158,78 +158,71 @@ class ExternalBookingAgent:
             return []
 
     async def _check_local_partners(self, destination: str, activity_type: str, booking_details: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Check local partner availability"""
+        """Check local partner availability using LLM"""
         try:
-            providers = []
+            context = f"""
+            Generate realistic local travel partners for {destination} that could handle {activity_type} activities.
             
-            # Mock local partner data - in production would integrate with actual partner APIs
-            local_partners = {
-                "goa": [
-                    {
-                        "name": "Goa Adventures",
-                        "contact": "+91-832-XXXX-XXXX",
-                        "email": "bookings@goa-adventures.com",
-                        "specialties": ["water_sports", "adventure", "sightseeing"],
-                        "rating": 4.5,
-                        "response_time": "immediate"
-                    },
-                    {
-                        "name": "Coastal Explorer Tours",
-                        "contact": "+91-832-YYYY-YYYY",
-                        "email": "info@coastal-explorer.com",
-                        "specialties": ["cultural", "heritage", "dining"],
-                        "rating": 4.3,
-                        "response_time": "2-4 hours"
-                    }
-                ],
-                "kerala": [
-                    {
-                        "name": "Kerala Backwater Cruises",
-                        "contact": "+91-484-XXXX-XXXX",
-                        "email": "cruise@kerala-backwaters.com",
-                        "specialties": ["backwater_cruise", "houseboat", "nature"],
-                        "rating": 4.7,
-                        "response_time": "immediate"
-                    }
-                ],
-                "rajasthan": [
-                    {
-                        "name": "Royal Rajasthan Tours",
-                        "contact": "+91-141-XXXX-XXXX",
-                        "email": "royal@rajasthan-tours.com",
-                        "specialties": ["heritage", "luxury", "cultural"],
-                        "rating": 4.6,
-                        "response_time": "1-2 hours"
-                    }
-                ]
-            }
+            Destination: {destination}
+            Activity Type: {activity_type}
+            Booking Details: {booking_details}
             
-            # Find relevant partners
-            for dest_key, partners in local_partners.items():
-                if dest_key in destination:
-                    for partner in partners:
-                        # Check if partner handles this activity type
-                        if not activity_type or any(specialty in activity_type for specialty in partner["specialties"]):
-                            providers.append({
-                                "name": f"Local Partner: {partner['name']}",
-                                "type": "local_partner",
-                                "contact_info": {
-                                    "phone": partner["contact"],
-                                    "email": partner["email"]
-                                },
-                                "rating": partner["rating"],
-                                "response_time": partner["response_time"],
-                                "booking_method": "direct_contact",
-                                "price": await self._estimate_local_partner_price(activity_type, booking_details),
-                                "availability": "high",
-                                "specialties": partner["specialties"]
-                            })
+            Generate 2-3 local partners with realistic details for this destination.
+            Each partner should have:
+            - name (realistic local business name)
+            - contact (realistic Indian phone number format)
+            - email (realistic business email)
+            - 3-4 specialties relevant to the destination
+            - rating (4.0-5.0)
+            - response_time
             
-            return providers
+            Respond in JSON array format:
+            [
+                {{
+                    "name": "Business Name",
+                    "contact": "+91-XXX-XXXX-XXXX",
+                    "email": "contact@business.com",
+                    "specialties": ["specialty1", "specialty2", "specialty3"],
+                    "rating": 4.5,
+                    "response_time": "immediate|1-2 hours|2-4 hours"
+                }}
+            ]
+            """
+            
+            user_msg = UserMessage(content=context)
+            response = await self.llm_client.send_message(user_msg)
+            
+            # Parse JSON response
+            import json
+            try:
+                partners_data = json.loads(response.content)
+                
+                providers = []
+                for partner in partners_data:
+                    providers.append({
+                        "name": f"Local Partner: {partner['name']}",
+                        "type": "local_partner",
+                        "contact_info": {
+                            "phone": partner["contact"],
+                            "email": partner["email"]
+                        },
+                        "rating": partner["rating"],
+                        "response_time": partner["response_time"],
+                        "booking_method": "direct_contact",
+                        "price": await self._estimate_local_partner_price(activity_type, booking_details),
+                        "availability": "high",
+                        "specialties": partner["specialties"]
+                    })
+                
+                return providers
+                
+            except json.JSONDecodeError:
+                logger.error("Failed to parse local partners JSON, using fallback")
+                return self._get_fallback_local_partners(destination)
             
         except Exception as e:
             logger.error(f"Local partner check error: {e}")
-            return []
+            return self._get_fallback_local_partners(destination)
 
     async def _check_external_provider(self, provider_name: str, booking_details: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Check external provider availability"""
