@@ -2961,23 +2961,32 @@ function App() {
   };
 
   // Helper function to generate enhanced mock itinerary
+  const generateEnhancedMockItinerary = (tripDetails, preferences, destination) => {
+    const baseItinerary = [
+      {
+        day: 1,
+        title: `Day 1: Arrival in ${destination}`,
         activities: [
           {
-            time: "9:00 AM",
-            title: content.substring(0, 50) + "...",
-            description: content,
+            time: "10:00 AM",
+            title: `Airport Transfer to ${destination}`,
+            description: `Comfortable transfer from airport to accommodation`,
+            location: destination,
+            category: "transportation"
+          },
+          {
+            time: "2:00 PM", 
+            title: `${destination} Welcome Tour`,
+            description: `Orientation tour of ${destination}'s key areas`,
             location: destination,
             category: "sightseeing"
           }
         ]
-      });
-      dayCount++;
-    }
+      }
+    ];
     
-    // If no structured days found, create a basic itinerary
-    if (days.length === 0) {
-      for (let i = 1; i <= 5; i++) {
-        days.push({
+    return baseItinerary;
+  };
           day: i,
           title: `Day ${i} in ${destination}`,
           activities: [
