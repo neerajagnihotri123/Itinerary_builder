@@ -211,7 +211,7 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
         budget = trip_details.get("budget_per_night", 8000)
         
         # Calculate trip duration
-        from datetime import datetime
+        from datetime import datetime, timedelta
         try:
             start = datetime.fromisoformat(start_date)
             end = datetime.fromisoformat(end_date)
