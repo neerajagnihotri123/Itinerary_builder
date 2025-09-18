@@ -215,7 +215,7 @@ Always create comprehensive, actionable itineraries that travelers can actually 
             import json
             import uuid
             try:
-                activities_data = json.loads(response.content)
+                activities_data = json.loads(response)  # response is a string
                 
                 activities = []
                 for i, act_data in enumerate(activities_data):
