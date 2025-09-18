@@ -140,11 +140,11 @@ Always provide helpful, specific, and engaging responses that move the conversat
             # Parse JSON response
             import json
             try:
-                result = json.loads(response.content)
+                result = json.loads(response)  # response is a string, not response.content
                 return result
             except json.JSONDecodeError:
                 # Fallback parsing if JSON fails
-                content = response.content.lower()
+                content = response.lower()  # response is a string
                 intent = "general"
                 
                 if any(word in content for word in ["plan", "trip", "travel", "visit", "go to"]):
