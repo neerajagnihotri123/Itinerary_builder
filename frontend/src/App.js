@@ -2987,23 +2987,6 @@ function App() {
     
     return baseItinerary;
   };
-          day: i,
-          title: `Day ${i} in ${destination}`,
-          activities: [
-            {
-              time: "9:00 AM",
-              title: `Explore ${destination}`,
-              description: `Discover the best of ${destination} with guided tours and local experiences.`,
-              location: destination,
-              category: "sightseeing"
-            }
-          ]
-        });
-      }
-    }
-    
-    return days;
-  };
   
   // Helper function to generate accommodations from AI
   const generateAccommodationsFromAI = async (destination, preferences) => {
