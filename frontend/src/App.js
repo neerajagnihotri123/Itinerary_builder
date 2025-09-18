@@ -4184,8 +4184,8 @@ function App() {
                           {day.activities?.map((activity, actIndex) => (
                             <div key={actIndex} className="flex gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                               <img 
-                                src={activity.image || `https://images.unsplash.com/300x300/?${activity.type}`}
-                                alt={activity.name}
+                                src={activity.image || `https://images.unsplash.com/300x300/?${activity.category}`}
+                                alt={activity.title}
                                 className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
                                 onError={(e) => {
                                   e.target.src = 'https://images.unsplash.com/300x300/?activity';
@@ -4194,14 +4194,14 @@ function App() {
                               <div className="flex-1">
                                 <div className="flex items-start justify-between mb-2">
                                   <div>
-                                    <h5 className="font-bold text-slate-900 text-lg">{activity.name}</h5>
+                                    <h5 className="font-bold text-slate-900 text-lg">{activity.title}</h5>
                                     <p className="text-slate-600 flex items-center gap-1">
                                       <MapPin className="w-4 h-4" />
                                       {activity.location}
                                     </p>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-lg font-bold text-green-600">₹{activity.cost?.toLocaleString()}</div>
+                                    <div className="text-lg font-bold text-green-600">₹{activity.cost?.toLocaleString() || 'Included'}</div>
                                     <div className="text-sm text-slate-500">{activity.duration}</div>
                                   </div>
                                 </div>
@@ -4211,7 +4211,7 @@ function App() {
                                     {activity.time}
                                   </span>
                                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
-                                    {activity.type.replace('_', ' ')}
+                                    {activity.category?.replace('_', ' ')}
                                   </span>
                                 </div>
                               </div>
