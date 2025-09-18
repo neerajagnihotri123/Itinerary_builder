@@ -561,7 +561,7 @@ def main():
     print(f"⏰ Started at: {datetime.now().isoformat()}")
     
     tester = TravelloBackendTester()
-    passed, total = tester.test_complete_flow()
+    passed, total = tester.test_critical_llm_integration()
     
     success = tester.print_summary()
     
