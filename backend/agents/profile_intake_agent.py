@@ -290,46 +290,60 @@ Always provide helpful, specific, and engaging responses that move the conversat
             )
 
     async def _handle_general_inquiry(self, session_id: str, message: str, intent_analysis: Dict) -> ChatResponse:
-        """Handle general travel inquiries and greetings"""
+        """Handle general travel inquiries and greetings using LLM"""
         try:
             context = f"""
-            You are Travello.ai, a friendly AI travel assistant. Respond naturally and helpfully to this user message:
+            You are Travello.ai, a friendly AI travel assistant. The user said: "{message}"
             
-            User message: "{message}"
-            
-            Guidelines:
+            Respond naturally and helpfully. Guidelines:
             - Be enthusiastic and helpful about travel
             - If it's a greeting, respond warmly and introduce your capabilities
             - If it's a general travel question, provide helpful information
             - Always try to guide the conversation toward planning a trip
-            - Keep responses concise but engaging
+            - Keep responses conversational and engaging (2-3 sentences)
             - End with a question to continue the conversation
             
-            Respond as if talking directly to the user, no JSON format needed.
+            Don't use JSON format - just respond naturally as Travello.ai.
             """
             
             user_msg = UserMessage(text=context)
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(user_msg)
             
+            # Generate contextual follow-up questions
+            follow_up_questions = [
+                "Are you planning a trip somewhere?",
+                "What kind of travel experience interests you most?",
+                "Any particular destinations on your wishlist?"
+            ]
+            
+            # If the message seems like a greeting, provide more welcoming follow-ups
+            if any(word in message.lower() for word in ["hello", "hi", "hey", "good morning", "good evening"]):
+                follow_up_questions = [
+                    "Where would you like to explore?",
+                    "What type of adventure are you looking for?",
+                    "Any dream destinations in mind?"
+                ]
+            
             return ChatResponse(
-                chat_text=response,  # response is already a string
+                chat_text=response,  # Use the LLM response directly
                 ui_actions=[],
                 updated_profile={},
-                followup_questions=[
-                    "Are you planning a trip somewhere?",
-                    "What kind of travel experience interests you most?",
-                    "Any particular destinations on your wishlist?"
-                ],
-                analytics_tags=["general_inquiry"]
+                followup_questions=follow_up_questions,
+                analytics_tags=["general_inquiry", "llm_response"]
             )
+            
         except Exception as e:
             logger.error(f"General inquiry error: {e}")
             return ChatResponse(
-                chat_text="Hello! I'm your AI travel assistant. I'd love to help you plan an amazing trip. Where would you like to explore?",
+                chat_text="Hello! I'm Travello.ai, your AI travel assistant. I'd love to help you plan an amazing trip! Whether you're dreaming of beaches, mountains, cities, or adventures, I can create personalized itineraries just for you. Where would you like to explore?",
                 ui_actions=[],
                 updated_profile={},
-                followup_questions=["What destination interests you?"],
+                followup_questions=[
+                    "What destination interests you?",
+                    "What type of vacation do you prefer?",
+                    "Are you planning a trip soon?"
+                ],
                 analytics_tags=["general_fallback"]
             )
 
