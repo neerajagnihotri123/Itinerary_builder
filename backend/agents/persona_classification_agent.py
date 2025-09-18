@@ -19,15 +19,18 @@ class PersonaClassificationAgent:
     def __init__(self, context_store: ContextStore, event_bus: EventBus):
         self.context_store = context_store
         self.event_bus = event_bus
-        
-        # Initialize LLM client
-        self.llm_client = LlmChat(
-            api_key=os.environ.get('EMERGENT_LLM_KEY'),
-            system_message=self._get_system_message()
-        ).with_model("openai", "gpt-4o-mini")
+        self.api_key = os.environ.get('EMERGENT_LLM_KEY')
         
         # Subscribe to profile intake completion events
         self.event_bus.subscribe(EventTypes.PROFILE_INTAKE_COMPLETED, self._handle_profile_completion)
+    
+    def _get_llm_client(self, session_id: str) -> LlmChat:
+        """Get LLM client for session"""
+        return LlmChat(
+            api_key=self.api_key,
+            session_id=session_id,
+            system_message=self._get_system_message()
+        ).with_model("openai", "gpt-4o-mini")
     
     def _get_system_message(self) -> str:
         return """You are Travello.ai's Persona Classification Agent. Your role is to analyze traveler profiles and classify them into specific personas that guide itinerary generation.
