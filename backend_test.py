@@ -85,12 +85,68 @@ class TravelloBackendTester:
             
         return False
 
-    def test_chat_endpoint_trip_planning(self):
-        """Test POST /api/chat with trip planning message"""
+    def test_chat_greeting_message(self):
+        """Test POST /api/chat with greeting message - should NOT classify as trip_planning"""
         try:
             payload = {
-                "message": "I want to plan a trip to Goa for 5 days",
-                "session_id": self.session_id
+                "message": "hello there!",
+                "session_id": "test_greeting"
+            }
+            
+            response = requests.post(f"{API_BASE}/chat", json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["chat_text", "ui_actions", "updated_profile", "followup_questions", "analytics_tags"]
+                
+                if all(field in data for field in required_fields):
+                    # Verify LLM-powered response (not hardcoded)
+                    if self.verify_llm_response(data["chat_text"], "greeting"):
+                        # Should NOT have trip_planner_card for greeting
+                        has_trip_planner = any(
+                            action.get("type") == "trip_planner_card" 
+                            for action in data["ui_actions"]
+                        )
+                        
+                        # Should use general_inquiry analytics tag
+                        has_general_tag = "general_inquiry" in data["analytics_tags"]
+                        
+                        # Should have follow-up questions
+                        has_followup = len(data["followup_questions"]) > 0
+                        
+                        if not has_trip_planner and has_general_tag and has_followup:
+                            self.log_result("Chat Greeting Message", True, 
+                                          f"LLM greeting response without trip planning: {data['chat_text'][:100]}...", data)
+                            return True
+                        else:
+                            issues = []
+                            if has_trip_planner:
+                                issues.append("incorrectly triggered trip_planner_card")
+                            if not has_general_tag:
+                                issues.append("missing general_inquiry tag")
+                            if not has_followup:
+                                issues.append("no follow-up questions")
+                            self.log_result("Chat Greeting Message", False, 
+                                          f"Issues: {', '.join(issues)}. Analytics: {data['analytics_tags']}", data)
+                    else:
+                        self.log_result("Chat Greeting Message", False, 
+                                      f"Response appears hardcoded: {data['chat_text']}", data)
+                else:
+                    self.log_result("Chat Greeting Message", False, f"Missing required fields: {data}", data)
+            else:
+                self.log_result("Chat Greeting Message", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("Chat Greeting Message", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_chat_trip_planning_message(self):
+        """Test POST /api/chat with trip planning message - should classify as trip_planning"""
+        try:
+            payload = {
+                "message": "plan a trip to goa",
+                "session_id": "test_trip"
             }
             
             response = requests.post(f"{API_BASE}/chat", json=payload, timeout=60)
@@ -102,29 +158,102 @@ class TravelloBackendTester:
                 if all(field in data for field in required_fields):
                     # Verify LLM-powered response
                     if self.verify_llm_response(data["chat_text"], "trip planning"):
-                        # Check for trip planner card UI action
+                        # Should have trip_planner_card UI action
                         has_trip_planner = any(
                             action.get("type") == "trip_planner_card" 
                             for action in data["ui_actions"]
                         )
                         
-                        if has_trip_planner:
-                            self.log_result("Chat Trip Planning", True, 
-                                          f"LLM response with trip planner card: {data['chat_text'][:100]}...", data)
+                        # Should extract "Goa" as destination
+                        goa_mentioned = "goa" in data["chat_text"].lower() or any(
+                            "goa" in str(action.get("payload", {})).lower() 
+                            for action in data["ui_actions"]
+                        )
+                        
+                        # Should have follow-up questions about dates/travelers/budget
+                        has_followup = len(data["followup_questions"]) > 0
+                        
+                        if has_trip_planner and goa_mentioned and has_followup:
+                            self.log_result("Chat Trip Planning Message", True, 
+                                          f"LLM trip planning response with Goa extraction: {data['chat_text'][:100]}...", data)
                             return True
                         else:
-                            self.log_result("Chat Trip Planning", False, 
-                                          f"Missing trip_planner_card UI action: {data['ui_actions']}", data)
+                            issues = []
+                            if not has_trip_planner:
+                                issues.append("missing trip_planner_card")
+                            if not goa_mentioned:
+                                issues.append("Goa not extracted/mentioned")
+                            if not has_followup:
+                                issues.append("no follow-up questions")
+                            self.log_result("Chat Trip Planning Message", False, 
+                                          f"Issues: {', '.join(issues)}", data)
                     else:
-                        self.log_result("Chat Trip Planning", False, 
+                        self.log_result("Chat Trip Planning Message", False, 
                                       f"Response appears hardcoded: {data['chat_text']}", data)
                 else:
-                    self.log_result("Chat Trip Planning", False, f"Missing required fields: {data}", data)
+                    self.log_result("Chat Trip Planning Message", False, f"Missing required fields: {data}", data)
             else:
-                self.log_result("Chat Trip Planning", False, f"HTTP {response.status_code}: {response.text}")
+                self.log_result("Chat Trip Planning Message", False, f"HTTP {response.status_code}: {response.text}")
                 
         except Exception as e:
-            self.log_result("Chat Trip Planning", False, f"Request failed: {str(e)}")
+            self.log_result("Chat Trip Planning Message", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_chat_general_question(self):
+        """Test POST /api/chat with general question - should NOT trigger trip_planner_card"""
+        try:
+            payload = {
+                "message": "what can you help me with?",
+                "session_id": "test_general"
+            }
+            
+            response = requests.post(f"{API_BASE}/chat", json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["chat_text", "ui_actions", "updated_profile", "followup_questions", "analytics_tags"]
+                
+                if all(field in data for field in required_fields):
+                    # Verify LLM-powered response
+                    if self.verify_llm_response(data["chat_text"], "general question"):
+                        # Should NOT have trip_planner_card
+                        has_trip_planner = any(
+                            action.get("type") == "trip_planner_card" 
+                            for action in data["ui_actions"]
+                        )
+                        
+                        # Should have general follow-up questions
+                        has_followup = len(data["followup_questions"]) > 0
+                        
+                        # Should be helpful response about capabilities
+                        is_helpful = any(word in data["chat_text"].lower() for word in 
+                                       ["help", "assist", "travel", "plan", "trip", "can"])
+                        
+                        if not has_trip_planner and has_followup and is_helpful:
+                            self.log_result("Chat General Question", True, 
+                                          f"LLM general response without trip planning: {data['chat_text'][:100]}...", data)
+                            return True
+                        else:
+                            issues = []
+                            if has_trip_planner:
+                                issues.append("incorrectly triggered trip_planner_card")
+                            if not has_followup:
+                                issues.append("no follow-up questions")
+                            if not is_helpful:
+                                issues.append("not helpful about capabilities")
+                            self.log_result("Chat General Question", False, 
+                                          f"Issues: {', '.join(issues)}", data)
+                    else:
+                        self.log_result("Chat General Question", False, 
+                                      f"Response appears hardcoded: {data['chat_text']}", data)
+                else:
+                    self.log_result("Chat General Question", False, f"Missing required fields: {data}", data)
+            else:
+                self.log_result("Chat General Question", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("Chat General Question", False, f"Request failed: {str(e)}")
             
         return False
 
