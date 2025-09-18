@@ -471,6 +471,10 @@ const ProfessionalCarousel = ({ items, onAction, title = "Recommendations", item
                   src={item.hero_image || item.image}
                   alt={item.title || item.name}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                  onError={(e) => {
+                    // Fallback to a default beautiful travel image if the original fails
+                    e.target.src = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 
