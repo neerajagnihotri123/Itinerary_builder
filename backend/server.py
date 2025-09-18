@@ -107,9 +107,9 @@ async def chat_endpoint(request: ChatRequest):
         }
         
         # Fix any remaining invalid image URLs in UI actions
-        for action in response.ui_actions:
-            if action.get("type") == "card_add" and action.get("payload"):
-                payload = action["payload"]
+        for i, action_dict in enumerate(response.ui_actions):
+            if action_dict.get("type") == "card_add" and action_dict.get("payload"):
+                payload = action_dict["payload"]
                 if payload.get("image") and not payload["image"].startswith("https://images.unsplash.com/photo-"):
                     title_lower = payload.get("title", "").lower()
                     
