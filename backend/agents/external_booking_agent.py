@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from models.schemas import ExternalBookingResponse, Activity
 from utils.event_bus import EventBus, EventTypes
 from utils.context_store import ContextStore
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 logger = logging.getLogger(__name__)
 
