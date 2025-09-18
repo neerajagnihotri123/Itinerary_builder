@@ -224,6 +224,25 @@ class ExternalBookingAgent:
             logger.error(f"Local partner check error: {e}")
             return self._get_fallback_local_partners(destination)
 
+    def _get_fallback_local_partners(self, destination: str) -> List[Dict[str, Any]]:
+        """Fallback local partners if LLM fails"""
+        return [
+            {
+                "name": f"Local Partner: {destination} Tours",
+                "type": "local_partner",
+                "contact_info": {
+                    "phone": "+91-XXX-XXXX-XXXX",
+                    "email": f"info@{destination.lower()}-tours.com"
+                },
+                "rating": 4.5,
+                "response_time": "2-4 hours",
+                "booking_method": "direct_contact",
+                "price": 5000,
+                "availability": "high",
+                "specialties": ["sightseeing", "cultural", "adventure"]
+            }
+        ]
+
     async def _check_external_provider(self, provider_name: str, booking_details: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Check external provider availability"""
         try:
