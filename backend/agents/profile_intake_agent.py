@@ -409,35 +409,54 @@ Always provide helpful, specific, and engaging responses that move the conversat
                 
                 Query type: {query_type}
                 
-                Return ONLY a JSON array with 3 recommendations in this exact format:
+                Return ONLY a JSON array with 3 recommendations. CRITICAL: Use ONLY these exact image URLs - do not modify them:
+
+                For beaches/Goa: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop"
+                For Kerala: "https://images.unsplash.com/photo-1580490006164-4d93fc09ea97?w=400&h=300&fit=crop"
+                For hotels/luxury: "https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?w=400&h=300&fit=crop"
+                For general destinations: "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"
+
+                Format (copy this exact structure):
                 [
                   {{
                     "category": "destination",
-                    "id": "unique_id",
+                    "id": "unique_id_1",
                     "title": "Destination Name",
                     "description": "Brief engaging description (1-2 sentences)",
-                    "image": "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=400&h=300&fit=crop",
+                    "image": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
                     "rating": 4.5,
                     "price_estimate": {{"min": 8000, "max": 15000}},
                     "location": "State/Region",
                     "highlights": ["Feature1", "Feature2", "Feature3", "Feature4"],
                     "why_match": "Why this matches the user's query"
+                  }},
+                  {{
+                    "category": "destination",
+                    "id": "unique_id_2", 
+                    "title": "Second Destination",
+                    "description": "Another brief description",
+                    "image": "https://images.unsplash.com/photo-1580490006164-4d93fc09ea97?w=400&h=300&fit=crop",
+                    "rating": 4.3,
+                    "price_estimate": {{"min": 10000, "max": 18000}},
+                    "location": "State/Region",
+                    "highlights": ["Feature1", "Feature2", "Feature3", "Feature4"],
+                    "why_match": "Why this matches the user's query"
+                  }},
+                  {{
+                    "category": "destination",
+                    "id": "unique_id_3",
+                    "title": "Third Destination", 
+                    "description": "Third brief description",
+                    "image": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop",
+                    "rating": 4.7,
+                    "price_estimate": {{"min": 12000, "max": 20000}},
+                    "location": "State/Region", 
+                    "highlights": ["Feature1", "Feature2", "Feature3", "Feature4"],
+                    "why_match": "Why this matches the user's query"
                   }}
                 ]
-                
-                IMPORTANT: Use high-quality Unsplash photo URLs that actually work. Examples:
-                - Beaches: "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=400&h=300&fit=crop"
-                - Goa beaches: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop"
-                - Kerala backwaters: "https://images.unsplash.com/photo-1580490006164-4d93fc09ea97?w=400&h=300&fit=crop"
-                - Mountain destinations: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop"
-                - City destinations: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=400&h=300&fit=crop"
-                - Hotels/resorts: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop"
-                - Luxury hotels: "https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?w=400&h=300&fit=crop" 
-                - Cultural sites: "https://images.unsplash.com/photo-1591640140449-bfb5d00b8c3b?w=400&h=300&fit=crop"
-                
-                Choose appropriate images that match the destination type and ensure URLs are valid.
-                
-                Make recommendations relevant to their query and include real Indian destinations.
+
+                IMPORTANT: Copy the image URLs exactly as shown above. Do not create new URLs.
                 """
                 
                 try:
