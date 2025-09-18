@@ -22,6 +22,13 @@ class ExternalBookingAgent:
         self.context_store = context_store
         self.event_bus = event_bus
         
+        # Initialize LLM client
+        self.llm_client = LlmChat(
+            model="gpt-4o-mini",
+            temperature=0.7,
+            max_tokens=2000
+        )
+        
         # Provider configurations
         self.providers = {
             "viator": {
