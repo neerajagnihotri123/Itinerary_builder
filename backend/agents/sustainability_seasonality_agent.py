@@ -1,12 +1,14 @@
 """
 Sustainability & Seasonality Agent - Tags eco-friendly options and adjusts plans 
-based on seasonality and events
+based on seasonality and events using LLM analysis
 """
 
+import os
 import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone, timedelta
 import calendar
+from emergentintegrations.llm.chat import LlmChat, UserMessage
 from models.schemas import ItineraryVariant, Activity
 from utils.event_bus import EventBus, EventTypes
 from utils.context_store import ContextStore
@@ -14,11 +16,17 @@ from utils.context_store import ContextStore
 logger = logging.getLogger(__name__)
 
 class SustainabilitySeasonalityAgent:
-    """Agent responsible for sustainability tagging and seasonality adjustments"""
+    """Agent responsible for sustainability tagging and seasonality adjustments using LLM"""
     
     def __init__(self, context_store: ContextStore, event_bus: EventBus):
         self.context_store = context_store
         self.event_bus = event_bus
+        
+        # Initialize LLM client
+        self.llm_client = LlmChat(
+            api_key=os.environ.get('EMERGENT_LLM_KEY'),
+            system_message="You are a sustainability and seasonality expert for travel planning. You analyze activities for eco-friendliness and provide seasonal recommendations."
+        ).with_model("openai", "gpt-4o-mini")
         
         # Sustainability criteria
         self.sustainability_criteria = {
