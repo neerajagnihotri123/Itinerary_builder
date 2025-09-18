@@ -2746,6 +2746,10 @@ function App() {
             console.log('🎯 Setting showTripPlanner to true NOW');
             setShowTripPlanner(true);
             console.log('✅ setShowTripPlanner(true) called successfully');
+          } else if (action.type === 'personalization_modal' && action.payload) {
+            // Show personalization modal
+            console.log('🎭 Processing personalization_modal action!', action.payload);
+            setShowPersonalizationModal(true);
           }
         });
 
