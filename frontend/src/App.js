@@ -4168,15 +4168,15 @@ function App() {
                       Complete Itinerary
                     </h3>
                     
-                    {selectedVariant.detailed_itinerary?.map((day, dayIndex) => (
+                    {selectedVariant.itinerary?.map((day, dayIndex) => (
                       <div key={dayIndex} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                         <div className="flex items-center gap-4 mb-6">
                           <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full flex items-center justify-center text-lg font-bold">
                             {day.day}
                           </div>
-                          <div>
-                            <h4 className="text-xl font-bold text-slate-900">{day.theme}</h4>
-                            <p className="text-slate-600">{day.activities?.length || 0} activities planned</p>
+                          <div className="flex-1">
+                            <h4 className="text-xl font-bold text-slate-900">{day.title}</h4>
+                            <p className="text-slate-600">{day.date} • {day.activities?.length || 0} activities planned</p>
                           </div>
                         </div>
                         
