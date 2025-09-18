@@ -3921,7 +3921,7 @@ function App() {
               ))}
             </AnimatePresence>
 
-            {/* Enhanced Recommendations Carousel */}
+            {/* Enhanced Recommendations Carousel - Only show when there are recommendations */}
             {recommendations.length > 0 && (
               <ProfessionalCarousel
                 items={recommendations}
@@ -3929,13 +3929,6 @@ function App() {
                 title="Your Personalized Recommendations"
                 itemsPerView={3}
               />
-            )}
-
-            {/* Debug: Show if we have recommendations */}
-            {recommendations.length === 0 && messages.length > 1 && (
-              <div className="text-center text-gray-500 p-4 bg-gray-50 rounded-xl">
-                <p>No recommendation cards available yet. Try asking about destinations!</p>
-              </div>
             )}
 
             {isLoading && (
