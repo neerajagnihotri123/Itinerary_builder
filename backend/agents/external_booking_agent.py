@@ -50,6 +50,14 @@ class ExternalBookingAgent:
         # Subscribe to booking events
         self.event_bus.subscribe(EventTypes.BOOKING_REQUESTED, self._handle_booking_request)
     
+    def _get_llm_client(self, session_id: str) -> LlmChat:
+        """Get LLM client for session"""
+        return LlmChat(
+            api_key=self.api_key,
+            session_id=session_id,
+            system_message="You are a travel booking assistant that generates realistic local travel partners and provider information."
+        ).with_model("openai", "gpt-4o-mini")
+    
     async def _handle_booking_request(self, event):
         """Handle booking request event"""
         try:
