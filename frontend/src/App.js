@@ -34,7 +34,208 @@ import {
   Route
 } from 'lucide-react';
 
-// Use environment variable for backend URL - production configured
+// Interactive Trip Map Component
+const InteractiveTripMap = ({ selectedVariant, tripDetails }) => {
+  const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 }); // India center
+  const [showNavigation, setShowNavigation] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState(null);
+  
+  useEffect(() => {
+    // Get user's current location for live navigation
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setCurrentLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => console.log('Location error:', error)
+      );
+    }
+  }, []);
+  
+  // Generate trip route points from itinerary
+  const getRoutePoints = () => {
+    if (!selectedVariant?.itinerary) return [];
+    
+    const points = [];
+    selectedVariant.itinerary.forEach((day, index) => {
+      day.activities?.forEach((activity, actIndex) => {
+        // Simulate coordinates based on location names (in real app, use geocoding API)
+        const baseCoords = getLocationCoordinates(activity.location);
+        points.push({
+          id: `${day.day}-${actIndex}`,
+          day: day.day,
+          title: activity.title,
+          location: activity.location,
+          time: activity.time,
+          coordinates: baseCoords,
+          category: activity.category
+        });
+      });
+    });
+    return points;
+  };
+  
+  // Simple coordinate mapping (in production, use real geocoding)
+  const getLocationCoordinates = (location) => {
+    const coordinates = {
+      'Goa': { lat: 15.2993, lng: 74.1240 },
+      'Kerala': { lat: 10.8505, lng: 76.2711 },
+      'Mumbai': { lat: 19.0760, lng: 72.8777 },
+      'Delhi': { lat: 28.7041, lng: 77.1025 },
+      'Rajasthan': { lat: 27.0238, lng: 74.2179 },
+      'Chennai': { lat: 13.0827, lng: 80.2707 },
+      'Bangalore': { lat: 12.9716, lng: 77.5946 }
+    };
+    
+    // Find matching coordinate or return default
+    const locationKey = Object.keys(coordinates).find(key => 
+      location.toLowerCase().includes(key.toLowerCase())
+    );
+    
+    return locationKey ? coordinates[locationKey] : { lat: 20.5937, lng: 78.9629 };
+  };
+  
+  const routePoints = getRoutePoints();
+  
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      {/* Map Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Route className="w-6 h-6" />
+            <div>
+              <h3 className="text-lg font-bold">Trip Route Map</h3>
+              <p className="text-blue-100 text-sm">
+                {selectedVariant ? `${selectedVariant.days} days • ${routePoints.length} locations` : 'Select an itinerary to view route'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowNavigation(!showNavigation)}
+              className={`p-2 rounded-lg transition-colors ${
+                showNavigation ? 'bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              <Navigation className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Map Container */}
+      <div className="relative h-96 bg-gradient-to-br from-blue-50 to-green-50">
+        {/* Simulated Map View */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {selectedVariant ? (
+            <div className="w-full h-full p-6">
+              {/* Route Overview */}
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-semibold text-slate-700">Start Point</span>
+                  </div>
+                  <p className="text-xs text-slate-600">{tripDetails?.destination || 'Your Destination'}</p>
+                </div>
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Route className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-semibold text-slate-700">Total Distance</span>
+                  </div>
+                  <p className="text-xs text-slate-600">~{routePoints.length * 15} km</p>
+                </div>
+              </div>
+              
+              {/* Live Navigation Panel */}
+              {showNavigation && currentLocation && (
+                <div className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-3 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Navigation className="w-4 h-4" />
+                    <span className="text-sm font-bold">Live Navigation Active</span>
+                  </div>
+                  <p className="text-xs text-green-100">
+                    Current: {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+                  </p>
+                  <p className="text-xs text-green-100">
+                    Next: {routePoints[0]?.location || 'Destination'}
+                  </p>
+                </div>
+              )}
+              
+              {/* Route Points List */}
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {routePoints.map((point, index) => (
+                  <div key={point.id} className="flex items-center gap-3 bg-white rounded-lg p-2 shadow-sm">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
+                      point.category === 'adventure' ? 'bg-red-500' :
+                      point.category === 'culture' ? 'bg-purple-500' :
+                      point.category === 'dining' ? 'bg-orange-500' :
+                      'bg-blue-500'
+                    }`}>
+                      {point.day}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">{point.title}</p>
+                      <p className="text-xs text-slate-600">{point.time} • {point.location}</p>
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {index + 1}/{routePoints.length}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <Route className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 text-lg font-medium">Select an itinerary to view route</p>
+              <p className="text-slate-400 text-sm">Interactive map with live navigation will appear here</p>
+            </div>
+          )}
+        </div>
+        
+        {/* Map Controls */}
+        <div className="absolute top-4 right-4 space-y-2">
+          <button className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <span className="text-lg">🔍</span>
+          </button>
+          <button className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <span className="text-lg">📍</span>
+          </button>
+          <button className="bg-white p-2 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <span className="text-lg">🛣️</span>
+          </button>
+        </div>
+        
+        {/* Navigation Status */}
+        {showNavigation && (
+          <div className="absolute bottom-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+            🧭 Live Navigation ON
+          </div>
+        )}
+      </div>
+      
+      {/* Map Footer */}
+      <div className="bg-slate-50 p-3 border-t border-slate-200">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-4">
+            <span className="text-slate-600">
+              🗺️ Interactive map with real-time updates
+            </span>
+          </div>
+          <div className="text-slate-500">
+            {routePoints.length > 0 && `${routePoints.length} stops planned`}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
