@@ -219,24 +219,41 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
         except:
             days = 5
         
-        # Generate streamlined itinerary using LLM (faster approach)
+        # Generate comprehensive itinerary using LLM with multiple activities per day
         itinerary_prompt = f"""
-        Generate 3 travel itinerary variants for {destination} ({days}-day trip, {adults} travelers, ₹{budget} budget):
+        Generate 3 detailed travel itinerary variants for {destination} ({days} days, {adults} travelers, ₹{budget} budget):
 
         1. ADVENTURER: Focus on outdoor activities and adventure sports
         2. BALANCED: Mix of sightseeing, culture, and activities  
         3. LUXURY: Premium experiences and fine dining
 
-        For each variant, provide only:
-        - Title and 1-line description
-        - Total estimated cost
+        For each variant, provide:
+        - Title and description
         - 4 key highlights
+        - Daily cost estimate
+
+        IMPORTANT: Each day should have 3-4 activities at different times (morning, afternoon, evening) to create a full-day experience.
 
         Keep response concise and in JSON format:
         {{
-          "adventurer": {{"title": "Adventure Explorer", "description": "...", "price": 25000, "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]}},
-          "balanced": {{"title": "Balanced Explorer", "description": "...", "price": 20000, "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]}},
-          "luxury": {{"title": "Luxury Experience", "description": "...", "price": 45000, "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]}}
+          "adventurer": {{
+            "title": "Adventure Explorer", 
+            "description": "...", 
+            "price": {budget * days},
+            "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]
+          }},
+          "balanced": {{
+            "title": "Balanced Explorer", 
+            "description": "...", 
+            "price": {int(budget * days * 0.8)},
+            "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]
+          }},
+          "luxury": {{
+            "title": "Luxury Experience", 
+            "description": "...", 
+            "price": {int(budget * days * 1.5)},
+            "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]
+          }}
         }}
         """
         
