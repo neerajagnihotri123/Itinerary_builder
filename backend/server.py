@@ -418,121 +418,141 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
             logger.error(f"LLM processing error: {e}, using fallback")
             variants = None
         
-        # Use fallback variants if LLM failed (frontend compatible format)
+        # Use fallback variants if LLM failed (frontend compatible format with multiple activities)
         if variants is None:
-            fallback_variants = [
-                {
-                    "id": f"adventurer_{destination.lower()}",
-                    "title": "Adventure Explorer",
-                    "description": f"Thrilling outdoor experiences and adventure sports in {destination}",
-                    "persona": "adventurer",
-                    "days": days,
-                    "price": 25000,
-                    "total_activities": 12,
-                    "activity_types": ["Adventure Sports", "Water Sports", "Trekking", "Local Culture"],
-                    "highlights": ["Paragliding", "Scuba Diving", "Beach Trek", "Local Markets"],
-                    "recommended": True,
-                    "itinerary": [
-                        {
-                            "day": 1,
-                            "date": start_date,
-                            "title": f"Arrival & {destination} Adventure",
-                            "activities": [
-                                {
-                                    "time": "10:00 AM",
-                                    "title": "Airport Transfer",
-                                    "description": "Comfortable transfer to adventure resort",
-                                    "location": destination,
-                                    "category": "transportation",
-                                    "duration": "1 hour"
-                                },
-                                {
-                                    "time": "2:00 PM",
-                                    "title": "Adventure Sports Introduction",
-                                    "description": "Orientation and first adventure activity",
-                                    "location": f"{destination} Adventure Zone",
-                                    "category": "adventure",
-                                    "duration": "3 hours"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "id": f"balanced_{destination.lower()}",
-                    "title": "Balanced Explorer",
-                    "description": f"Perfect mix of adventure, culture, and relaxation in {destination}",
-                    "persona": "balanced",
-                    "days": days,
-                    "price": 20000,
-                    "total_activities": 10,
-                    "activity_types": ["Sightseeing", "Culture", "Adventure", "Relaxation"],
-                    "highlights": ["City Tour", "Cultural Sites", "Beach Time", "Local Cuisine"],
-                    "recommended": False,
-                    "itinerary": [
-                        {
-                            "day": 1,
-                            "date": start_date,
-                            "title": f"Welcome to {destination}",
-                            "activities": [
-                                {
-                                    "time": "11:00 AM",
-                                    "title": "Hotel Check-in",
-                                    "description": "Comfortable accommodation setup",
-                                    "location": destination,
-                                    "category": "accommodation",
-                                    "duration": "1 hour"
-                                },
-                                {
-                                    "time": "3:00 PM",
-                                    "title": "Heritage Walk",
-                                    "description": "Guided tour of historical landmarks",
-                                    "location": "Old Town",
-                                    "category": "culture",
-                                    "duration": "2.5 hours"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "id": f"luxury_{destination.lower()}",
-                    "title": "Luxury Experience",
-                    "description": f"Premium accommodations and exclusive experiences in {destination}",
-                    "persona": "luxury",
-                    "days": days,
-                    "price": 45000,
-                    "total_activities": 8,
-                    "activity_types": ["Fine Dining", "Spa", "Private Tours", "Luxury Transport"],
-                    "highlights": ["5-Star Resort", "Private Tours", "Spa Treatments", "Gourmet Dining"],
-                    "recommended": False,
-                    "itinerary": [
-                        {
-                            "day": 1,
-                            "date": start_date,
-                            "title": f"Luxury Arrival in {destination}",
-                            "activities": [
-                                {
-                                    "time": "10:00 AM",
-                                    "title": "Private Airport Transfer",
-                                    "description": "Luxury vehicle with personal chauffeur",
-                                    "location": "Airport",
-                                    "category": "transportation",
-                                    "duration": "1 hour"
-                                },
-                                {
-                                    "time": "4:00 PM",
-                                    "title": "Premium Spa Experience",
-                                    "description": "Rejuvenating treatments at 5-star spa",
-                                    "location": "Resort Spa",
-                                    "category": "wellness",
-                                    "duration": "3 hours"
-                                }
-                            ]
-                        }
-                    ]
+            fallback_variants = []
+            
+            # Define activity templates for each variant type
+            for variant_type in ['adventurer', 'balanced', 'luxury']:
+                activities_per_day = []
+                
+                for day_num in range(1, days + 1):
+                    day_date = (datetime.fromisoformat(start_date) + timedelta(days=day_num-1)).isoformat()[:10]
+                    
+                    if variant_type == 'adventurer':
+                        daily_activities = [
+                            {
+                                "time": "8:00 AM",
+                                "title": f"Adventure Activity {day_num}A",
+                                "description": f"Exciting outdoor adventure experience in {destination}",
+                                "location": f"{destination} Adventure Park",
+                                "category": "adventure",
+                                "duration": "3 hours"
+                            },
+                            {
+                                "time": "1:00 PM", 
+                                "title": f"Exploration {day_num}B",
+                                "description": f"Discover hidden gems and scenic spots in {destination}",
+                                "location": f"{destination} Scenic Area",
+                                "category": "sightseeing",
+                                "duration": "2.5 hours"
+                            },
+                            {
+                                "time": "6:00 PM",
+                                "title": f"Evening Adventure {day_num}C",  
+                                "description": f"Thrilling evening activities and local experiences",
+                                "location": f"{destination} Activity Zone",
+                                "category": "culture",
+                                "duration": "2 hours"
+                            }
+                        ]
+                    elif variant_type == 'balanced':
+                        daily_activities = [
+                            {
+                                "time": "9:00 AM",
+                                "title": f"Morning Sightseeing {day_num}",
+                                "description": f"Visit popular attractions and landmarks in {destination}",
+                                "location": f"{destination} City Center",
+                                "category": "sightseeing", 
+                                "duration": "3 hours"
+                            },
+                            {
+                                "time": "2:00 PM",
+                                "title": f"Cultural Experience {day_num}",
+                                "description": f"Immerse in local culture and traditions of {destination}",
+                                "location": f"{destination} Cultural District",
+                                "category": "culture",
+                                "duration": "2 hours"
+                            },
+                            {
+                                "time": "5:30 PM",
+                                "title": f"Local Shopping {day_num}",
+                                "description": f"Explore local markets and shopping areas",
+                                "location": f"{destination} Market Street",
+                                "category": "shopping",
+                                "duration": "2.5 hours"
+                            }
+                        ]
+                    else:  # luxury
+                        daily_activities = [
+                            {
+                                "time": "10:00 AM",
+                                "title": f"Luxury Tour {day_num}",
+                                "description": f"Premium guided tour with personal concierge in {destination}",
+                                "location": f"{destination} Luxury District",
+                                "category": "luxury",
+                                "duration": "3 hours"
+                            },
+                            {
+                                "time": "2:30 PM",
+                                "title": f"Fine Dining Experience {day_num}",
+                                "description": f"Exquisite dining at top-rated restaurants",
+                                "location": f"{destination} Restaurant District",
+                                "category": "dining",
+                                "duration": "2 hours"
+                            },
+                            {
+                                "time": "6:00 PM",
+                                "title": f"Spa & Wellness {day_num}",
+                                "description": f"Rejuvenating spa treatments and luxury wellness",
+                                "location": f"{destination} Spa Resort",
+                                "category": "wellness",
+                                "duration": "2.5 hours"
+                            }
+                        ]
+                    
+                    activities_per_day.append({
+                        "day": day_num,
+                        "date": day_date,
+                        "title": f"Day {day_num}: {destination} {variant_type.title()} Experience",
+                        "activities": daily_activities
+                    })
+                
+                # Create variant object
+                variant_config = {
+                    'adventurer': {
+                        'title': 'Adventure Explorer',
+                        'description': f'Thrilling outdoor experiences and adventure sports in {destination}',
+                        'price': 25000 * days,
+                        'highlights': ['Adventure Sports', 'Outdoor Activities', 'Scenic Exploration', 'Local Culture']
+                    },
+                    'balanced': {
+                        'title': 'Balanced Explorer', 
+                        'description': f'Perfect mix of adventure, culture, and relaxation in {destination}',
+                        'price': 20000 * days,
+                        'highlights': ['City Tours', 'Cultural Sites', 'Shopping', 'Local Cuisine']
+                    },
+                    'luxury': {
+                        'title': 'Luxury Experience',
+                        'description': f'Premium accommodations and exclusive experiences in {destination}',
+                        'price': 45000 * days,
+                        'highlights': ['5-Star Experience', 'Fine Dining', 'Spa Treatments', 'Personal Service']
+                    }
                 }
-            ]
+                
+                fallback_variants.append({
+                    "id": f"{variant_type}_{destination.lower()}",
+                    "title": variant_config[variant_type]['title'],
+                    "description": variant_config[variant_type]['description'],
+                    "persona": variant_type,
+                    "days": days,
+                    "price": variant_config[variant_type]['price'],
+                    "total_activities": days * 3,  # 3 activities per day
+                    "activity_types": variant_config[variant_type]['highlights'],
+                    "highlights": variant_config[variant_type]['highlights'],
+                    "recommended": variant_type == 'adventurer',
+                    "itinerary": activities_per_day
+                })
         else:
             # Use LLM-generated variants
             fallback_variants = variants
