@@ -190,7 +190,7 @@ class SustainabilitySeasonalityAgent:
             }}
             """
             
-            user_msg = UserMessage(content=context)
+            user_msg = UserMessage(text=context)
             llm_client = self._get_llm_client("temp_session")  # Use temp session for sustainability analysis
             response = await llm_client.send_message(user_msg)
             
