@@ -352,19 +352,20 @@ Always provide helpful, specific, and engaging responses that move the conversat
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(user_msg)
             
-            # Generate contextual follow-up questions
+            # Generate contextual follow-up questions as suggestions for user to ask
             follow_up_questions = [
-                "Are you planning a trip somewhere?",
-                "What kind of travel experience interests you most?",
-                "Any particular destinations on your wishlist?"
+                "Tell me about your travel services",
+                "Show me popular destinations", 
+                "How does your trip planning work?"
             ]
             
             # If the message seems like a greeting, provide more welcoming follow-ups
             if any(word in message.lower() for word in ["hello", "hi", "hey", "good morning", "good evening"]):
                 follow_up_questions = [
-                    "Where would you like to explore?",
-                    "What type of adventure are you looking for?",
-                    "Any dream destinations in mind?"
+                    "Plan a trip to Goa",
+                    "Show me adventure destinations",
+                    "Find luxury accommodations",
+                    "Plan a cultural tour"
                 ]
             
             # Generate sample destination cards for general inquiries to showcase capabilities
