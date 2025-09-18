@@ -199,7 +199,7 @@ class ExternalBookingAgent:
             # Parse JSON response
             import json
             try:
-                partners_data = json.loads(response.content)
+                partners_data = json.loads(response)  # response is a string
                 
                 providers = []
                 for partner in partners_data:
