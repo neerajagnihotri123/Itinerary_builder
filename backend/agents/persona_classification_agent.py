@@ -189,7 +189,7 @@ PERSONALITY:
             }}
             """
             
-            user_msg = UserMessage(content=analysis_context)
+            user_msg = UserMessage(text=analysis_context)
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(user_msg)
             
