@@ -196,7 +196,7 @@ PERSONALITY:
             # Parse LLM response
             import json
             try:
-                llm_result = json.loads(response.content)
+                llm_result = json.loads(response)  # response is a string
                 
                 # Validate and enhance the result
                 persona_type = llm_result.get("persona_type", "cultural_explorer")
