@@ -385,11 +385,67 @@ class TravelloBackendTester:
             
         return False
 
-    def test_generate_itinerary_endpoint(self):
-        """Test POST /api/generate-itinerary endpoint - The critical test"""
+    def test_complete_itinerary_flow(self):
+        """Test the complete itinerary generation flow as requested in review"""
         try:
-            # Use data from previous tests or defaults
-            trip_details = self.trip_details or {
+            print(f"\n🎯 Testing Complete Itinerary Generation Flow")
+            print("=" * 60)
+            
+            # Step 1: Initial chat message that should trigger trip planner
+            print("Step 1: Sending trip planning message...")
+            chat_payload = {
+                "message": "I want to plan a trip to Goa",
+                "session_id": self.session_id
+            }
+            
+            chat_response = requests.post(f"{API_BASE}/chat", json=chat_payload, timeout=60)
+            
+            if chat_response.status_code != 200:
+                self.log_result("Complete Itinerary Flow - Chat", False, 
+                              f"Chat endpoint failed: HTTP {chat_response.status_code}: {chat_response.text}")
+                return False
+            
+            chat_data = chat_response.json()
+            print(f"✅ Chat response received: {chat_data['chat_text'][:100]}...")
+            
+            # Verify trip planner card is triggered
+            has_trip_planner = any(
+                action.get("type") == "trip_planner_card" 
+                for action in chat_data.get("ui_actions", [])
+            )
+            
+            if not has_trip_planner:
+                self.log_result("Complete Itinerary Flow - Chat", False, 
+                              "Trip planner card not triggered for Goa trip message")
+                return False
+            
+            # Step 2: Profile intake with adventurous/nature preferences
+            print("Step 2: Submitting profile intake...")
+            profile_payload = {
+                "session_id": self.session_id,
+                "responses": {
+                    "vacation_style": "adventurous",
+                    "experience_type": "nature",
+                    "attraction_preference": "both",
+                    "accommodation": ["boutique_hotels", "luxury_hotels"],
+                    "interests": ["hiking", "food", "photography", "wildlife"],
+                    "custom_inputs": ["I love water sports and want to try paragliding in Goa"]
+                }
+            }
+            
+            profile_response = requests.post(f"{API_BASE}/profile-intake", json=profile_payload, timeout=60)
+            
+            if profile_response.status_code != 200:
+                self.log_result("Complete Itinerary Flow - Profile", False, 
+                              f"Profile intake failed: HTTP {profile_response.status_code}: {profile_response.text}")
+                return False
+            
+            profile_data = profile_response.json()
+            print(f"✅ Profile intake completed with persona tags: {profile_data.get('persona_tags', [])}")
+            
+            # Step 3: Persona classification
+            print("Step 3: Running persona classification...")
+            trip_details = {
                 "destination": "Goa",
                 "start_date": "2024-12-15",
                 "end_date": "2024-12-20",
@@ -398,106 +454,156 @@ class TravelloBackendTester:
                 "budget_per_night": 12000
             }
             
-            persona_tags = self.persona_data.get("persona_tags", ["adventurer", "nature_lover"])
-            
-            payload = {
+            persona_payload = {
                 "session_id": self.session_id,
                 "trip_details": trip_details,
-                "persona_tags": persona_tags
+                "profile_data": profile_payload["responses"]
             }
             
-            print(f"🗓️ Generating itinerary for {trip_details['destination']} with persona tags: {persona_tags}")
+            persona_response = requests.post(f"{API_BASE}/persona-classification", json=persona_payload, timeout=60)
             
-            response = requests.post(f"{API_BASE}/generate-itinerary", json=payload, timeout=120)
+            if persona_response.status_code != 200:
+                self.log_result("Complete Itinerary Flow - Persona", False, 
+                              f"Persona classification failed: HTTP {persona_response.status_code}: {persona_response.text}")
+                return False
             
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["variants", "session_id", "generated_at"]
+            persona_data = persona_response.json()
+            print(f"✅ Persona classified as: {persona_data.get('persona_type')} with confidence {persona_data.get('confidence', 0):.2f}")
+            
+            # Step 4: Generate itinerary - THE CRITICAL TEST
+            print("Step 4: Generating itinerary variants...")
+            itinerary_payload = {
+                "session_id": self.session_id,
+                "trip_details": trip_details,
+                "persona_tags": persona_data.get("persona_tags", ["adventurer", "nature_lover"])
+            }
+            
+            itinerary_response = requests.post(f"{API_BASE}/generate-itinerary", json=itinerary_payload, timeout=120)
+            
+            if itinerary_response.status_code != 200:
+                self.log_result("Complete Itinerary Flow - Itinerary", False, 
+                              f"Itinerary generation failed: HTTP {itinerary_response.status_code}: {itinerary_response.text}")
+                return False
+            
+            itinerary_data = itinerary_response.json()
+            
+            # Step 5: Verify data format for frontend timeline rendering
+            print("Step 5: Verifying data format for timeline rendering...")
+            
+            # Check required top-level fields
+            required_fields = ["variants", "session_id", "generated_at"]
+            if not all(field in itinerary_data for field in required_fields):
+                self.log_result("Complete Itinerary Flow - Format", False, 
+                              f"Missing required top-level fields: {required_fields}")
+                return False
+            
+            variants = itinerary_data["variants"]
+            
+            # Verify 3 variants
+            if len(variants) != 3:
+                self.log_result("Complete Itinerary Flow - Format", False, 
+                              f"Expected 3 variants, got {len(variants)}")
+                return False
+            
+            # Verify each variant has correct format for frontend
+            variant_issues = []
+            for i, variant in enumerate(variants):
+                # Check required variant fields (based on server.py response format)
+                required_variant_fields = ["id", "title", "description", "persona", "days", "price", 
+                                         "total_activities", "activity_types", "highlights", "recommended", "itinerary"]
                 
-                if all(field in data for field in required_fields):
-                    variants = data["variants"]
-                    
-                    # Verify 3 variants generated
-                    if len(variants) == 3:
-                        variant_types = [v["type"] for v in variants]
-                        expected_types = ["adventurer", "balanced", "luxury"]
-                        
-                        if all(vtype in variant_types for vtype in expected_types):
-                            # Verify each variant has real LLM-generated content
-                            all_variants_valid = True
-                            variant_details = []
-                            
-                            for variant in variants:
-                                # Check required variant fields
-                                variant_fields = ["id", "type", "title", "description", "days", "total_cost", 
-                                                "daily_itinerary", "highlights", "total_activities"]
-                                
-                                if not all(field in variant for field in variant_fields):
-                                    all_variants_valid = False
-                                    break
-                                
-                                # Verify daily itinerary has real activities
-                                daily_itinerary = variant["daily_itinerary"]
-                                if len(daily_itinerary) > 0:
-                                    # Check first day activities
-                                    first_day = daily_itinerary[0]
-                                    if "activities" in first_day and len(first_day["activities"]) > 0:
-                                        first_activity = first_day["activities"][0]
-                                        
-                                        # Verify activity has realistic data
-                                        activity_fields = ["id", "name", "type", "time", "duration", 
-                                                         "location", "description", "cost"]
-                                        
-                                        if all(field in first_activity for field in activity_fields):
-                                            # Check if activity appears LLM-generated (not hardcoded)
-                                            activity_name = first_activity["name"]
-                                            activity_desc = first_activity["description"]
-                                            
-                                            is_realistic = (
-                                                "Goa" in activity_name or "Goa" in activity_desc or
-                                                len(activity_desc) > 30 and
-                                                not any(word in activity_desc.lower() for word in ["test", "mock", "placeholder"])
-                                            )
-                                            
-                                            if is_realistic:
-                                                variant_details.append(f"{variant['type']}: {variant['title']} ({variant['total_activities']} activities, ₹{variant['total_cost']})")
-                                            else:
-                                                all_variants_valid = False
-                                                self.log_result("Generate Itinerary", False, 
-                                                              f"Activity appears hardcoded: {activity_name} - {activity_desc}")
-                                                break
-                                        else:
-                                            all_variants_valid = False
-                                            break
-                                    else:
-                                        all_variants_valid = False
-                                        break
-                                else:
-                                    all_variants_valid = False
-                                    break
-                            
-                            if all_variants_valid:
-                                self.log_result("Generate Itinerary", True, 
-                                              f"3 variants generated with real LLM content: {'; '.join(variant_details)}", 
-                                              {"variant_count": len(variants), "variant_types": variant_types})
-                                return True
-                            else:
-                                self.log_result("Generate Itinerary", False, "Some variants have invalid or hardcoded content")
-                        else:
-                            self.log_result("Generate Itinerary", False, 
-                                          f"Missing expected variant types. Got: {variant_types}, Expected: {expected_types}", data)
-                    else:
-                        self.log_result("Generate Itinerary", False, 
-                                      f"Expected 3 variants, got {len(variants)}", data)
-                else:
-                    self.log_result("Generate Itinerary", False, f"Missing required fields: {data}", data)
-            else:
-                self.log_result("Generate Itinerary", False, f"HTTP {response.status_code}: {response.text}")
+                missing_fields = [field for field in required_variant_fields if field not in variant]
+                if missing_fields:
+                    variant_issues.append(f"Variant {i+1} missing fields: {missing_fields}")
+                    continue
                 
+                # Check itinerary structure for timeline rendering
+                itinerary = variant["itinerary"]
+                if not isinstance(itinerary, list) or len(itinerary) == 0:
+                    variant_issues.append(f"Variant {i+1} has invalid itinerary structure")
+                    continue
+                
+                # Check first day structure
+                first_day = itinerary[0]
+                required_day_fields = ["day", "date", "title", "activities"]
+                missing_day_fields = [field for field in required_day_fields if field not in first_day]
+                if missing_day_fields:
+                    variant_issues.append(f"Variant {i+1} day missing fields: {missing_day_fields}")
+                    continue
+                
+                # Check first activity structure
+                activities = first_day["activities"]
+                if not isinstance(activities, list) or len(activities) == 0:
+                    variant_issues.append(f"Variant {i+1} has no activities")
+                    continue
+                
+                first_activity = activities[0]
+                required_activity_fields = ["time", "title", "description", "location", "category", "duration"]
+                missing_activity_fields = [field for field in required_activity_fields if field not in first_activity]
+                if missing_activity_fields:
+                    variant_issues.append(f"Variant {i+1} activity missing fields: {missing_activity_fields}")
+                    continue
+            
+            if variant_issues:
+                self.log_result("Complete Itinerary Flow - Format", False, 
+                              f"Variant format issues: {'; '.join(variant_issues)}")
+                return False
+            
+            # Verify content quality (not just structure)
+            content_issues = []
+            for i, variant in enumerate(variants):
+                # Check if content appears to be LLM-generated (not hardcoded)
+                title = variant["title"]
+                description = variant["description"]
+                highlights = variant.get("highlights", [])
+                
+                # Basic content quality checks
+                if len(description) < 30:
+                    content_issues.append(f"Variant {i+1} description too short")
+                
+                if len(highlights) < 2:
+                    content_issues.append(f"Variant {i+1} has insufficient highlights")
+                
+                # Check for Goa-specific content
+                goa_mentioned = any("goa" in str(field).lower() for field in [title, description] + highlights)
+                if not goa_mentioned:
+                    content_issues.append(f"Variant {i+1} doesn't mention Goa")
+                
+                # Check activity content
+                first_activity = variant["itinerary"][0]["activities"][0]
+                activity_desc = first_activity["description"]
+                if len(activity_desc) < 20:
+                    content_issues.append(f"Variant {i+1} activity description too short")
+            
+            if content_issues:
+                self.log_result("Complete Itinerary Flow - Content", False, 
+                              f"Content quality issues: {'; '.join(content_issues)}")
+                return False
+            
+            # Success! Log detailed results
+            variant_summary = []
+            for variant in variants:
+                variant_summary.append(
+                    f"{variant['persona']}: {variant['title']} "
+                    f"({variant['days']} days, ₹{variant['price']:,}, {variant['total_activities']} activities)"
+                )
+            
+            self.log_result("Complete Itinerary Flow", True, 
+                          f"✅ COMPLETE FLOW SUCCESS: {'; '.join(variant_summary)}", 
+                          {
+                              "variants_count": len(variants),
+                              "personas": [v["persona"] for v in variants],
+                              "total_activities": sum(v["total_activities"] for v in variants),
+                              "price_range": f"₹{min(v['price'] for v in variants):,} - ₹{max(v['price'] for v in variants):,}"
+                          })
+            
+            print(f"🎉 Complete itinerary flow test PASSED!")
+            print(f"📊 Generated {len(variants)} variants with proper timeline data format")
+            return True
+            
         except Exception as e:
-            self.log_result("Generate Itinerary", False, f"Request failed: {str(e)}")
-            
-        return False
+            self.log_result("Complete Itinerary Flow", False, f"Flow test failed with exception: {str(e)}")
+            return False
 
     def test_critical_llm_integration(self):
         """Test the critical LLM integration scenarios from review request"""
