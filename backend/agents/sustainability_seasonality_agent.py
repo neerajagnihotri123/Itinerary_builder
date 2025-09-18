@@ -21,10 +21,13 @@ class SustainabilitySeasonalityAgent:
     def __init__(self, context_store: ContextStore, event_bus: EventBus):
         self.context_store = context_store
         self.event_bus = event_bus
-        
-        # Initialize LLM client
-        self.llm_client = LlmChat(
-            api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        self.api_key = os.environ.get('EMERGENT_LLM_KEY')
+    
+    def _get_llm_client(self, session_id: str) -> LlmChat:
+        """Get LLM client for session"""
+        return LlmChat(
+            api_key=self.api_key,
+            session_id=session_id,
             system_message="You are a sustainability and seasonality expert for travel planning. You analyze activities for eco-friendliness and provide seasonal recommendations."
         ).with_model("openai", "gpt-4o-mini")
         
