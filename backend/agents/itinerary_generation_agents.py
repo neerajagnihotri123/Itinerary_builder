@@ -165,8 +165,119 @@ Always create comprehensive, actionable itineraries that travelers can actually 
         )
 
     async def _get_day_activities(self, day: int, destination: str, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> List[Activity]:
-        """Get activities for a specific day (to be overridden by subclasses)"""
-        return []
+        """Get activities for a specific day using LLM"""
+        try:
+            context = f"""
+            Generate a detailed day {day} itinerary for a {self.variant_type.value} style trip to {destination}.
+            
+            Trip Context:
+            - Destination: {destination}
+            - Day: {day}
+            - Trip Style: {self.variant_type.value}
+            - Budget per night: ₹{trip_details.get('budget_per_night', 8000)}
+            - Travelers: {trip_details.get('adults', 2)} adults, {trip_details.get('children', 0)} children
+            - User preferences: {profile_data}
+            
+            Generate 3-4 activities for this day that match the {self.variant_type.value} style:
+            
+            Guidelines:
+            - Include realistic timings (format: "HH:MM")
+            - Include realistic costs in INR
+            - Activities should be 1-4 hours duration
+            - Include mix of activity types: arrival/departure, adventure, cultural, dining, sightseeing, relaxation
+            - For day 1, include arrival logistics
+            - Make activities specific to {destination}
+            - Ensure activities match {self.variant_type.value} persona
+            
+            Respond in JSON array format:
+            [
+                {{
+                    "name": "Activity Name",
+                    "type": "arrival|departure|adventure|cultural|dining|sightseeing|relaxation|transportation|accommodation|shopping",
+                    "time": "09:00",
+                    "duration": "2 hours",
+                    "location": "Specific location in {destination}",
+                    "description": "Detailed description of the activity",
+                    "cost": 2500,
+                    "sustainability_tags": ["eco_friendly", "local_community"]
+                }}
+            ]
+            """
+            
+            user_msg = UserMessage(content=context)
+            response = await self.llm_client.send_message(user_msg)
+            
+            # Parse JSON response
+            import json
+            import uuid
+            try:
+                activities_data = json.loads(response.content)
+                
+                activities = []
+                for i, act_data in enumerate(activities_data):
+                    # Map string type to enum
+                    activity_type = ActivityType.SIGHTSEEING  # Default
+                    try:
+                        activity_type = ActivityType(act_data["type"])
+                    except ValueError:
+                        logger.warning(f"Invalid activity type: {act_data['type']}, using sightseeing")
+                    
+                    activity = Activity(
+                        id=f"{self.variant_type.value}_day{day}_act{i}_{str(uuid.uuid4())[:8]}",
+                        name=act_data["name"],
+                        type=activity_type,
+                        time=act_data["time"],
+                        duration=act_data["duration"],
+                        location=act_data["location"],
+                        description=act_data["description"],
+                        cost=float(act_data["cost"]),
+                        image=f"https://images.unsplash.com/800x400/?{act_data['name'].lower().replace(' ', '-')}-{destination.lower()}",
+                        sustainability_tags=act_data.get("sustainability_tags", [])
+                    )
+                    activities.append(activity)
+                
+                return activities
+                
+            except json.JSONDecodeError:
+                logger.error(f"Failed to parse activities JSON for day {day}, using fallback")
+                return await self._get_fallback_activities(day, destination, trip_details)
+            
+        except Exception as e:
+            logger.error(f"LLM activity generation error for day {day}: {e}")
+            return await self._get_fallback_activities(day, destination, trip_details)
+
+    async def _get_fallback_activities(self, day: int, destination: str, trip_details: Dict[str, Any]) -> List[Activity]:
+        """Fallback activities if LLM fails"""
+        import uuid
+        
+        base_activities = [
+            Activity(
+                id=f"fallback_{day}_{str(uuid.uuid4())[:8]}",
+                name=f"Explore {destination}",
+                type=ActivityType.SIGHTSEEING,
+                time="10:00",
+                duration="3 hours",
+                location=f"Central {destination}",
+                description=f"Guided exploration of {destination}'s main attractions",
+                cost=3000,
+                image=f"https://images.unsplash.com/800x400/?explore-{destination.lower()}",
+                sustainability_tags=["local_guides"]
+            ),
+            Activity(
+                id=f"fallback_{day}_dining_{str(uuid.uuid4())[:8]}",
+                name=f"Traditional {destination} Cuisine",
+                type=ActivityType.DINING,
+                time="19:00",
+                duration="2 hours",
+                location=f"Local Restaurant, {destination}",
+                description=f"Authentic {destination} dining experience",
+                cost=2000,
+                image=f"https://images.unsplash.com/800x400/?local-food-{destination.lower()}",
+                sustainability_tags=["local_cuisine"]
+            )
+        ]
+        
+        return base_activities
 
     def _get_variant_title(self) -> str:
         """Get variant title (to be overridden by subclasses)"""
