@@ -402,8 +402,8 @@ Always provide helpful, specific, and engaging responses that move the conversat
             
             # Generate dynamic recommendation cards based on query type using LLM
             ui_actions = []
-            if query_type in ["greeting", "destination_suggestion", "beach_suggestion"]:
-                # Generate LLM-powered recommendations instead of hardcoded ones
+            if query_type in ["destination_suggestion", "beach_suggestion", "accommodation_suggestion"]:
+                # Only generate recommendations for specific travel queries, not general conversation
                 recommendations_prompt = f"""
                 Generate 3 travel recommendations for a user who asked: "{message}"
                 
