@@ -96,6 +96,36 @@ async def chat_endpoint(request: ChatRequest):
         
         logger.info(f"✉️ Chat response: {response.chat_text[:100]}...")
         
+        # Final validation and fix for image URLs in UI actions
+        image_fallbacks = {
+            "beach": "https://images.unsplash.com/photo-1596402184320-417e7178b2cd?w=400&h=300&fit=crop",
+            "goa": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop", 
+            "kerala": "https://images.unsplash.com/photo-1580490006164-4d93fc09ea97?w=400&h=300&fit=crop",
+            "hotel": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop",
+            "luxury": "https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?w=400&h=300&fit=crop",
+            "default": "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"
+        }
+        
+        # Fix any remaining invalid image URLs in UI actions
+        for action in response.ui_actions:
+            if action.get("type") == "card_add" and action.get("payload"):
+                payload = action["payload"]
+                if payload.get("image") and not payload["image"].startswith("https://images.unsplash.com/photo-"):
+                    title_lower = payload.get("title", "").lower()
+                    
+                    if any(word in title_lower for word in ["beach", "coastal"]):
+                        payload["image"] = image_fallbacks["beach"]
+                    elif any(word in title_lower for word in ["goa", "anjuna"]):
+                        payload["image"] = image_fallbacks["goa"]  
+                    elif any(word in title_lower for word in ["kerala", "varkala"]):
+                        payload["image"] = image_fallbacks["kerala"]
+                    elif any(word in title_lower for word in ["luxury", "premium", "resort"]):
+                        payload["image"] = image_fallbacks["luxury"]
+                    elif any(word in title_lower for word in ["hotel", "accommodation"]):
+                        payload["image"] = image_fallbacks["hotel"]
+                    else:
+                        payload["image"] = image_fallbacks["default"]
+        
         return response
         
     except Exception as e:
