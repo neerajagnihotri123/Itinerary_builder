@@ -4186,11 +4186,13 @@ function App() {
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-orange-600">{selectedVariant.total_activities || 0}</div>
-                      <div className="text-sm text-slate-600">Activities</div>
+                      <div className="text-sm text-slate-600">Total Activities</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-orange-600">{selectedVariant.activity_types?.length || 0}</div>
-                      <div className="text-sm text-slate-600">Types</div>
+                      <div className="text-3xl font-bold text-orange-600">
+                        {selectedVariant.itinerary ? Math.round(selectedVariant.total_activities / selectedVariant.days) : 0}
+                      </div>
+                      <div className="text-sm text-slate-600">Per Day</div>
                     </div>
                     <div className="text-center">
                       <div className="text-3xl font-bold text-green-600">₹{(selectedVariant.price || 0).toLocaleString()}</div>
