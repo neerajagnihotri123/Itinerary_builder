@@ -19,12 +19,9 @@ class ProfileIntakeAgent:
     def __init__(self, context_store: ContextStore, event_bus: EventBus):
         self.context_store = context_store
         self.event_bus = event_bus
+        self.api_key = os.environ.get('EMERGENT_LLM_KEY')
         
-        # Initialize LLM client
-        self.llm_client = LlmChat(
-            api_key=os.environ.get('EMERGENT_LLM_KEY'),
-            system_message=self._get_system_message()
-        ).with_model("openai", "gpt-4o-mini")
+        # LLM client will be initialized per session
     
     def _get_system_message(self) -> str:
         return """You are Travello.ai's Profile Intake Agent. Your role is to conversationally collect traveler preferences, budget, constraints, and travel style through natural dialogue.
