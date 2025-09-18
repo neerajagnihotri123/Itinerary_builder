@@ -197,7 +197,7 @@ class SustainabilitySeasonalityAgent:
             # Parse JSON response
             import json
             try:
-                analysis = json.loads(response.content)
+                analysis = json.loads(response)  # response is a string
                 return analysis
             except json.JSONDecodeError:
                 logger.error("Failed to parse seasonal analysis JSON")
