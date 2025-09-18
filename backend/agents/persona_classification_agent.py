@@ -190,7 +190,8 @@ PERSONALITY:
             """
             
             user_msg = UserMessage(content=analysis_context)
-            response = await self.llm_client.send_message(user_msg)
+            llm_client = self._get_llm_client(session_id)
+            response = await llm_client.send_message(user_msg)
             
             # Parse LLM response
             import json
