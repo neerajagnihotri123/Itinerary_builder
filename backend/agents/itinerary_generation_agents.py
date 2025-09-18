@@ -22,15 +22,18 @@ class BaseItineraryAgent:
         self.context_store = context_store
         self.event_bus = event_bus
         self.variant_type = variant_type
-        
-        # Initialize LLM client
-        self.llm_client = LlmChat(
-            api_key=os.environ.get('EMERGENT_LLM_KEY'),
-            system_message=self._get_system_message()
-        ).with_model("openai", "gpt-4o-mini")
+        self.api_key = os.environ.get('EMERGENT_LLM_KEY')
         
         # Subscribe to itinerary generation requests
         self.event_bus.subscribe(EventTypes.ITINERARY_GENERATION_REQUESTED, self._handle_generation_request)
+    
+    def _get_llm_client(self, session_id: str) -> LlmChat:
+        """Get LLM client for session"""
+        return LlmChat(
+            api_key=self.api_key,
+            session_id=session_id,
+            system_message=self._get_system_message()
+        ).with_model("openai", "gpt-4o-mini")
     
     def _get_system_message(self) -> str:
         return f"""You are Travello.ai's {self.variant_type.value.title()} Itinerary Generation Agent. 
