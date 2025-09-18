@@ -137,14 +137,27 @@ Always provide helpful, specific, and engaging responses that move the conversat
             llm_client = self._get_llm_client("temp_session")  # Use temp session for intent analysis
             response = await llm_client.send_message(user_msg)
             
-            # Parse JSON response
+            # Parse JSON response (handle markdown-wrapped JSON)
             import json
+            import re
             try:
-                result = json.loads(response)  # response is a string, not response.content
+                # Remove markdown code blocks if present
+                json_text = response
+                if '```json' in json_text:
+                    json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                    if json_match:
+                        json_text = json_match.group(1)
+                elif '```' in json_text:
+                    json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                    if json_match:
+                        json_text = json_match.group(1)
+                
+                result = json.loads(json_text.strip())
                 return result
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing failed: {e}, response: {response}")
                 # Fallback parsing if JSON fails
-                content = response.lower()  # response is a string
+                content = response.lower()
                 intent = "general"
                 
                 if any(word in content for word in ["plan", "trip", "travel", "visit", "go to"]):
