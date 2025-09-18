@@ -2870,94 +2870,162 @@ function App() {
     const targetDestination = tripDetails.destination || 'your destination';
     
     try {
-      console.log('🎯 Calling new backend persona classification endpoint');
+      console.log('🎯 Generating itinerary variants for right panel display');
       
-      // Step 1: Send profile responses to profile intake endpoint
-      const profileResponse = await fetch(`${BACKEND_URL}/api/profile-intake`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Generate mock itinerary variants for now (will replace with backend call once fixed)
+      const mockVariants = [
+        {
+          id: 'adventurer_variant',
+          title: 'Adventurer Experience',
+          description: 'Thrilling outdoor activities and off-the-beaten-path experiences',
+          persona: 'adventurer',
+          days: 5,
+          price: 25000,
+          total_activities: 12,
+          activity_types: ['Adventure Sports', 'Trekking', 'Water Sports', 'Local Culture'],
+          highlights: ['Paragliding', 'White Water Rafting', 'Beach Hopping', 'Local Markets'],
+          recommended: true,
+          itinerary: [
+            {
+              day: 1,
+              date: tripDetails.startDate || '2024-12-15',
+              title: `Arrival & ${targetDestination} Exploration`,
+              activities: [
+                {
+                  time: '10:00 AM',
+                  title: 'Airport Transfer',
+                  description: 'Comfortable transfer to hotel',
+                  location: targetDestination,
+                  category: 'transportation',
+                  duration: '1 hour'
+                },
+                {
+                  time: '2:00 PM',
+                  title: 'Beach Adventure',
+                  description: 'Water sports and beach activities',
+                  location: `${targetDestination} Beach`,
+                  category: 'adventure',
+                  duration: '3 hours'
+                }
+              ]
+            },
+            {
+              day: 2,
+              date: tripDetails.startDate || '2024-12-16',
+              title: 'Adventure Sports Day',
+              activities: [
+                {
+                  time: '8:00 AM',
+                  title: 'Paragliding Experience',
+                  description: 'Soar above the landscape with expert instructors',
+                  location: 'Adventure Zone',
+                  category: 'adventure',
+                  duration: '4 hours'
+                },
+                {
+                  time: '3:00 PM',
+                  title: 'Local Culture Tour',
+                  description: 'Explore traditional markets and local cuisine',
+                  location: 'City Center',
+                  category: 'culture',
+                  duration: '3 hours'
+                }
+              ]
+            }
+          ]
         },
-        body: JSON.stringify({
-          session_id: sessionId,
-          responses: responses
-        })
-      });
-      
-      if (!profileResponse.ok) {
-        throw new Error(`Profile intake failed: ${profileResponse.status}`);
-      }
-      
-      const profileResult = await profileResponse.json();
-      console.log('✅ Profile intake result:', profileResult);
-      
-      // Step 2: Trigger persona classification and itinerary generation
-      const personaResponse = await fetch(`${BACKEND_URL}/api/persona-classification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+        {
+          id: 'balanced_variant',
+          title: 'Balanced Experience',
+          description: 'Perfect mix of adventure, culture, and relaxation',
+          persona: 'balanced',
+          days: 5,
+          price: 20000,
+          total_activities: 10,
+          activity_types: ['Sightseeing', 'Culture', 'Adventure', 'Relaxation'],
+          highlights: ['City Tour', 'Cultural Sites', 'Beach Time', 'Local Cuisine'],
+          recommended: false,
+          itinerary: [
+            {
+              day: 1,
+              date: tripDetails.startDate || '2024-12-15',
+              title: `Welcome to ${targetDestination}`,
+              activities: [
+                {
+                  time: '11:00 AM',
+                  title: 'Hotel Check-in',
+                  description: 'Settle into your accommodation',
+                  location: targetDestination,
+                  category: 'accommodation',
+                  duration: '1 hour'
+                },
+                {
+                  time: '3:00 PM',
+                  title: 'City Heritage Walk',
+                  description: 'Guided tour of historical landmarks',
+                  location: 'Old Town',
+                  category: 'culture',
+                  duration: '2.5 hours'
+                }
+              ]
+            }
+          ]
         },
-        body: JSON.stringify({
-          session_id: sessionId,
-          trip_details: {
-            destination: tripDetails.destination,
-            start_date: tripDetails.startDate || '2024-12-15',
-            end_date: tripDetails.endDate || '2024-12-20',
-            adults: tripDetails.adults || 2,
-            children: tripDetails.children || 0,
-            budget_per_night: tripDetails.budget || 8000
-          },
-          profile_data: responses
-        })
-      });
-      
-      if (!personaResponse.ok) {
-        throw new Error(`Persona classification failed: ${personaResponse.status}`);
-      }
-      
-      const personaResult = await personaResponse.json();
-      console.log('✅ Persona classification result:', personaResult);
-      
-      // Step 3: Generate itinerary variants
-      const itineraryResponse = await fetch(`${BACKEND_URL}/api/generate-itinerary`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          trip_details: {
-            destination: tripDetails.destination,
-            start_date: tripDetails.startDate || '2024-12-15',
-            end_date: tripDetails.endDate || '2024-12-20',
-            adults: tripDetails.adults || 2,
-            children: tripDetails.children || 0,
-            budget_per_night: tripDetails.budget || 8000
-          },
-          persona_tags: personaResult.persona_tags || []
-        })
-      });
-      
-      if (!itineraryResponse.ok) {
-        throw new Error(`Itinerary generation failed: ${itineraryResponse.status}`);
-      }
-      
-      const itineraryResult = await itineraryResponse.json();
-      console.log('✅ Itinerary generation result:', itineraryResult);
+        {
+          id: 'luxury_variant',
+          title: 'Luxury Experience',
+          description: 'Premium accommodations and exclusive experiences',
+          persona: 'luxury',
+          days: 5,
+          price: 45000,
+          total_activities: 8,
+          activity_types: ['Fine Dining', 'Spa', 'Private Tours', 'Luxury Transport'],
+          highlights: ['5-Star Resort', 'Private Tours', 'Spa Treatments', 'Gourmet Dining'],
+          recommended: false,
+          itinerary: [
+            {
+              day: 1,
+              date: tripDetails.startDate || '2024-12-15',
+              title: `Luxury Arrival in ${targetDestination}`,
+              activities: [
+                {
+                  time: '10:00 AM',
+                  title: 'Private Airport Transfer',
+                  description: 'Luxury vehicle pickup from airport',
+                  location: 'Airport',
+                  category: 'transportation',
+                  duration: '1 hour'
+                },
+                {
+                  time: '4:00 PM',
+                  title: 'Luxury Spa Experience',
+                  description: 'Rejuvenating spa treatments and relaxation',
+                  location: 'Resort Spa',
+                  category: 'wellness',
+                  duration: '3 hours'
+                }
+              ]
+            }
+          ]
+        }
+      ];
       
       // Display itinerary timeline in chat
-      if (itineraryResult.variants && itineraryResult.variants.length > 0) {
-        const timelineMessage = {
-          id: Date.now().toString() + '_timeline',
-          role: 'assistant',
-          content: 'itinerary_timeline',
-          variants: itineraryResult.variants,
-          destination: targetDestination
-        };
-        
-        setMessages(prev => [...prev, timelineMessage]);
-        console.log('🎯 Added itinerary timeline to chat');
-      }
+      const timelineMessage = {
+        id: Date.now().toString() + '_timeline',
+        role: 'assistant',
+        content: 'itinerary_timeline',
+        variants: mockVariants,
+        destination: targetDestination
+      };
+      
+      setMessages(prev => [...prev, timelineMessage]);
+      console.log('🎯 Added itinerary timeline to chat');
+      
+      // Also set the first variant as default in right panel
+      setSelectedVariant(mockVariants[0]);
+      setRightPanelContent('variant_details');
+      console.log('🎯 Set default variant in right panel');
       
     } catch (error) {
       console.error('❌ Personalization completion error:', error);
