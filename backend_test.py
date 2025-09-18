@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
 # Configuration
-BACKEND_URL = "https://ai-trip-planner-1.preview.emergentagent.com"
+BACKEND_URL = "https://ai-concierge-6.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class TravelloBackendTester:
