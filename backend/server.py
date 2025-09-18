@@ -302,16 +302,18 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                     
                     variants.append({
                         "id": f"{variant_key}_{destination.lower().replace(' ', '_')}",
+                        "type": variant_key,  # Required field
                         "title": variant_data.get("title", f"{variant_key.title()} Experience"),
                         "description": variant_data.get("description", f"Great {variant_key} experience in {destination}"),
-                        "persona": variant_key,
                         "days": days,
-                        "price": variant_data.get("price", 20000),
-                        "total_activities": days * 2,
-                        "activity_types": variant_data.get("highlights", ["Sightseeing", "Culture"]),
+                        "total_cost": float(variant_data.get("price", 20000)),  # Required field
+                        "daily_itinerary": detailed_itinerary,  # Required field (renamed from itinerary)
                         "highlights": variant_data.get("highlights", ["Experience 1", "Experience 2", "Experience 3", "Experience 4"]),
+                        "persona_match": 0.85,  # Required field
+                        "sustainability_score": 0.7,  # Required field
                         "recommended": variant_key == 'adventurer',  # Default to adventurer as recommended
-                        "itinerary": detailed_itinerary
+                        "total_activities": days * 2,
+                        "activity_types": variant_data.get("highlights", ["Sightseeing", "Culture"])
                     })
             
             logger.info(f"✅ Built {len(variants)} complete itinerary variants from LLM data")
