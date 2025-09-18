@@ -2999,6 +2999,9 @@ function App() {
         if (newRecommendations.length > 0) {
           // Replace recommendations instead of appending to prevent continuous addition
           setRecommendations(newRecommendations);
+        } else {
+          // Clear recommendations if no new ones are generated
+          setRecommendations([]);
         }
         
         if (newQuestionChips.length > 0) {
