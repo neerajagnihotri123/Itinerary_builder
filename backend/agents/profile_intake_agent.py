@@ -483,7 +483,7 @@ Always provide helpful, specific, and engaging responses that move the conversat
                                 rec["image"] = image_map["beach"]
                             elif any(word in title_lower for word in ["goa", "anjuna", "baga"]):
                                 rec["image"] = image_map["goa"]  
-                            elif any(word in title_lower for word in ["kerala", "backwater", "alleppey"]):
+                            elif any(word in title_lower for word in ["kerala", "backwater", "alleppey", "varkala"]):
                                 rec["image"] = image_map["kerala"]
                             elif any(word in title_lower for word in ["hotel", "resort", "accommodation"]):
                                 if "luxury" in title_lower or "premium" in title_lower:
@@ -498,6 +498,9 @@ Always provide helpful, specific, and engaging responses that move the conversat
                                 rec["image"] = image_map["cultural"]
                             else:
                                 rec["image"] = image_map["default"]
+                        elif not rec.get("image"):
+                            # If no image provided, set default
+                            rec["image"] = image_map["default"]
                     
                     for rec in recommendations:
                         ui_actions.append(
