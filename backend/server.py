@@ -219,77 +219,50 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
         except:
             days = 5
         
-        # Generate comprehensive itinerary using LLM
+        # Generate streamlined itinerary using LLM (faster approach)
         itinerary_prompt = f"""
-        Create 3 detailed travel itinerary variants for {destination} ({days} days, {adults} travelers, ₹{budget} per night budget).
-        
-        Persona preferences: {', '.join(persona_tags)}
-        
-        Generate exactly 3 variants:
-        1. ADVENTURER: Outdoor activities, adventure sports, off-beat experiences
-        2. BALANCED: Mix of sightseeing, culture, adventure, and relaxation  
-        3. LUXURY: Premium experiences, fine dining, luxury accommodations
-        
-        For each variant, provide:
-        - Title and description
-        - Day-by-day detailed itinerary with activities, times, locations
-        - Total cost estimate
-        - Key highlights (4-5 items)
-        - Activity types covered
-        
-        Format as JSON:
+        Generate 3 travel itinerary variants for {destination} ({days}-day trip, {adults} travelers, ₹{budget} budget):
+
+        1. ADVENTURER: Focus on outdoor activities and adventure sports
+        2. BALANCED: Mix of sightseeing, culture, and activities  
+        3. LUXURY: Premium experiences and fine dining
+
+        For each variant, provide only:
+        - Title and 1-line description
+        - Total estimated cost
+        - 4 key highlights
+
+        Keep response concise and in JSON format:
         {{
-          "variants": [
-            {{
-              "id": "adventurer_goa",
-              "title": "Adventure Explorer",
-              "description": "Thrilling outdoor experiences...",
-              "persona": "adventurer",
-              "days": {days},
-              "price": 25000,
-              "total_activities": 12,
-              "activity_types": ["Adventure Sports", "Water Sports", "Trekking"],
-              "highlights": ["Paragliding", "Scuba Diving", "Trek", "Beach Sports"],
-              "recommended": true,
-              "itinerary": [
-                {{
-                  "day": 1,
-                  "date": "{start_date}",
-                  "title": "Arrival & Beach Adventure",
-                  "activities": [
-                    {{
-                      "time": "10:00 AM",
-                      "title": "Airport Transfer",
-                      "description": "Pickup and transfer to hotel",
-                      "location": "{destination}",
-                      "category": "transportation",
-                      "duration": "1 hour"
-                    }}
-                  ]
-                }}
-              ]
-            }}
-          ]
+          "adventurer": {{"title": "Adventure Explorer", "description": "...", "price": 25000, "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]}},
+          "balanced": {{"title": "Balanced Explorer", "description": "...", "price": 20000, "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]}},
+          "luxury": {{"title": "Luxury Experience", "description": "...", "price": 45000, "highlights": ["Activity1", "Activity2", "Activity3", "Activity4"]}}
         }}
         """
         
-        # Get LLM response
+        # Get LLM response with timeout
         from emergentintegrations.llm.chat import LlmChat, UserMessage
+        import asyncio
         
-        llm_client = LlmChat(
-            api_key=os.environ.get('EMERGENT_LLM_KEY'),
-            session_id=session_id,
-            system_message="You are a travel itinerary expert. Generate detailed, realistic itineraries in valid JSON format."
-        ).with_model("openai", "gpt-4o-mini")
-        
-        user_msg = UserMessage(text=itinerary_prompt)
-        llm_response = await llm_client.send_message(user_msg)
-        
-        # Parse LLM response
-        import json
-        import re
         try:
-            # Clean and parse JSON response
+            llm_client = LlmChat(
+                api_key=os.environ.get('EMERGENT_LLM_KEY'),
+                session_id=session_id,
+                system_message="You are a travel expert. Generate concise itinerary variants in valid JSON format."
+            ).with_model("openai", "gpt-4o-mini")
+            
+            user_msg = UserMessage(text=itinerary_prompt)
+            
+            # Add timeout to LLM call
+            llm_response = await asyncio.wait_for(
+                llm_client.send_message(user_msg), 
+                timeout=15.0  # 15 second timeout
+            )
+            
+            # Parse LLM response quickly
+            import json
+            import re
+            
             json_text = llm_response
             if '```json' in json_text:
                 json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
@@ -300,20 +273,58 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                 if json_match:
                     json_text = json_match.group(1)
             
-            itinerary_data = json.loads(json_text.strip())
-            variants = itinerary_data.get("variants", [])
+            llm_data = json.loads(json_text.strip())
+            logger.info(f"✅ LLM generated itinerary data successfully")
             
-            logger.info(f"✅ Generated {len(variants)} LLM-powered itinerary variants")
+            # Build structured variants from LLM data
+            variants = []
+            for variant_key, variant_data in llm_data.items():
+                if variant_key in ['adventurer', 'balanced', 'luxury']:
+                    # Create detailed itinerary structure
+                    detailed_itinerary = []
+                    for day_num in range(1, days + 1):
+                        day_date = (datetime.fromisoformat(start_date) + timedelta(days=day_num-1)).isoformat()[:10]
+                        detailed_itinerary.append({
+                            "day": day_num,
+                            "date": day_date,
+                            "title": f"Day {day_num}: {variant_data.get('highlights', ['Experience'])[min(day_num-1, len(variant_data.get('highlights', []))-1)]}",
+                            "activities": [
+                                {
+                                    "time": "10:00 AM",
+                                    "title": f"{variant_data.get('highlights', ['Activity'])[0]} Experience" if day_num == 1 else f"Day {day_num} Adventure",
+                                    "description": f"Enjoy {variant_data.get('highlights', ['activities'])[min(day_num-1, len(variant_data.get('highlights', []))-1)].lower()} in {destination}",
+                                    "location": destination,
+                                    "category": "adventure" if variant_key == 'adventurer' else "sightseeing",
+                                    "duration": "4 hours"
+                                }
+                            ]
+                        })
+                    
+                    variants.append({
+                        "id": f"{variant_key}_{destination.lower().replace(' ', '_')}",
+                        "title": variant_data.get("title", f"{variant_key.title()} Experience"),
+                        "description": variant_data.get("description", f"Great {variant_key} experience in {destination}"),
+                        "persona": variant_key,
+                        "days": days,
+                        "price": variant_data.get("price", 20000),
+                        "total_activities": days * 2,
+                        "activity_types": variant_data.get("highlights", ["Sightseeing", "Culture"]),
+                        "highlights": variant_data.get("highlights", ["Experience 1", "Experience 2", "Experience 3", "Experience 4"]),
+                        "recommended": variant_key == 'adventurer',  # Default to adventurer as recommended
+                        "itinerary": detailed_itinerary
+                    })
             
-            return ItineraryResponse(
-                variants=variants,
-                session_id=session_id,
-                generated_at=datetime.now(timezone.utc).isoformat()
-            )
+            logger.info(f"✅ Built {len(variants)} complete itinerary variants from LLM data")
             
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {e}, response: {llm_response}")
-            # Fallback to structured data
+        except asyncio.TimeoutError:
+            logger.warning("LLM call timed out, using fallback variants")
+            variants = None
+        except Exception as e:
+            logger.error(f"LLM processing error: {e}, using fallback")
+            variants = None
+        
+        # Use fallback variants if LLM failed
+        if variants is None:
             fallback_variants = [
                 {
                     "id": f"adventurer_{destination.lower()}",
