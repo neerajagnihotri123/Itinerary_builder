@@ -196,10 +196,22 @@ class ExternalBookingAgent:
             llm_client = self._get_llm_client("temp_session")  # Use temp session for partner analysis
             response = await llm_client.send_message(user_msg)
             
-            # Parse JSON response
+            # Parse JSON response (handle markdown-wrapped JSON)
             import json
+            import re
             try:
-                partners_data = json.loads(response)  # response is a string
+                # Remove markdown code blocks if present
+                json_text = response
+                if '```json' in json_text:
+                    json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                    if json_match:
+                        json_text = json_match.group(1)
+                elif '```' in json_text:
+                    json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                    if json_match:
+                        json_text = json_match.group(1)
+                
+                partners_data = json.loads(json_text.strip())
                 
                 providers = []
                 for partner in partners_data:
