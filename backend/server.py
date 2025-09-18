@@ -297,24 +297,102 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
             variants = []
             for variant_key, variant_data in llm_data.items():
                 if variant_key in ['adventurer', 'balanced', 'luxury']:
-                    # Create detailed itinerary structure for frontend
+                    # Create detailed itinerary structure for frontend with multiple activities per day
                     detailed_itinerary = []
+                    highlights = variant_data.get('highlights', ['Activity 1', 'Activity 2', 'Activity 3', 'Activity 4'])
+                    
                     for day_num in range(1, days + 1):
                         day_date = (datetime.fromisoformat(start_date) + timedelta(days=day_num-1)).isoformat()[:10]
+                        
+                        # Generate 3-4 activities per day based on variant type
+                        activities = []
+                        if variant_key == 'adventurer':
+                            activities = [
+                                {
+                                    "time": "8:00 AM",
+                                    "title": f"Morning Adventure - {highlights[0] if day_num == 1 else f'Day {day_num} Outdoor Activity'}",
+                                    "description": f"Start your day with exciting {highlights[0].lower() if day_num == 1 else 'outdoor adventures'} in {destination}",
+                                    "location": f"{destination} Adventure Zone",
+                                    "category": "adventure",
+                                    "duration": "3 hours"
+                                },
+                                {
+                                    "time": "1:00 PM",
+                                    "title": f"Afternoon Exploration - {highlights[1] if day_num <= len(highlights) else f'Scenic Tour'}",
+                                    "description": f"Explore {highlights[1].lower() if day_num <= len(highlights) else 'scenic locations'} and local attractions",
+                                    "location": f"{destination} City Center",
+                                    "category": "sightseeing",
+                                    "duration": "2.5 hours"
+                                },
+                                {
+                                    "time": "6:00 PM",
+                                    "title": f"Evening Activity - {highlights[2] if day_num <= len(highlights) else f'Local Culture'}",
+                                    "description": f"Wind down with {highlights[2].lower() if day_num <= len(highlights) else 'cultural experiences'} and local cuisine",
+                                    "location": f"{destination} Cultural District",
+                                    "category": "culture",
+                                    "duration": "2 hours"
+                                }
+                            ]
+                        elif variant_key == 'balanced':
+                            activities = [
+                                {
+                                    "time": "9:00 AM",
+                                    "title": f"Morning Sightseeing - {highlights[0] if day_num == 1 else f'Day {day_num} Landmarks'}",
+                                    "description": f"Visit famous {highlights[0].lower() if day_num == 1 else 'landmarks and attractions'} in {destination}",
+                                    "location": f"{destination} Historic District",
+                                    "category": "sightseeing",
+                                    "duration": "3 hours"
+                                },
+                                {
+                                    "time": "2:00 PM",
+                                    "title": f"Afternoon Culture - {highlights[1] if day_num <= len(highlights) else f'Museums & Art'}",
+                                    "description": f"Immerse in {highlights[1].lower() if day_num <= len(highlights) else 'local culture and heritage'}",
+                                    "location": f"{destination} Museum Quarter",
+                                    "category": "culture", 
+                                    "duration": "2 hours"
+                                },
+                                {
+                                    "time": "5:30 PM",
+                                    "title": f"Evening Relaxation - {highlights[2] if day_num <= len(highlights) else f'Local Markets'}",
+                                    "description": f"Enjoy {highlights[2].lower() if day_num <= len(highlights) else 'shopping and local experiences'}",
+                                    "location": f"{destination} Market Area",
+                                    "category": "shopping",
+                                    "duration": "2.5 hours"
+                                }
+                            ]
+                        else:  # luxury
+                            activities = [
+                                {
+                                    "time": "10:00 AM",
+                                    "title": f"Luxury Experience - {highlights[0] if day_num == 1 else f'Day {day_num} Premium Tour'}",
+                                    "description": f"Indulge in {highlights[0].lower() if day_num == 1 else 'premium experiences'} with personal guide",
+                                    "location": f"{destination} Luxury District",
+                                    "category": "luxury",
+                                    "duration": "3 hours"
+                                },
+                                {
+                                    "time": "2:30 PM",
+                                    "title": f"Fine Dining - {highlights[1] if day_num <= len(highlights) else f'Gourmet Lunch'}",
+                                    "description": f"Savor {highlights[1].lower() if day_num <= len(highlights) else 'exquisite cuisine'} at top restaurants",
+                                    "location": f"{destination} Fine Dining",
+                                    "category": "dining",
+                                    "duration": "2 hours"
+                                },
+                                {
+                                    "time": "6:00 PM",
+                                    "title": f"Evening Luxury - {highlights[2] if day_num <= len(highlights) else f'Spa & Wellness'}",
+                                    "description": f"Relax with {highlights[2].lower() if day_num <= len(highlights) else 'spa treatments and wellness'}",
+                                    "location": f"{destination} Spa Resort",
+                                    "category": "wellness",
+                                    "duration": "2.5 hours"
+                                }
+                            ]
+                        
                         detailed_itinerary.append({
                             "day": day_num,
                             "date": day_date,
-                            "title": f"Day {day_num}: {variant_data.get('highlights', ['Experience'])[min(day_num-1, len(variant_data.get('highlights', []))-1)]}",
-                            "activities": [
-                                {
-                                    "time": "10:00 AM",
-                                    "title": f"{variant_data.get('highlights', ['Activity'])[0]} Experience" if day_num == 1 else f"Day {day_num} Adventure",
-                                    "description": f"Enjoy {variant_data.get('highlights', ['activities'])[min(day_num-1, len(variant_data.get('highlights', []))-1)].lower()} in {destination}",
-                                    "location": destination,
-                                    "category": "adventure" if variant_key == 'adventurer' else "sightseeing",
-                                    "duration": "4 hours"
-                                }
-                            ]
+                            "title": f"Day {day_num}: {highlights[min(day_num-1, len(highlights)-1)]}",
+                            "activities": activities
                         })
                     
                     variants.append({
@@ -324,14 +402,14 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                         "persona": variant_key,  # Frontend expects 'persona' not 'type'
                         "days": days,
                         "price": variant_data.get("price", 20000),  # Frontend expects 'price' not 'total_cost'
-                        "total_activities": days * 2,
+                        "total_activities": days * 3,  # 3 activities per day
                         "activity_types": variant_data.get("highlights", ["Sightseeing", "Culture"]),
                         "highlights": variant_data.get("highlights", ["Experience 1", "Experience 2", "Experience 3", "Experience 4"]),
                         "recommended": variant_key == 'adventurer',  # Default to adventurer as recommended
                         "itinerary": detailed_itinerary  # Frontend expects 'itinerary' not 'daily_itinerary'
                     })
             
-            logger.info(f"✅ Built {len(variants)} complete itinerary variants from LLM data")
+            logger.info(f"✅ Built {len(variants)} complete itinerary variants with multiple activities per day")
             
         except asyncio.TimeoutError:
             logger.warning("LLM call timed out, using fallback variants")
