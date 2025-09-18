@@ -96,48 +96,67 @@ Always provide helpful, specific, and engaging responses that move the conversat
         """Analyze user message intent using LLM"""
         try:
             context = f"""
-            User message: {message}
-            Current profile completeness: {len(profile)} fields
-            Trip details: {trip_details}
+            Analyze this user message for travel intent:
             
-            Analyze the user's intent and classify into:
-            - trip_planning: User wants to plan a new trip
+            User message: "{message}"
+            Current profile completeness: {len(profile)} fields collected
+            Existing trip details: {trip_details}
+            
+            Classify the intent as one of:
+            - trip_planning: User wants to plan a new trip or mentions destinations
             - accommodation: User specifically asking about hotels/stays
-            - general: General travel questions or greetings
-            - profile_continuation: Continuing profile building process
+            - general: General questions, greetings, or non-specific inquiries
+            - profile_continuation: User providing more profile information
             
-            Also extract any mentioned:
-            - destination
-            - travel_style preferences
-            - budget_range
-            - trip_duration
-            - group_size
+            Extract any mentioned information:
+            - destination (if mentioned)
+            - travel_style preferences (adventurous, relaxing, cultural, etc.)
+            - budget indicators (luxury, budget, mid-range)
+            - group_size or travel companions
+            - trip_duration hints
+            
+            Respond in JSON format:
+            {{
+                "intent": "trip_planning|accommodation|general|profile_continuation",
+                "confidence": 0.0-1.0,
+                "destination": "extracted destination or null",
+                "travel_style": "extracted style or null",
+                "budget_preference": "luxury|mid-range|budget or null",
+                "group_info": "extracted group info or null",
+                "reasoning": "brief explanation of classification"
+            }}
             """
             
             user_msg = UserMessage(content=context)
             response = await self.llm_client.send_message(user_msg)
             
-            # Parse LLM response (simplified - would use structured output in production)
-            content = response.content.lower()
-            intent = "general"
-            
-            if any(word in content for word in ["plan", "trip", "travel", "visit", "go to"]):
-                intent = "trip_planning"
-            elif any(word in content for word in ["hotel", "stay", "accommodation", "resort"]):
-                intent = "accommodation"
-            elif len(profile) > 0 and not trip_details:
-                intent = "profile_continuation"
-            
-            return {
-                "intent": intent,
-                "destination": self._extract_destination(message),
-                "confidence": 0.8,
-                "extracted_info": self._extract_trip_info(message)
-            }
+            # Parse JSON response
+            import json
+            try:
+                result = json.loads(response.content)
+                return result
+            except json.JSONDecodeError:
+                # Fallback parsing if JSON fails
+                content = response.content.lower()
+                intent = "general"
+                
+                if any(word in content for word in ["plan", "trip", "travel", "visit", "go to"]):
+                    intent = "trip_planning"
+                elif any(word in content for word in ["hotel", "stay", "accommodation", "resort"]):
+                    intent = "accommodation"
+                elif len(profile) > 0 and not trip_details:
+                    intent = "profile_continuation"
+                
+                return {
+                    "intent": intent,
+                    "confidence": 0.7,
+                    "destination": self._extract_destination(message),
+                    "reasoning": "Fallback analysis due to JSON parsing error"
+                }
             
         except Exception as e:
             logger.error(f"Intent analysis error: {e}")
-            return {"intent": "general", "confidence": 0.5}
+            return {"intent": "general", "confidence": 0.5, "reasoning": f"Error: {str(e)}"}
 
     async def _handle_trip_planning(self, session_id: str, message: str, intent_analysis: Dict) -> ChatResponse:
         """Handle trip planning requests"""
