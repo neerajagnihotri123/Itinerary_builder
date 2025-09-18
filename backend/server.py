@@ -438,12 +438,15 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                     ]
                 }
             ]
+        else:
+            # Use LLM-generated variants
+            fallback_variants = variants
             
-            return ItineraryResponse(
-                variants=fallback_variants,
-                session_id=session_id,
-                generated_at=datetime.now(timezone.utc).isoformat()
-            )
+        return ItineraryResponse(
+            variants=fallback_variants,
+            session_id=session_id,
+            generated_at=datetime.now(timezone.utc).isoformat()
+        )
         
     except Exception as e:
         logger.error(f"Itinerary generation error: {e}")
