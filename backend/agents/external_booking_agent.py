@@ -4,6 +4,7 @@ via browser automation or API calls, normalized for swapping and pricing
 """
 
 import logging
+import os
 from typing import Dict, List, Any, Optional
 import httpx
 import asyncio
