@@ -193,10 +193,22 @@ PERSONALITY:
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(user_msg)
             
-            # Parse LLM response
+            # Parse LLM response (handle markdown-wrapped JSON)
             import json
+            import re
             try:
-                llm_result = json.loads(response)  # response is a string
+                # Remove markdown code blocks if present
+                json_text = response
+                if '```json' in json_text:
+                    json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                    if json_match:
+                        json_text = json_match.group(1)
+                elif '```' in json_text:
+                    json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                    if json_match:
+                        json_text = json_match.group(1)
+                
+                llm_result = json.loads(json_text.strip())
                 
                 # Validate and enhance the result
                 persona_type = llm_result.get("persona_type", "cultural_explorer")
