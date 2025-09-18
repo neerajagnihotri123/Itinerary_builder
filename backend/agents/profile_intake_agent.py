@@ -263,9 +263,24 @@ Always provide helpful, specific, and engaging responses that move the conversat
 
     async def _handle_general_inquiry(self, session_id: str, message: str, intent_analysis: Dict) -> ChatResponse:
         """Handle general travel inquiries and greetings"""
-        # Generate personalized response based on message
         try:
-            user_msg = UserMessage(content=f"Respond to this travel inquiry naturally and helpfully: {message}")
+            context = f"""
+            You are Travello.ai, a friendly AI travel assistant. Respond naturally and helpfully to this user message:
+            
+            User message: "{message}"
+            
+            Guidelines:
+            - Be enthusiastic and helpful about travel
+            - If it's a greeting, respond warmly and introduce your capabilities
+            - If it's a general travel question, provide helpful information
+            - Always try to guide the conversation toward planning a trip
+            - Keep responses concise but engaging
+            - End with a question to continue the conversation
+            
+            Respond as if talking directly to the user, no JSON format needed.
+            """
+            
+            user_msg = UserMessage(content=context)
             response = await self.llm_client.send_message(user_msg)
             
             return ChatResponse(
