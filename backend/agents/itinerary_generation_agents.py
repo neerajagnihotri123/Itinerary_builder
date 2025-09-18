@@ -207,7 +207,7 @@ Always create comprehensive, actionable itineraries that travelers can actually 
             ]
             """
             
-            user_msg = UserMessage(content=context)
+            user_msg = UserMessage(text=context)
             llm_client = self._get_llm_client("temp_session")  # Use temp session for activity generation
             response = await llm_client.send_message(user_msg)
             
