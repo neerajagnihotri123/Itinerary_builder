@@ -4219,39 +4219,53 @@ function App() {
                           </div>
                         </div>
                         
-                        <div className="space-y-4">
+                        <div className="space-y-3">
                           {day.activities?.map((activity, actIndex) => (
-                            <div key={actIndex} className="flex gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                              <img 
-                                src={activity.image || `https://images.unsplash.com/300x300/?${activity.category}`}
-                                alt={activity.title}
-                                className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
-                                onError={(e) => {
-                                  e.target.src = 'https://images.unsplash.com/300x300/?activity';
-                                }}
-                              />
-                              <div className="flex-1">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <h5 className="font-bold text-slate-900 text-lg">{activity.title}</h5>
-                                    <p className="text-slate-600 flex items-center gap-1">
-                                      <MapPin className="w-4 h-4" />
-                                      {activity.location}
-                                    </p>
+                            <div key={actIndex} className="relative">
+                              {/* Timeline connector for multiple activities */}
+                              {actIndex > 0 && (
+                                <div className="absolute left-10 -top-3 w-0.5 h-3 bg-orange-200"></div>
+                              )}
+                              
+                              <div className="flex gap-4 p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors border-l-4 border-orange-400">
+                                {/* Activity Time Badge */}
+                                <div className="flex-shrink-0 flex flex-col items-center">
+                                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold mb-2">
+                                    {actIndex + 1}
                                   </div>
-                                  <div className="text-right">
-                                    <div className="text-lg font-bold text-green-600">₹{activity.cost?.toLocaleString() || 'Included'}</div>
-                                    <div className="text-sm text-slate-500">{activity.duration}</div>
+                                  <div className="bg-orange-100 text-orange-800 px-2 py-1 rounded-full text-xs font-medium">
+                                    {activity.time}
                                   </div>
                                 </div>
-                                <p className="text-slate-700 mb-3">{activity.description}</p>
-                                <div className="flex items-center gap-3">
-                                  <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-                                    {activity.time}
-                                  </span>
-                                  <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
-                                    {activity.category?.replace('_', ' ')}
-                                  </span>
+                                
+                                <img 
+                                  src={activity.image || `https://images.unsplash.com/300x300/?${activity.category}`}
+                                  alt={activity.title}
+                                  className="w-16 h-16 object-cover rounded-xl flex-shrink-0"
+                                  onError={(e) => {
+                                    e.target.src = 'https://images.unsplash.com/300x300/?activity';
+                                  }}
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <h5 className="font-bold text-slate-900 text-base">{activity.title}</h5>
+                                      <p className="text-slate-600 flex items-center gap-1 text-sm">
+                                        <MapPin className="w-3 h-3" />
+                                        {activity.location}
+                                      </p>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-sm font-bold text-green-600">₹{activity.cost?.toLocaleString() || 'Included'}</div>
+                                      <div className="text-xs text-slate-500">{activity.duration}</div>
+                                    </div>
+                                  </div>
+                                  <p className="text-slate-700 mb-2 text-sm">{activity.description}</p>
+                                  <div className="flex items-center gap-2">
+                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium capitalize">
+                                      {activity.category?.replace('_', ' ')}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
