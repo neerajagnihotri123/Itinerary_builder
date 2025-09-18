@@ -11,9 +11,18 @@ import uuid
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
 
-# Configuration
-BACKEND_URL = "http://localhost:8001"
+# Configuration - Use production URL from environment
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv('/app/frontend/.env')
+
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://ai-concierge-6.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
+
+print(f"🔍 Testing against: {BACKEND_URL}")
+print(f"🔍 API Base: {API_BASE}")
 
 class TravelloBackendTester:
     def __init__(self):
