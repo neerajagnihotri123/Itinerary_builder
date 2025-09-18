@@ -292,7 +292,7 @@ Always provide helpful, specific, and engaging responses that move the conversat
             response = await llm_client.send_message(user_msg)
             
             return ChatResponse(
-                chat_text=response.content,
+                chat_text=response,  # response is already a string
                 ui_actions=[],
                 updated_profile={},
                 followup_questions=[
