@@ -25,10 +25,9 @@ class ExternalBookingAgent:
         
         # Initialize LLM client
         self.llm_client = LlmChat(
-            model="gpt-4o-mini",
-            temperature=0.7,
-            max_tokens=2000
-        )
+            api_key=os.environ.get('EMERGENT_LLM_KEY'),
+            system_message="You are a travel booking assistant that generates realistic local travel partners and provider information."
+        ).with_model("openai", "gpt-4o-mini")
         
         # Provider configurations
         self.providers = {
