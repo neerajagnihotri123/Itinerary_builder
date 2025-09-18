@@ -140,10 +140,12 @@ PERSONALITY:
             )
 
     async def classify_persona(self, session_id: str, profile_data: Dict[str, Any], trip_details: Dict[str, Any]) -> Dict[str, Any]:
-        """Classify traveler persona based on profile and trip data"""
+        """Classify traveler persona based on profile and trip data using LLM"""
         try:
-            # Prepare analysis context
+            # Prepare comprehensive analysis context
             analysis_context = f"""
+            Analyze this traveler profile and classify them into the most appropriate persona type.
+            
             PROFILE DATA:
             - Vacation Style: {profile_data.get('vacation_style', 'unknown')}
             - Experience Type: {profile_data.get('experience_type', 'unknown')}
@@ -158,24 +160,68 @@ PERSONALITY:
             - Group Size: {trip_details.get('adults', 1)} adults, {trip_details.get('children', 0)} children
             - Budget per night: ₹{trip_details.get('budget_per_night', 0)}
             
-            Analyze this traveler profile and classify into one primary persona type with supporting tags.
-            Consider budget, preferences, group composition, and travel style.
+            PERSONA TYPES TO CHOOSE FROM:
+            1. adventurer - Seeks thrills, outdoor activities, extreme sports, off-beat destinations
+            2. cultural_explorer - Interested in heritage, local traditions, museums, authentic experiences
+            3. luxury_connoisseur - Prefers premium experiences, fine dining, luxury accommodations
+            4. budget_backpacker - Cost-conscious, authentic local experiences, budget accommodations
+            5. eco_conscious_traveler - Sustainable travel, eco-friendly options, nature conservation
+            6. family_oriented - Kid-friendly activities, safe destinations, educational experiences
+            7. business_traveler - Efficient travel, meeting facilities, good connectivity
+            
+            Based on the profile, classify this traveler and provide:
+            - Primary persona type
+            - Confidence score (0.0-1.0)
+            - Supporting persona tags/traits
+            - Propensity to pay score (0.0-1.0) for pricing strategy
+            - Detailed reasoning for the classification
+            
+            Respond in JSON format:
+            {{
+                "persona_type": "adventurer|cultural_explorer|luxury_connoisseur|budget_backpacker|eco_conscious_traveler|family_oriented|business_traveler",
+                "confidence": 0.85,
+                "persona_tags": ["primary_persona", "secondary_trait1", "secondary_trait2"],
+                "propensity_to_pay": 0.7,
+                "reasoning": "Detailed explanation of why this classification was chosen"
+            }}
             """
             
             user_msg = UserMessage(content=analysis_context)
             response = await self.llm_client.send_message(user_msg)
             
-            # Parse LLM response and perform rule-based classification
-            persona_analysis = await self._perform_rule_based_classification(profile_data, trip_details)
-            
-            # Combine LLM insights with rule-based classification
-            final_classification = self._combine_classifications(persona_analysis, response.content)
-            
-            return final_classification
+            # Parse LLM response
+            import json
+            try:
+                llm_result = json.loads(response.content)
+                
+                # Validate and enhance the result
+                persona_type = llm_result.get("persona_type", "cultural_explorer")
+                confidence = max(0.1, min(1.0, float(llm_result.get("confidence", 0.5))))
+                propensity_to_pay = max(0.1, min(1.0, float(llm_result.get("propensity_to_pay", 0.5))))
+                
+                # Add additional analysis
+                rule_based_backup = await self._perform_rule_based_classification(profile_data, trip_details)
+                
+                # Combine LLM and rule-based insights
+                final_classification = {
+                    "persona_type": persona_type,
+                    "persona_tags": llm_result.get("persona_tags", []) + rule_based_backup.get("persona_tags", []),
+                    "confidence": confidence,
+                    "propensity_to_pay": propensity_to_pay,
+                    "reasoning": llm_result.get("reasoning", "LLM-based classification"),
+                    "llm_analysis": llm_result,
+                    "rule_based_backup": rule_based_backup
+                }
+                
+                return final_classification
+                
+            except json.JSONDecodeError:
+                logger.error("Failed to parse persona classification JSON, using rule-based fallback")
+                return await self._perform_rule_based_classification(profile_data, trip_details)
             
         except Exception as e:
-            logger.error(f"Persona classification error: {e}")
-            return self._get_default_classification(profile_data, trip_details)
+            logger.error(f"LLM persona classification error: {e}")
+            return await self._perform_rule_based_classification(profile_data, trip_details)
 
     async def _perform_rule_based_classification(self, profile_data: Dict[str, Any], trip_details: Dict[str, Any]) -> Dict[str, Any]:
         """Perform rule-based persona classification"""
