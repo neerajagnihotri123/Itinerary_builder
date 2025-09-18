@@ -2780,6 +2780,17 @@ function App() {
         }
       }
 
+      // Handle followup questions
+      if (data.followup_questions && data.followup_questions.length > 0) {
+        console.log('💬 Processing followup questions:', data.followup_questions);
+        const followupChips = data.followup_questions.map((question, index) => ({
+          id: `followup_${Date.now()}_${index}`,
+          question: question,
+          label: question
+        }));
+        setQuestionChips(followupChips);
+      }
+
       // Also extract destinations from the assistant's text response for map highlighting
       if (data.chat_text) {
         const extractedDestinations = extractDestinationsFromText(data.chat_text);
