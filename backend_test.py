@@ -613,9 +613,7 @@ class TravelloBackendTester:
         # Test sequence focusing on the review request scenarios
         tests = [
             ("Health Check", self.test_health_check),
-            ("Chat Greeting Message", self.test_chat_greeting_message),
-            ("Chat Trip Planning Message", self.test_chat_trip_planning_message), 
-            ("Chat General Question", self.test_chat_general_question)
+            ("Complete Itinerary Flow", self.test_complete_itinerary_flow)
         ]
         
         passed = 0
