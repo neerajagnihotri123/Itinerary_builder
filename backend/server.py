@@ -330,16 +330,12 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
             fallback_variants = [
                 {
                     "id": f"adventurer_{destination.lower()}",
+                    "type": "adventurer",
                     "title": "Adventure Explorer",
                     "description": f"Thrilling outdoor experiences and adventure sports in {destination}",
-                    "persona": "adventurer",
                     "days": days,
-                    "price": 25000,
-                    "total_activities": 12,
-                    "activity_types": ["Adventure Sports", "Water Sports", "Trekking", "Local Culture"],
-                    "highlights": ["Paragliding", "Scuba Diving", "Beach Trek", "Local Markets"],
-                    "recommended": True,
-                    "itinerary": [
+                    "total_cost": 25000.0,
+                    "daily_itinerary": [
                         {
                             "day": 1,
                             "date": start_date,
@@ -363,20 +359,22 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                                 }
                             ]
                         }
-                    ]
+                    ],
+                    "highlights": ["Paragliding", "Scuba Diving", "Beach Trek", "Local Markets"],
+                    "persona_match": 0.9,
+                    "sustainability_score": 0.7,
+                    "recommended": True,
+                    "total_activities": 12,
+                    "activity_types": ["Adventure Sports", "Water Sports", "Trekking", "Local Culture"]
                 },
                 {
                     "id": f"balanced_{destination.lower()}",
-                    "title": "Balanced Explorer",
+                    "type": "balanced",
+                    "title": "Balanced Explorer", 
                     "description": f"Perfect mix of adventure, culture, and relaxation in {destination}",
-                    "persona": "balanced",
                     "days": days,
-                    "price": 20000,
-                    "total_activities": 10,
-                    "activity_types": ["Sightseeing", "Culture", "Adventure", "Relaxation"],
-                    "highlights": ["City Tour", "Cultural Sites", "Beach Time", "Local Cuisine"],
-                    "recommended": False,
-                    "itinerary": [
+                    "total_cost": 20000.0,
+                    "daily_itinerary": [
                         {
                             "day": 1,
                             "date": start_date,
@@ -400,20 +398,22 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                                 }
                             ]
                         }
-                    ]
+                    ],
+                    "highlights": ["City Tour", "Cultural Sites", "Beach Time", "Local Cuisine"],
+                    "persona_match": 0.8,
+                    "sustainability_score": 0.75,
+                    "recommended": False,
+                    "total_activities": 10,
+                    "activity_types": ["Sightseeing", "Culture", "Adventure", "Relaxation"]
                 },
                 {
                     "id": f"luxury_{destination.lower()}",
+                    "type": "luxury",
                     "title": "Luxury Experience",
                     "description": f"Premium accommodations and exclusive experiences in {destination}",
-                    "persona": "luxury",
                     "days": days,
-                    "price": 45000,
-                    "total_activities": 8,
-                    "activity_types": ["Fine Dining", "Spa", "Private Tours", "Luxury Transport"],
-                    "highlights": ["5-Star Resort", "Private Tours", "Spa Treatments", "Gourmet Dining"],
-                    "recommended": False,
-                    "itinerary": [
+                    "total_cost": 45000.0,
+                    "daily_itinerary": [
                         {
                             "day": 1,
                             "date": start_date,
@@ -437,7 +437,13 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                                 }
                             ]
                         }
-                    ]
+                    ],
+                    "highlights": ["5-Star Resort", "Private Tours", "Spa Treatments", "Gourmet Dining"],
+                    "persona_match": 0.85,
+                    "sustainability_score": 0.6,
+                    "recommended": False,
+                    "total_activities": 8,
+                    "activity_types": ["Fine Dining", "Spa", "Private Tours", "Luxury Transport"]
                 }
             ]
         else:
