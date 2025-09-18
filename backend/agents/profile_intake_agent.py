@@ -367,12 +367,63 @@ Always provide helpful, specific, and engaging responses that move the conversat
                     "Any dream destinations in mind?"
                 ]
             
+            # Generate sample destination cards for general inquiries to showcase capabilities
+            ui_actions = []
+            if any(word in message.lower() for word in ["hello", "hi", "hey", "good morning", "good evening", "what can you", "help"]):
+                # Add popular destination cards to showcase capabilities
+                sample_destinations = [
+                    {
+                        "category": "destination",
+                        "id": "goa_showcase",
+                        "title": "Goa, India",
+                        "description": "Beach paradise with vibrant nightlife, Portuguese heritage, and stunning coastlines perfect for relaxation and adventure.",
+                        "image": "https://images.unsplash.com/photo-1571115764595-644a1f56a55c?w=400&h=300&fit=crop",
+                        "rating": 4.6,
+                        "price_estimate": {"min": 8000, "max": 15000},
+                        "location": "Western India",
+                        "highlights": ["Beaches", "Nightlife", "Heritage", "Water Sports"],
+                        "why_match": "Perfect blend of relaxation and adventure for all types of travelers"
+                    },
+                    {
+                        "category": "destination", 
+                        "id": "kerala_showcase",
+                        "title": "Kerala, India",
+                        "description": "God's Own Country with backwaters, hill stations, and rich cultural experiences in nature's lap.",
+                        "image": "https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=400&h=300&fit=crop",
+                        "rating": 4.7,
+                        "price_estimate": {"min": 10000, "max": 18000},
+                        "location": "South India",
+                        "highlights": ["Backwaters", "Hill Stations", "Ayurveda", "Spices"],
+                        "why_match": "Ideal for cultural immersion and natural beauty seekers"
+                    },
+                    {
+                        "category": "destination",
+                        "id": "rajasthan_showcase", 
+                        "title": "Rajasthan, India",
+                        "description": "Royal heritage with majestic palaces, desert landscapes, and vibrant cultural traditions.",
+                        "image": "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&h=300&fit=crop",
+                        "rating": 4.5,
+                        "price_estimate": {"min": 12000, "max": 25000},
+                        "location": "Northwest India",
+                        "highlights": ["Palaces", "Desert Safari", "Culture", "Heritage"],
+                        "why_match": "Perfect for history enthusiasts and luxury travel experiences"
+                    }
+                ]
+                
+                for dest in sample_destinations:
+                    ui_actions.append(
+                        UIAction(
+                            type="card_add",
+                            payload=dest
+                        ).dict()
+                    )
+            
             return ChatResponse(
                 chat_text=response,  # Use the LLM response directly
-                ui_actions=[],
+                ui_actions=ui_actions,
                 updated_profile={},
                 followup_questions=follow_up_questions,
-                analytics_tags=["general_inquiry", "llm_response"]
+                analytics_tags=["general_inquiry", "llm_response", "showcase_destinations"]
             )
             
         except Exception as e:
