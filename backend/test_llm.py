@@ -5,7 +5,11 @@ import os
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 async def test_llm():
-    client = LlmChat(api_key=os.environ.get('EMERGENT_LLM_KEY'))
+    client = LlmChat(
+        api_key=os.environ.get('EMERGENT_LLM_KEY'),
+        session_id="test_session",
+        system_message="You are a helpful assistant."
+    )
     client = client.with_model('openai', 'gpt-4o-mini')
     
     msg = UserMessage(text='Hello, how are you?')
