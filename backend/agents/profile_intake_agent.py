@@ -208,7 +208,11 @@ Always provide helpful, specific, and engaging responses that move the conversat
                 chat_text=response_text,
                 ui_actions=ui_actions,
                 updated_profile={},
-                followup_questions=[],
+                followup_questions=[
+                    "What dates are you thinking?",
+                    "How many travelers?",
+                    "What's your budget range?"
+                ],
                 analytics_tags=["trip_planning_started", "trip_planner_card_shown"]
             )
         else:
@@ -230,7 +234,11 @@ Always provide helpful, specific, and engaging responses that move the conversat
                     ).dict()
                 ],
                 updated_profile={},
-                followup_questions=[],
+                followup_questions=[
+                    "What type of vacation do you prefer?",
+                    "Are you more adventurous or relaxed?",
+                    "What interests you most when traveling?"
+                ],
                 analytics_tags=["profile_intake_to_personalization"]
             )
 
