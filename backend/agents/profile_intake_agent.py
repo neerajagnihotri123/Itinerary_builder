@@ -293,7 +293,8 @@ Always provide helpful, specific, and engaging responses that move the conversat
             """
             
             user_msg = UserMessage(content=context)
-            response = await self.llm_client.send_message(user_msg)
+            llm_client = self._get_llm_client(session_id)
+            response = await llm_client.send_message(user_msg)
             
             return ChatResponse(
                 chat_text=response.content,
