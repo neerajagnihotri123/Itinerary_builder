@@ -147,28 +147,246 @@ async def persona_classification_endpoint(request: PersonaClassificationRequest)
 
 @app.post("/api/generate-itinerary")
 async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
-    """Generate itinerary variants endpoint"""
+    """Generate itinerary variants endpoint with LLM integration"""
     try:
         session_id = request.session_id
         trip_details = request.trip_details
         persona_tags = request.persona_tags
         
-        logger.info(f"🗓️ Generating itinerary variants for session {session_id}")
+        logger.info(f"🗓️ Generating LLM-powered itinerary variants for session {session_id}")
+        logger.info(f"🗓️ Trip details: {trip_details}")
+        logger.info(f"🗓️ Persona tags: {persona_tags}")
         
-        # Generate variants in parallel
-        variants = await _generate_all_variants(session_id, trip_details, persona_tags)
+        # Use profile intake agent to generate itinerary content via LLM
+        destination = trip_details.get("destination", "Unknown")
+        start_date = trip_details.get("start_date", "2024-12-15")
+        end_date = trip_details.get("end_date", "2024-12-20") 
+        adults = trip_details.get("adults", 2)
+        budget = trip_details.get("budget_per_night", 8000)
         
-        # Apply pricing
-        priced_variants = await pricing_agent.apply_pricing(session_id, variants)
+        # Calculate trip duration
+        from datetime import datetime
+        try:
+            start = datetime.fromisoformat(start_date)
+            end = datetime.fromisoformat(end_date)
+            days = (end - start).days
+        except:
+            days = 5
         
-        # Apply sustainability tags
-        enhanced_variants = await sustainability_agent.enhance_variants(session_id, priced_variants)
+        # Generate comprehensive itinerary using LLM
+        itinerary_prompt = f"""
+        Create 3 detailed travel itinerary variants for {destination} ({days} days, {adults} travelers, ₹{budget} per night budget).
         
-        return ItineraryResponse(
-            variants=enhanced_variants,
+        Persona preferences: {', '.join(persona_tags)}
+        
+        Generate exactly 3 variants:
+        1. ADVENTURER: Outdoor activities, adventure sports, off-beat experiences
+        2. BALANCED: Mix of sightseeing, culture, adventure, and relaxation  
+        3. LUXURY: Premium experiences, fine dining, luxury accommodations
+        
+        For each variant, provide:
+        - Title and description
+        - Day-by-day detailed itinerary with activities, times, locations
+        - Total cost estimate
+        - Key highlights (4-5 items)
+        - Activity types covered
+        
+        Format as JSON:
+        {{
+          "variants": [
+            {{
+              "id": "adventurer_goa",
+              "title": "Adventure Explorer",
+              "description": "Thrilling outdoor experiences...",
+              "persona": "adventurer",
+              "days": {days},
+              "price": 25000,
+              "total_activities": 12,
+              "activity_types": ["Adventure Sports", "Water Sports", "Trekking"],
+              "highlights": ["Paragliding", "Scuba Diving", "Trek", "Beach Sports"],
+              "recommended": true,
+              "itinerary": [
+                {{
+                  "day": 1,
+                  "date": "{start_date}",
+                  "title": "Arrival & Beach Adventure",
+                  "activities": [
+                    {{
+                      "time": "10:00 AM",
+                      "title": "Airport Transfer",
+                      "description": "Pickup and transfer to hotel",
+                      "location": "{destination}",
+                      "category": "transportation",
+                      "duration": "1 hour"
+                    }}
+                  ]
+                }}
+              ]
+            }}
+          ]
+        }}
+        """
+        
+        # Get LLM response
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        llm_client = LlmChat(
+            api_key=os.environ.get('EMERGENT_LLM_KEY'),
             session_id=session_id,
-            generated_at=datetime.now(timezone.utc).isoformat()
-        )
+            system_message="You are a travel itinerary expert. Generate detailed, realistic itineraries in valid JSON format."
+        ).with_model("openai", "gpt-4o-mini")
+        
+        user_msg = UserMessage(text=itinerary_prompt)
+        llm_response = await llm_client.send_message(user_msg)
+        
+        # Parse LLM response
+        import json
+        import re
+        try:
+            # Clean and parse JSON response
+            json_text = llm_response
+            if '```json' in json_text:
+                json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            elif '```' in json_text:
+                json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            
+            itinerary_data = json.loads(json_text.strip())
+            variants = itinerary_data.get("variants", [])
+            
+            logger.info(f"✅ Generated {len(variants)} LLM-powered itinerary variants")
+            
+            return ItineraryResponse(
+                variants=variants,
+                session_id=session_id,
+                generated_at=datetime.now(timezone.utc).isoformat()
+            )
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing error: {e}, response: {llm_response}")
+            # Fallback to structured data
+            fallback_variants = [
+                {
+                    "id": f"adventurer_{destination.lower()}",
+                    "title": "Adventure Explorer",
+                    "description": f"Thrilling outdoor experiences and adventure sports in {destination}",
+                    "persona": "adventurer",
+                    "days": days,
+                    "price": 25000,
+                    "total_activities": 12,
+                    "activity_types": ["Adventure Sports", "Water Sports", "Trekking", "Local Culture"],
+                    "highlights": ["Paragliding", "Scuba Diving", "Beach Trek", "Local Markets"],
+                    "recommended": True,
+                    "itinerary": [
+                        {
+                            "day": 1,
+                            "date": start_date,
+                            "title": f"Arrival & {destination} Adventure",
+                            "activities": [
+                                {
+                                    "time": "10:00 AM",
+                                    "title": "Airport Transfer",
+                                    "description": "Comfortable transfer to adventure resort",
+                                    "location": destination,
+                                    "category": "transportation",
+                                    "duration": "1 hour"
+                                },
+                                {
+                                    "time": "2:00 PM",
+                                    "title": "Adventure Sports Introduction",
+                                    "description": "Orientation and first adventure activity",
+                                    "location": f"{destination} Adventure Zone",
+                                    "category": "adventure",
+                                    "duration": "3 hours"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": f"balanced_{destination.lower()}",
+                    "title": "Balanced Explorer",
+                    "description": f"Perfect mix of adventure, culture, and relaxation in {destination}",
+                    "persona": "balanced",
+                    "days": days,
+                    "price": 20000,
+                    "total_activities": 10,
+                    "activity_types": ["Sightseeing", "Culture", "Adventure", "Relaxation"],
+                    "highlights": ["City Tour", "Cultural Sites", "Beach Time", "Local Cuisine"],
+                    "recommended": False,
+                    "itinerary": [
+                        {
+                            "day": 1,
+                            "date": start_date,
+                            "title": f"Welcome to {destination}",
+                            "activities": [
+                                {
+                                    "time": "11:00 AM",
+                                    "title": "Hotel Check-in",
+                                    "description": "Comfortable accommodation setup",
+                                    "location": destination,
+                                    "category": "accommodation",
+                                    "duration": "1 hour"
+                                },
+                                {
+                                    "time": "3:00 PM",
+                                    "title": "Heritage Walk",
+                                    "description": "Guided tour of historical landmarks",
+                                    "location": "Old Town",
+                                    "category": "culture",
+                                    "duration": "2.5 hours"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": f"luxury_{destination.lower()}",
+                    "title": "Luxury Experience",
+                    "description": f"Premium accommodations and exclusive experiences in {destination}",
+                    "persona": "luxury",
+                    "days": days,
+                    "price": 45000,
+                    "total_activities": 8,
+                    "activity_types": ["Fine Dining", "Spa", "Private Tours", "Luxury Transport"],
+                    "highlights": ["5-Star Resort", "Private Tours", "Spa Treatments", "Gourmet Dining"],
+                    "recommended": False,
+                    "itinerary": [
+                        {
+                            "day": 1,
+                            "date": start_date,
+                            "title": f"Luxury Arrival in {destination}",
+                            "activities": [
+                                {
+                                    "time": "10:00 AM",
+                                    "title": "Private Airport Transfer",
+                                    "description": "Luxury vehicle with personal chauffeur",
+                                    "location": "Airport",
+                                    "category": "transportation",
+                                    "duration": "1 hour"
+                                },
+                                {
+                                    "time": "4:00 PM",
+                                    "title": "Premium Spa Experience",
+                                    "description": "Rejuvenating treatments at 5-star spa",
+                                    "location": "Resort Spa",
+                                    "category": "wellness",
+                                    "duration": "3 hours"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+            
+            return ItineraryResponse(
+                variants=fallback_variants,
+                session_id=session_id,
+                generated_at=datetime.now(timezone.utc).isoformat()
+            )
         
     except Exception as e:
         logger.error(f"Itinerary generation error: {e}")
