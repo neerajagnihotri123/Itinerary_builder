@@ -520,6 +520,10 @@ Always provide helpful, specific, and engaging responses that move the conversat
                         elif not rec.get("image"):
                             # If no image provided, set default
                             rec["image"] = image_map["default"]
+                        
+                        # Double-check: if image still doesn't start with proper URL, use default
+                        if not rec["image"].startswith("https://images.unsplash.com/photo-"):
+                            rec["image"] = image_map["default"]
                     
                     for rec in recommendations:
                         ui_actions.append(
