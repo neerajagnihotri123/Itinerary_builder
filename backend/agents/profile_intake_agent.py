@@ -31,13 +31,8 @@ class ProfileIntakeAgent:
             system_message=self._get_system_message()
         ).with_model("openai", "gpt-4o-mini")
     
-    def _get_llm_client(self, session_id: str) -> LlmChat:
-        """Get LLM client for session"""
-        return LlmChat(
-            api_key=self.api_key,
-            session_id=session_id,
-            system_message=self._get_system_message()
-        ).with_model("openai", "gpt-4o-mini")
+    def _get_system_message(self) -> str:
+        """Get system message for LLM"""
         return """You are Travello.ai's Profile Intake Agent. Your role is to conversationally collect traveler preferences, budget, constraints, and travel style through natural dialogue.
 
 KEY RESPONSIBILITIES:
