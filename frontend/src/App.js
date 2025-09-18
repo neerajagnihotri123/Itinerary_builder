@@ -2959,15 +2959,9 @@ function App() {
       setIsLoading(false);
     }
   };
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🎯 Trip planner response:', data);
-        
-        // Add AI-generated response to chat
-        const aiMessage = {
-          id: Date.now().toString(),
+
+  // Handle variant selection from timeline
+  const handleVariantSelection = (variant) => {
           role: 'assistant',
           content: data.chat_text || `Here are your personalized itinerary options for ${targetDestination}!`
         };
