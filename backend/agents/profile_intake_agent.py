@@ -476,39 +476,80 @@ Always provide helpful, specific, and engaging responses that move the conversat
         return list(set(tags))  # Remove duplicates
 
     async def _generate_accommodation_suggestions(self, destination: str) -> List[Dict[str, Any]]:
-        """Generate accommodation suggestions for destination"""
-        # Mock accommodation data - in production would integrate with booking APIs
-        accommodations = [
+        """Generate accommodation suggestions for destination using LLM"""
+        try:
+            context = f"""
+            Generate 3 diverse accommodation recommendations for {destination} covering different budget ranges and styles:
+            
+            1. Luxury Option (₹15,000-25,000 per night)
+            2. Mid-Range Option (₹8,000-15,000 per night) 
+            3. Budget Option (₹3,000-6,000 per night)
+            
+            For each accommodation, provide:
+            - name (realistic hotel/resort name)
+            - description (2-3 sentences highlighting unique features)
+            - location (specific area in {destination})
+            - rating (4.0-5.0 realistic rating)
+            - price_min and price_max (in INR per night)
+            - 5 key amenities
+            
+            Respond in JSON array format:
+            [
+                {{
+                    "name": "Hotel Name",
+                    "description": "Detailed description",
+                    "location": "Specific area in {destination}",
+                    "rating": 4.5,
+                    "price_min": 15000,
+                    "price_max": 25000,
+                    "amenities": ["amenity1", "amenity2", "amenity3", "amenity4", "amenity5"]
+                }}
+            ]
+            """
+            
+            user_msg = UserMessage(content=context)
+            response = await self.llm_client.send_message(user_msg)
+            
+            # Parse JSON response
+            import json
+            try:
+                accommodations_data = json.loads(response.content)
+                
+                # Convert to expected format
+                accommodations = []
+                for i, acc in enumerate(accommodations_data):
+                    accommodations.append({
+                        "id": f"hotel_{destination.lower().replace(' ', '_')}_{i+1}",
+                        "name": acc["name"],
+                        "description": acc["description"],
+                        "image": f"https://images.unsplash.com/800x400/?{acc['name'].lower().replace(' ', '-')}-{destination.lower()}",
+                        "rating": acc["rating"],
+                        "price": {"min": acc["price_min"], "max": acc["price_max"]},
+                        "location": acc["location"],
+                        "amenities": acc["amenities"]
+                    })
+                
+                return accommodations
+                
+            except json.JSONDecodeError:
+                logger.error("Failed to parse accommodation JSON, using fallback")
+                return self._get_fallback_accommodations(destination)
+            
+        except Exception as e:
+            logger.error(f"Accommodation generation error: {e}")
+            return self._get_fallback_accommodations(destination)
+
+    def _get_fallback_accommodations(self, destination: str) -> List[Dict[str, Any]]:
+        """Fallback accommodation data if LLM fails"""
+        return [
             {
                 "id": f"hotel_{destination.lower().replace(' ', '_')}_1",
-                "name": f"The Luxury {destination} Resort",
-                "description": f"Premium beachfront resort in {destination} with world-class amenities",
+                "name": f"Premium {destination} Resort",
+                "description": f"Luxury accommodation in {destination} with world-class amenities",
                 "image": f"https://images.unsplash.com/800x400/?luxury-resort-{destination.lower()}",
-                "rating": 4.8,
-                "price": {"min": 12000, "max": 25000},
-                "location": f"{destination} Beach",
-                "amenities": ["Pool", "Spa", "Beach Access", "Fine Dining", "WiFi"]
-            },
-            {
-                "id": f"hotel_{destination.lower().replace(' ', '_')}_2",
-                "name": f"Heritage {destination} Palace",
-                "description": f"Boutique heritage hotel showcasing {destination}'s rich culture",
-                "image": f"https://images.unsplash.com/800x400/?heritage-hotel-{destination.lower()}",
-                "rating": 4.6,
-                "price": {"min": 8000, "max": 15000},
-                "location": f"Historic {destination}",
-                "amenities": ["Cultural Tours", "Traditional Cuisine", "Heritage Architecture", "WiFi"]
-            },
-            {
-                "id": f"hotel_{destination.lower().replace(' ', '_')}_3",
-                "name": f"Budget Comfort {destination}",
-                "description": f"Clean, comfortable accommodation perfect for budget travelers",
-                "image": f"https://images.unsplash.com/800x400/?budget-hotel-{destination.lower()}",
-                "rating": 4.2,
-                "price": {"min": 3000, "max": 6000},
-                "location": f"Central {destination}",
-                "amenities": ["Clean Rooms", "AC", "WiFi", "24x7 Front Desk"]
+                "rating": 4.7,
+                "price": {"min": 15000, "max": 25000},
+                "location": f"Prime {destination}",
+                "amenities": ["Pool", "Spa", "Fine Dining", "WiFi", "Room Service"]
             }
         ]
-        
-        return accommodations
