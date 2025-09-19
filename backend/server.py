@@ -47,16 +47,9 @@ from models.schemas import *
 context_store = ContextStore()
 event_bus = EventBus()
 
-# Initialize agents
-profile_intake = ProfileIntakeAgent(context_store, event_bus)
-persona_classifier = PersonaClassificationAgent(context_store, event_bus)
-adventurer_agent = AdventurerAgent(context_store, event_bus)
-balanced_agent = BalancedAgent(context_store, event_bus)
-luxury_agent = LuxuryAgent(context_store, event_bus)
-customization_agent = CustomizationAgent(context_store, event_bus)
-pricing_agent = PricingAgent(context_store, event_bus)
-booking_agent = ExternalBookingAgent(context_store, event_bus)
-sustainability_agent = SustainabilitySeasonalityAgent(context_store, event_bus)
+# Initialize new agents
+service_selector = ServiceSelectionAgent()
+conflict_detector = ConflictDetectionAgent()
 
 # Register agents with event bus
 event_bus.register_agent("profile_intake", profile_intake)
