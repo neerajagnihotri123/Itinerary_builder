@@ -481,6 +481,78 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                                     })
 
                         else:  # luxury
+                            if day_num == 1:
+                                activities = [
+                                    {
+                                        "time": "11:00 AM",
+                                        "title": f"VIP Arrival & {destination} Welcome",
+                                        "description": f"Private airport transfer, luxury hotel check-in, and welcome champagne service in {destination}",
+                                        "location": f"{destination} 5-Star Hotel",
+                                        "category": "luxury",
+                                        "duration": "2 hours"
+                                    },
+                                    {
+                                        "time": "3:00 PM",
+                                        "title": "Private City Tour with Personal Guide",
+                                        "description": f"Exclusive chauffeur-driven tour of {destination}'s premier attractions with expert historian guide",
+                                        "location": f"{destination} Premium District",
+                                        "category": "luxury",
+                                        "duration": "4 hours"
+                                    },
+                                    {
+                                        "time": "8:00 PM",
+                                        "title": "Michelin-Star Dining Experience",
+                                        "description": f"Multi-course gourmet dinner at {destination}'s finest restaurant with wine pairing",
+                                        "location": f"{destination} Fine Dining",
+                                        "category": "dining",
+                                        "duration": "3 hours"
+                                    }
+                                ]
+                            elif day_num == 2:
+                                activities = [
+                                    {
+                                        "time": "10:00 AM",
+                                        "title": "Luxury Spa & Wellness Retreat",
+                                        "description": f"Full-day spa experience with traditional {destination} treatments, massage, and wellness therapies",
+                                        "location": f"{destination} Luxury Spa Resort",
+                                        "category": "wellness",
+                                        "duration": "6 hours"
+                                    },
+                                    {
+                                        "time": "7:00 PM",
+                                        "title": "Private Sunset Experience",
+                                        "description": f"Exclusive sunset viewing with champagne and canapés at {destination}'s most scenic location",
+                                        "location": f"{destination} Private Terrace",
+                                        "category": "luxury",
+                                        "duration": "2 hours"
+                                    }
+                                ]
+                            else:
+                                # Exclusive luxury activities for other days
+                                luxury_activities = [
+                                    ("Private Yacht Charter", "Exclusive boat experience with crew and gourmet lunch", "luxury"),
+                                    ("Helicopter Tour", "Aerial views with champagne service", "luxury"),
+                                    ("Personal Shopping Experience", "Private shopper and exclusive boutique access", "shopping"),
+                                    ("Wine Tasting Masterclass", "Premium wines with expert sommelier", "dining"),
+                                    ("Private Art Gallery Tour", "Curator-led exclusive gallery experience", "culture"),
+                                    ("Luxury Safari Experience", "Private wildlife viewing with premium service", "luxury"),
+                                    ("Executive Chef Cooking", "Personal chef creates custom dining", "dining")
+                                ]
+                                
+                                import random
+                                selected_activities = random.sample(luxury_activities, min(3, len(luxury_activities)))
+                                
+                                activities = []
+                                times = ["10:30 AM", "3:00 PM", "7:30 PM"]
+                                for i, (act_name, act_desc, act_cat) in enumerate(selected_activities):
+                                    activities.append({
+                                        "time": times[i] if i < len(times) else f"{10 + i*3}:00 AM",
+                                        "title": f"Day {day_num} {act_name}",
+                                        "description": f"{act_desc} - ultimate luxury experience in {destination}",
+                                        "location": f"{destination} Exclusive {act_cat.title()} Venue",
+                                        "category": act_cat,
+                                        "duration": "3-4 hours"
+                                    })
                             activities = [
                                 {
                                     "time": "10:00 AM",
