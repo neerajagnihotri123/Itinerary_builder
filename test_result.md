@@ -152,8 +152,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend Chat Functionality"
-  stuck_tasks: []
+    - "Service Selection API"
+    - "Conflict Detection API" 
+    - "Itinerary Editing API"
+    - "Advanced Features Integration"
+  stuck_tasks:
+    - "Service Selection API"
   test_all: false
   test_priority: "high_first"
 
