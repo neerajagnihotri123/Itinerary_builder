@@ -61,6 +61,7 @@ customization_agent = CustomizationAgent(context_store, event_bus)
 pricing_agent = PricingAgent(context_store, event_bus)
 service_selector = ServiceSelectionAgent()
 conflict_detector = ConflictDetectionAgent()
+dynamic_pricing_agent = DynamicPricingAgent()
 
 # Initialize placeholder agents (to be implemented later)
 class PlaceholderAgent:
