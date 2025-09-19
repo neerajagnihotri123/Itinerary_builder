@@ -5656,18 +5656,10 @@ function App() {
                     )}
                     
                     <button 
-                      onClick={() => {
-                        const message = {
-                          id: Date.now().toString(),
-                          role: 'assistant',
-                          content: `Perfect! You've selected the ${selectedVariant.title} experience. Let me help you book this amazing ${selectedVariant.days}-day adventure!`
-                        };
-                        setMessages(prev => [...prev, message]);
-                        saveCurrentTrip(); // Auto-save when booking
-                      }}
+                      onClick={() => setShowRequestCallback(true)}
                       className={`${pricingData ? 'flex-1' : 'flex-1'} bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl`}
                     >
-                      🚀 {pricingData ? 'Book Experience' : 'Book This Experience'}
+                      📞 Request Callback
                     </button>
                     
                     <button 
