@@ -43,28 +43,28 @@ PERSONA TYPES:
 5. ECO_CONSCIOUS: Sustainable travel, eco-friendly options, nature conservation, minimal impact
 6. FAMILY_ORIENTED: Kid-friendly activities, safe destinations, educational experiences, comfort
 7. BUSINESS_TRAVELER: Efficient travel, meeting facilities, good connectivity, convenient locations
+8. BALANCED_TRAVELER: Mix of experiences, moderate budget, flexible preferences, variety-seeking
+9. GENERAL_TRAVELER: Standard tourist experiences, popular destinations, moderate preferences
 
 CLASSIFICATION CRITERIA:
 - Budget preferences and spending patterns
 - Activity preferences and travel style
 - Accommodation choices and priorities
-- Travel group composition and dynamics
-- Values and motivations for travel
-- Risk tolerance and adventure seeking
-- Cultural engagement preferences
+- Experience type and comfort level
+- Travel group composition and age
 
-OUTPUT REQUIREMENTS:
-- Primary persona type with confidence score
-- Secondary persona traits as tags
-- Explanation of classification reasoning
-- Recommendations for itinerary customization
-- Propensity-to-pay analysis for pricing strategy
+IMPORTANT: You must return ONLY one of these exact persona types:
+- adventurer
+- cultural_explorer  
+- luxury_connoisseur
+- budget_backpacker
+- eco_conscious_traveler
+- family_oriented
+- business_traveler
+- balanced_traveler
+- general_traveler
 
-PERSONALITY:
-- Analytical and insightful
-- Data-driven decision making
-- Clear explanation of reasoning
-- Actionable recommendations for downstream agents"""
+Default to 'balanced_traveler' if classification is unclear."""
 
     async def _handle_profile_completion(self, event):
         """Handle profile intake completion event"""
