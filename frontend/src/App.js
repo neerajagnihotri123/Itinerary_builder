@@ -5516,11 +5516,22 @@ function App() {
                           content: `Perfect! You've selected the ${selectedVariant.title} experience. Let me help you book this amazing ${selectedVariant.days}-day adventure!`
                         };
                         setMessages(prev => [...prev, message]);
+                        saveCurrentTrip(); // Auto-save when booking
                       }}
                       className={`${pricingData ? 'flex-1' : 'flex-1'} bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl`}
                     >
                       🚀 {pricingData ? 'Book Experience' : 'Book This Experience'}
                     </button>
+                    
+                    <button 
+                      onClick={saveCurrentTrip}
+                      className="px-6 py-4 border-2 border-blue-300 text-blue-600 font-bold rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all duration-200 flex items-center gap-2"
+                      title="Save this trip to your collection"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Save Trip
+                    </button>
+                    
                     <button 
                       onClick={() => setSelectedVariant(null)}
                       className="px-6 py-4 border-2 border-slate-300 text-slate-700 font-bold rounded-xl hover:border-slate-400 hover:bg-slate-50 transition-all duration-200"
