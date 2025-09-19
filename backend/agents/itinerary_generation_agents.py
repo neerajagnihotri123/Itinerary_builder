@@ -66,6 +66,14 @@ class BaseItineraryAgent:
         # Default travel image
         return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop'
     
+    def _get_llm_client(self, session_id: str) -> LlmChat:
+        """Get LLM client for session"""
+        return LlmChat(
+            api_key=self.api_key,
+            session_id=session_id,
+            system_message=self._get_system_message()
+        ).with_model("openai", "gpt-4o-mini")
+    
     def _get_system_message(self) -> str:
         return f"""You are Travello.ai's {self.variant_type.value.title()} Itinerary Generation Agent. 
 
