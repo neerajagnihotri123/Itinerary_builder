@@ -4730,10 +4730,39 @@ function App() {
                                     </div>
                                   </div>
                                   <p className="text-slate-700 mb-2 text-sm">{activity.description}</p>
+                                  
+                                  {/* Service Selection for Activities */}
+                                  {(activity.category === 'accommodation' || activity.category === 'transport' || activity.category === 'activity') && (
+                                    <div className="mb-3">
+                                      <div className="text-xs text-slate-600 mb-1">Service Options:</div>
+                                      <ServiceSelectionDropdown
+                                        serviceType={activity.category === 'accommodation' ? 'accommodation' : 
+                                                    activity.category === 'transport' ? 'transportation' : 'activities'}
+                                        location={activity.location}
+                                        currentService={activity.selectedService}
+                                        onServiceChange={(service) => handleServiceChange(service, dayIndex, actIndex)}
+                                        travelerProfile={travelerProfile}
+                                        sessionId={sessionId}
+                                        API={API}
+                                      />
+                                    </div>
+                                  )}
+                                  
                                   <div className="flex items-center gap-2">
                                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium capitalize">
                                       {activity.category?.replace('_', ' ')}
                                     </span>
+                                    {activity.locked && (
+                                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                                        🔒 Locked
+                                      </span>
+                                    )}
+                                    <button
+                                      onClick={() => handleLockService(dayIndex, actIndex, !activity.locked)}
+                                      className="text-xs text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                      {activity.locked ? 'Unlock' : 'Lock'} Service
+                                    </button>
                                   </div>
                                 </div>
                               </div>
