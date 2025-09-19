@@ -854,6 +854,9 @@ const MessageBubble = ({ message, isUser, onSelectVariant }) => {
                           <div className="text-right ml-4 flex-shrink-0">
                             <div className="text-xl font-bold text-green-600">₹{(variant.price || 0).toLocaleString()}</div>
                             <div className="text-xs text-slate-500">Total Cost</div>
+                            {variant.price_per_day && (
+                              <div className="text-xs text-slate-400 mt-1">₹{variant.price_per_day.toLocaleString()}/day</div>
+                            )}
                           </div>
                         </div>
                         
