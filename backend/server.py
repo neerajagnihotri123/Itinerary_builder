@@ -980,6 +980,53 @@ async def external_booking_endpoint(request: ExternalBookingRequest):
         session_id = request.session_id
         booking_details = request.booking_details
         
+        logger.info(f"🎫 Processing external booking for session {session_id}")
+        
+        # Mock booking response
+        return {
+            "booking_id": f"booking_{session_id}_{int(time.time())}",
+            "status": "confirmed",
+            "booking_details": booking_details,
+            "confirmation_code": f"TRV{uuid.uuid4().hex[:8].upper()}",
+            "session_id": session_id
+        }
+        
+    except Exception as e:
+        logger.error(f"External booking error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/image-proxy")
+async def image_proxy(url: str):
+    """Proxy images to avoid CORS issues"""
+    try:
+        import httpx
+        from fastapi.responses import Response
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url, timeout=10.0)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('content-type', 'image/jpeg')
+                return Response(
+                    content=response.content,
+                    media_type=content_type,
+                    headers={
+                        "Cache-Control": "public, max-age=86400",  # Cache for 24 hours
+                        "Access-Control-Allow-Origin": "*"
+                    }
+                )
+            else:
+                # Return a default image if fetch fails
+                return Response(
+                    content=b"",
+                    status_code=404
+                )
+                
+    except Exception as e:
+        logger.error(f"Image proxy error: {e}")
+        return Response(content=b"", status_code=404)
+        booking_details = request.booking_details
+        
         logger.info(f"🔗 External booking for session {session_id}")
         
         result = await booking_agent.handle_booking(session_id, booking_details)
