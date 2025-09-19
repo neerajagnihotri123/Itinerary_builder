@@ -468,9 +468,11 @@ const TripHistoryModal = ({ isOpen, onClose, tripHistory, onSelectTrip }) => {
                   {/* Trip Image */}
                   <div className="relative h-32 rounded-lg overflow-hidden mb-3">
                     <SafeImage
-                      src={trip.image || `https://images.unsplash.com/800x400/?${trip.destination?.toLowerCase()}`}
+                      src={trip.image}
                       alt={trip.title}
                       className="w-full h-full object-cover"
+                      destination={trip.destination}
+                      category="destination"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                     <div className="absolute bottom-2 left-2 text-white">
