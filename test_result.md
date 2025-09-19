@@ -159,8 +159,7 @@ test_plan:
     - "Conflict Detection API" 
     - "Itinerary Editing API"
     - "Advanced Features Integration"
-  stuck_tasks:
-    - "Service Selection API"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
