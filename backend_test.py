@@ -355,9 +355,10 @@ class TravelloBackendTester:
                     self.trip_details = trip_details
                     self.persona_data = data
                     
-                    # Verify LLM-based classification (not rule-based hardcoded)
+                    # Updated valid personas list including balanced_traveler and general_traveler
                     valid_personas = ["adventurer", "cultural_explorer", "luxury_connoisseur", 
-                                    "budget_backpacker", "eco_conscious_traveler", "family_oriented", "business_traveler"]
+                                    "budget_backpacker", "eco_conscious_traveler", "family_oriented", 
+                                    "business_traveler", "balanced_traveler", "general_traveler"]
                     
                     if data["persona_type"] in valid_personas:
                         # Check confidence score is reasonable
@@ -374,7 +375,7 @@ class TravelloBackendTester:
                                           f"Invalid confidence score: {confidence}", data)
                     else:
                         self.log_result("Persona Classification", False, 
-                                      f"Invalid persona type: {data['persona_type']}", data)
+                                      f"Invalid persona type: {data['persona_type']}. Valid types: {valid_personas}", data)
                 else:
                     self.log_result("Persona Classification", False, f"Missing required fields: {data}", data)
             else:
@@ -384,6 +385,160 @@ class TravelloBackendTester:
             self.log_result("Persona Classification", False, f"Request failed: {str(e)}")
             
         return False
+
+    def test_persona_classification_fix(self):
+        """Test the specific persona classification fix from review request"""
+        try:
+            print(f"\n🎭 Testing Persona Classification Fix - Review Request")
+            print("=" * 60)
+            
+            # Test 1: Persona Classification API with sample profile data from review request
+            print("Test 1: Persona Classification API with sample profile data")
+            
+            sample_payload = {
+                "session_id": "test_persona_fix",
+                "profile_data": {
+                    "vacation_style": ["balanced"],
+                    "experience_type": ["no_preference"], 
+                    "attraction_preference": ["both"],
+                    "accommodation": ["bnb"],
+                    "interests": ["beach", "nightlife", "hiking", "museums"]
+                },
+                "trip_details": {
+                    "destination": "Goa, India",
+                    "adults": 2,
+                    "budget_per_night": 3000
+                }
+            }
+            
+            response = requests.post(f"{API_BASE}/persona-classification", json=sample_payload, timeout=60)
+            
+            test1_passed = False
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Test 2: Verify Response Format
+                print("Test 2: Verify Response Format")
+                required_fields = ["persona_type", "persona_tags", "confidence", "ui_actions"]
+                
+                if all(field in data for field in required_fields):
+                    # Check that response includes valid persona_type from the enum
+                    valid_persona_types = [
+                        "adventurer", "cultural_explorer", "luxury_connoisseur", 
+                        "budget_backpacker", "eco_conscious_traveler", "family_oriented", 
+                        "business_traveler", "balanced_traveler", "general_traveler"
+                    ]
+                    
+                    persona_type = data["persona_type"]
+                    if persona_type in valid_persona_types:
+                        print(f"✅ Valid persona_type returned: {persona_type}")
+                        
+                        # Verify confidence score is returned
+                        confidence = data["confidence"]
+                        if isinstance(confidence, (int, float)) and 0.0 <= confidence <= 1.0:
+                            print(f"✅ Valid confidence score returned: {confidence}")
+                            
+                            # Ensure no 500 errors occur
+                            print(f"✅ No 500 errors - API returned 200 OK")
+                            
+                            test1_passed = True
+                            
+                            self.log_result("Persona Classification Fix - API Test", True, 
+                                          f"Sample data test passed: persona_type={persona_type}, confidence={confidence:.2f}")
+                        else:
+                            print(f"❌ Invalid confidence score: {confidence}")
+                            self.log_result("Persona Classification Fix - API Test", False, 
+                                          f"Invalid confidence score: {confidence}")
+                    else:
+                        print(f"❌ Invalid persona_type: {persona_type}. Valid types: {valid_persona_types}")
+                        self.log_result("Persona Classification Fix - API Test", False, 
+                                      f"Invalid persona_type: {persona_type}")
+                else:
+                    print(f"❌ Missing required fields: {required_fields}")
+                    self.log_result("Persona Classification Fix - API Test", False, 
+                                  f"Missing required fields: {required_fields}")
+            else:
+                print(f"❌ HTTP {response.status_code}: {response.text}")
+                self.log_result("Persona Classification Fix - API Test", False, 
+                              f"HTTP {response.status_code}: {response.text}")
+                
+                # Check if this is the specific 500 error mentioned in review
+                if response.status_code == 500 and "balanced_traveler is not a valid PersonaType" in response.text:
+                    print(f"🚨 CRITICAL: The specific error mentioned in review request still exists!")
+                    self.log_result("Persona Classification Fix - 500 Error", False, 
+                                  "The 'balanced_traveler is not a valid PersonaType' error still occurs")
+                    return False
+            
+            # Test 3: Complete Chat Flow
+            print("\nTest 3: Complete Chat Flow with Persona Classification")
+            
+            chat_payload = {
+                "message": "I want to plan a trip to Goa",
+                "session_id": "test_persona_fix_chat"
+            }
+            
+            chat_response = requests.post(f"{API_BASE}/chat", json=chat_payload, timeout=60)
+            
+            test3_passed = False
+            if chat_response.status_code == 200:
+                chat_data = chat_response.json()
+                
+                # Verify that persona classification now works in the full flow
+                # The chat should trigger trip planning without errors
+                if "chat_text" in chat_data and len(chat_data["chat_text"]) > 0:
+                    print(f"✅ Chat flow working: {chat_data['chat_text'][:100]}...")
+                    
+                    # Check if trip planner is triggered (indicates persona classification working)
+                    has_trip_planner = any(
+                        action.get("type") == "trip_planner_card" 
+                        for action in chat_data.get("ui_actions", [])
+                    )
+                    
+                    if has_trip_planner:
+                        print(f"✅ Trip planner triggered - persona classification working in chat flow")
+                        test3_passed = True
+                        
+                        self.log_result("Persona Classification Fix - Chat Flow", True, 
+                                      "Complete chat flow with persona classification working")
+                    else:
+                        print(f"⚠️ Trip planner not triggered - may indicate persona classification issues")
+                        self.log_result("Persona Classification Fix - Chat Flow", False, 
+                                      "Trip planner not triggered in chat flow")
+                else:
+                    print(f"❌ Chat response empty or invalid")
+                    self.log_result("Persona Classification Fix - Chat Flow", False, 
+                                  "Chat response empty or invalid")
+            else:
+                print(f"❌ Chat flow failed: HTTP {chat_response.status_code}: {chat_response.text}")
+                self.log_result("Persona Classification Fix - Chat Flow", False, 
+                              f"Chat flow failed: HTTP {chat_response.status_code}")
+            
+            # Overall assessment
+            if test1_passed and test3_passed:
+                self.log_result("Persona Classification Fix - Complete", True, 
+                              "✅ ALL TESTS PASSED: Persona classification fix successful. No 500 errors, valid persona_type returned, confidence score working, complete chat flow functional.")
+                
+                print(f"\n🎉 PERSONA CLASSIFICATION FIX VERIFICATION COMPLETE")
+                print(f"✅ Test 1: API with sample data - PASSED")
+                print(f"✅ Test 2: Response format validation - PASSED") 
+                print(f"✅ Test 3: Complete chat flow - PASSED")
+                print(f"✅ No 500 errors detected")
+                print(f"✅ 'balanced_traveler is not a valid PersonaType' error RESOLVED")
+                
+                return True
+            else:
+                failed_tests = []
+                if not test1_passed: failed_tests.append("API with sample data")
+                if not test3_passed: failed_tests.append("Complete chat flow")
+                
+                self.log_result("Persona Classification Fix - Complete", False, 
+                              f"Some tests failed: {', '.join(failed_tests)}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Persona Classification Fix - Complete", False, 
+                          f"Test suite failed with exception: {str(e)}")
+            return False
 
     def test_complete_itinerary_flow(self):
         """Test the complete itinerary generation flow as requested in review"""
