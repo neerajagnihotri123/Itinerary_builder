@@ -2928,7 +2928,6 @@ function App() {
   const [currentActivityImageIndex, setCurrentActivityImageIndex] = useState(0);
   const [currentDestinationImageIndex, setCurrentDestinationImageIndex] = useState(0);
 
-  // Handle variant selection from timeline
   const handleVariantSelection = (variant) => {
     console.log('🎯 Selected variant from timeline:', variant.title);
     
@@ -2956,6 +2955,11 @@ function App() {
     
     setSelectedVariant(variantWithCorrectDuration);
     setRightPanelContent('variant_details');
+    
+    // Automatically check for conflicts when variant is selected
+    if (variantWithCorrectDuration.itinerary) {
+      checkItineraryConflicts(variantWithCorrectDuration.itinerary);
+    }
     
     // Add confirmation message to chat
     const message = {
