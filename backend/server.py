@@ -47,14 +47,14 @@ from models.schemas import *
 context_store = ContextStore()
 event_bus = EventBus()
 
-# Initialize all agents
-profile_intake = ProfileIntakeAgent()
-persona_classifier = PersonaClassificationAgent()
-adventurer_agent = AdventurerAgent()
-balanced_agent = BalancedAgent()
-luxury_agent = LuxuryAgent()
-customization_agent = CustomizationAgent()
-pricing_agent = PricingAgent()
+# Initialize all agents with required dependencies
+profile_intake = ProfileIntakeAgent(context_store, event_bus)
+persona_classifier = PersonaClassificationAgent(context_store, event_bus)
+adventurer_agent = AdventurerAgent(context_store, event_bus)
+balanced_agent = BalancedAgent(context_store, event_bus)
+luxury_agent = LuxuryAgent(context_store, event_bus)
+customization_agent = CustomizationAgent(context_store, event_bus)
+pricing_agent = PricingAgent(context_store, event_bus)
 service_selector = ServiceSelectionAgent()
 conflict_detector = ConflictDetectionAgent()
 
