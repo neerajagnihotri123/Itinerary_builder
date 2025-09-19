@@ -5202,8 +5202,49 @@ function App() {
                     </div>
                   </div>
                   
+                  {/* Dynamic Pricing Breakdown */}
+                  {pricingData && (
+                    <div className="mt-8">
+                      <PricingBreakdown 
+                        pricingData={pricingData}
+                        onCheckout={handleCheckout}
+                        isLoading={isProcessingCheckout}
+                      />
+                    </div>
+                  )}
+                  
+                  {/* Loading state for pricing calculation */}
+                  {isCalculatingPricing && (
+                    <div className="mt-8 bg-white rounded-2xl border border-slate-200 p-6">
+                      <div className="flex items-center justify-center gap-3">
+                        <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-slate-600">Calculating smart pricing...</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Action Buttons */}
                   <div className="mt-8 flex gap-4">
+                    {!pricingData && !isCalculatingPricing && (
+                      <button 
+                        onClick={() => {
+                          if (selectedVariant?.itinerary && tripDetails.startDate) {
+                            calculateDynamicPricing(
+                              selectedVariant.itinerary,
+                              travelerProfile,
+                              {
+                                start_date: tripDetails.startDate,
+                                end_date: tripDetails.endDate
+                              }
+                            );
+                          }
+                        }}
+                        className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold py-4 px-6 rounded-xl hover:from-blue-700 hover:to-blue-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        💰 Get Smart Pricing
+                      </button>
+                    )}
+                    
                     <button 
                       onClick={() => {
                         const message = {
@@ -5213,9 +5254,9 @@ function App() {
                         };
                         setMessages(prev => [...prev, message]);
                       }}
-                      className="flex-1 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl"
+                      className={`${pricingData ? 'flex-1' : 'flex-1'} bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl`}
                     >
-                      🚀 Book This Experience
+                      🚀 {pricingData ? 'Book Experience' : 'Book This Experience'}
                     </button>
                     <button 
                       onClick={() => setSelectedVariant(null)}
