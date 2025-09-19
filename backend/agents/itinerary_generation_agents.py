@@ -327,7 +327,7 @@ Always create comprehensive, actionable itineraries that travelers can actually 
                 location=f"Local Restaurant, {destination}",
                 description=f"Authentic {destination} dining experience",
                 cost=2000,
-                image=f"https://images.unsplash.com/800x400/?local-food-{destination.lower()}",
+                image=self._get_image_url_for_activity(f"Traditional {destination} Cuisine", f"Local Restaurant, {destination}", "dining"),
                 sustainability_tags=["local_cuisine"]
             )
         ]
