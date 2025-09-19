@@ -4654,12 +4654,27 @@ function App() {
                     />
                   </div>
 
+                  {/* Conflict Warnings */}
+                  <ConflictWarnings 
+                    conflicts={conflicts} 
+                    warnings={warnings} 
+                    onResolve={handleResolveConflicts}
+                  />
+
                   {/* Detailed Day-by-Day Itinerary */}
                   <div className="space-y-6">
-                    <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                      <Calendar className="w-6 h-6 text-orange-600" />
-                      Complete Itinerary
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                        <Calendar className="w-6 h-6 text-orange-600" />
+                        Complete Itinerary
+                      </h3>
+                      <button
+                        onClick={() => checkItineraryConflicts(selectedVariant.itinerary)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                      >
+                        🔍 Check Conflicts
+                      </button>
+                    </div>
                     
                     {selectedVariant.itinerary?.map((day, dayIndex) => (
                       <div key={dayIndex} className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
