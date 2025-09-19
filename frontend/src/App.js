@@ -1008,7 +1008,7 @@ const RecommendationCard = ({ item, onAction }) => {
     setIsEditing(true);
     // Handle different editing operations
     // Implementation depends on specific operation type
-  };
+};
 
 const MessageBubble = ({ message, isUser, onSelectVariant }) => {
   // Handle special itinerary timeline message
