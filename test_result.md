@@ -147,6 +147,18 @@ frontend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE FRONTEND TESTING COMPLETED: All chat functionality working perfectly. 1) Chat input/send: WORKING 2) Backend API integration: WORKING 3) AI message responses: WORKING 4) Recommendation cards display: WORKING (3 destination cards - Goa, Kerala, Rajasthan displaying correctly in carousel) 5) Follow-up question chips: WORKING 6) Trip planning flow: WORKING (modal appears with form fields) 7) Main chat view persistence: WORKING. Minor: Some Unsplash images blocked by CORS but doesn't affect functionality."
 
+  - task: "Advanced Features Integration"
+    implemented: true
+    working: false
+    file: "frontend/src/App.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ ADVANCED FEATURES NOT VISIBLE IN UI: While the components are implemented in code (ConflictWarnings, ServiceSelectionDropdown, InteractiveTripMap), they are not appearing in the actual user interface. Testing showed: 1) Chat functionality works - can send 'I want to plan a trip to Goa' 2) Basic itinerary elements found (9 elements) 3) Map elements found (12 elements) 4) BUT MISSING: Conflict warnings (0 found), Service selection dropdowns (0 found), Lock/unlock buttons (0 found), Auto-resolve buttons (0 found). The advanced features components exist in App.js but are not rendering in the UI flow. This suggests integration issues between the components and the main application flow."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
