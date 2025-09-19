@@ -605,15 +605,470 @@ class TravelloBackendTester:
             self.log_result("Complete Itinerary Flow", False, f"Flow test failed with exception: {str(e)}")
             return False
 
-    def test_critical_llm_integration(self):
-        """Test the critical LLM integration scenarios from review request"""
-        print(f"\n🧪 Testing Critical LLM Integration Scenarios")
+    def test_service_recommendations_api(self):
+        """Test POST /api/service-recommendations endpoint"""
+        try:
+            print(f"\n🔧 Testing Service Recommendations API")
+            
+            # Test different service types and locations
+            test_cases = [
+                {
+                    "service_type": "accommodation",
+                    "location": "Goa",
+                    "traveler_profile": {
+                        "vacation_style": "adventurous",
+                        "experience_type": "nature",
+                        "budget_level": "moderate",
+                        "preferences": ["beach", "water sports"]
+                    }
+                },
+                {
+                    "service_type": "activities", 
+                    "location": "Kerala",
+                    "traveler_profile": {
+                        "vacation_style": "relaxing",
+                        "experience_type": "culture",
+                        "budget_level": "luxury",
+                        "preferences": ["backwaters", "ayurveda"]
+                    }
+                },
+                {
+                    "service_type": "transportation",
+                    "location": "Mumbai",
+                    "traveler_profile": {
+                        "vacation_style": "balanced",
+                        "experience_type": "mixed",
+                        "budget_level": "budget",
+                        "preferences": ["convenience", "safety"]
+                    }
+                }
+            ]
+            
+            all_passed = True
+            
+            for i, test_case in enumerate(test_cases):
+                payload = {
+                    "session_id": self.session_id,
+                    **test_case
+                }
+                
+                response = requests.post(f"{API_BASE}/service-recommendations", json=payload, timeout=60)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    required_fields = ["services", "service_type", "location", "total_options", "auto_selected"]
+                    
+                    if all(field in data for field in required_fields):
+                        services = data["services"]
+                        
+                        # Verify we get exactly 10 services
+                        if len(services) == 10:
+                            # Check service structure
+                            first_service = services[0]
+                            required_service_fields = ["id", "name", "type", "location", "rating", "price", 
+                                                     "similarity_score", "match_reasons", "description", "features"]
+                            
+                            if all(field in first_service for field in required_service_fields):
+                                # Verify services are ranked (similarity_score descending)
+                                scores = [s.get("similarity_score", 0) for s in services]
+                                is_ranked = all(scores[i] >= scores[i+1] for i in range(len(scores)-1))
+                                
+                                if is_ranked:
+                                    print(f"✅ {test_case['service_type']} in {test_case['location']}: {len(services)} ranked services")
+                                else:
+                                    print(f"❌ Services not properly ranked by similarity score")
+                                    all_passed = False
+                            else:
+                                print(f"❌ Service missing required fields: {required_service_fields}")
+                                all_passed = False
+                        else:
+                            print(f"❌ Expected 10 services, got {len(services)}")
+                            all_passed = False
+                    else:
+                        print(f"❌ Response missing required fields: {required_fields}")
+                        all_passed = False
+                else:
+                    print(f"❌ HTTP {response.status_code}: {response.text}")
+                    all_passed = False
+            
+            if all_passed:
+                self.log_result("Service Recommendations API", True, 
+                              f"All 3 service types tested successfully with 10 ranked services each")
+                return True
+            else:
+                self.log_result("Service Recommendations API", False, "Some test cases failed")
+                return False
+                
+        except Exception as e:
+            self.log_result("Service Recommendations API", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_conflict_detection_api(self):
+        """Test POST /api/conflict-check endpoint"""
+        try:
+            print(f"\n🚨 Testing Conflict Detection API")
+            
+            # Create sample itinerary with potential conflicts
+            sample_itinerary = [
+                {
+                    "day": 1,
+                    "date": "2024-12-15",
+                    "title": "Day 1: Arrival in Goa",
+                    "activities": [
+                        {
+                            "time": "9:00 AM",
+                            "title": "Airport Pickup",
+                            "description": "Arrival and hotel check-in",
+                            "location": "Goa Airport",
+                            "category": "arrival",
+                            "duration": "2 hours"
+                        },
+                        {
+                            "time": "10:30 AM",  # CONFLICT: Overlaps with previous activity
+                            "title": "Beach Visit",
+                            "description": "Visit Baga Beach",
+                            "location": "Baga Beach",
+                            "category": "leisure",
+                            "duration": "3 hours"
+                        },
+                        {
+                            "time": "2:00 PM",
+                            "title": "Water Sports",
+                            "description": "Parasailing and jet skiing",
+                            "location": "Calangute Beach",
+                            "category": "adventure",
+                            "duration": "4 hours"
+                        },
+                        {
+                            "time": "6:00 PM",
+                            "title": "Sunset Cruise",
+                            "description": "Evening cruise with dinner",
+                            "location": "Mandovi River",
+                            "category": "leisure",
+                            "duration": "3 hours"
+                        },
+                        {
+                            "time": "8:00 PM",  # CONFLICT: Overlaps with cruise
+                            "title": "Night Market",
+                            "description": "Shopping at Anjuna Flea Market",
+                            "location": "Anjuna",
+                            "category": "shopping",
+                            "duration": "2 hours"
+                        }
+                    ]
+                },
+                {
+                    "day": 2,
+                    "date": "2024-12-16", 
+                    "title": "Day 2: Adventure Day",
+                    "activities": [
+                        {
+                            "time": "6:00 AM",
+                            "title": "Scuba Diving",
+                            "description": "Deep sea diving experience",
+                            "location": "Grande Island",
+                            "category": "adventure",
+                            "duration": "8 hours"  # Very long activity
+                        },
+                        {
+                            "time": "3:00 PM",
+                            "title": "Spice Plantation",
+                            "description": "Visit spice gardens",
+                            "location": "Ponda",  # Far from Grande Island
+                            "category": "culture",
+                            "duration": "3 hours"
+                        }
+                    ]
+                }
+            ]
+            
+            payload = {
+                "session_id": self.session_id,
+                "itinerary": sample_itinerary
+            }
+            
+            response = requests.post(f"{API_BASE}/conflict-check", json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["has_conflicts", "has_warnings", "conflicts", "warnings", 
+                                 "suggestions", "feasibility_score", "total_issues"]
+                
+                if all(field in data for field in required_fields):
+                    # Should detect conflicts (time overlaps)
+                    if data["has_conflicts"]:
+                        conflicts = data["conflicts"]
+                        
+                        # Check if time overlap conflicts are detected
+                        time_conflicts = [c for c in conflicts if c.get("type") == "time_overlap"]
+                        if len(time_conflicts) >= 2:  # Should detect at least 2 overlaps
+                            # Check feasibility score (should be low due to conflicts)
+                            feasibility_score = data["feasibility_score"]
+                            if feasibility_score < 0.8:  # Should be penalized for conflicts
+                                self.log_result("Conflict Detection API", True, 
+                                              f"Detected {len(conflicts)} conflicts, {len(data['warnings'])} warnings, feasibility: {feasibility_score:.2f}")
+                                return True
+                            else:
+                                self.log_result("Conflict Detection API", False, 
+                                              f"Feasibility score too high ({feasibility_score}) despite conflicts")
+                        else:
+                            self.log_result("Conflict Detection API", False, 
+                                          f"Expected time overlap conflicts, got: {[c.get('type') for c in conflicts]}")
+                    else:
+                        self.log_result("Conflict Detection API", False, 
+                                      "Should have detected conflicts in sample itinerary")
+                else:
+                    self.log_result("Conflict Detection API", False, f"Missing required fields: {required_fields}")
+            else:
+                self.log_result("Conflict Detection API", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("Conflict Detection API", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_itinerary_editing_api(self):
+        """Test POST /api/edit-itinerary endpoint"""
+        try:
+            print(f"\n✏️ Testing Itinerary Editing API")
+            
+            # Sample itinerary for editing
+            sample_itinerary = [
+                {
+                    "day": 1,
+                    "date": "2024-12-15",
+                    "title": "Day 1: Goa Arrival",
+                    "activities": [
+                        {
+                            "time": "10:00 AM",
+                            "title": "Hotel Check-in",
+                            "description": "Arrival and check-in",
+                            "location": "Goa Hotel",
+                            "category": "arrival",
+                            "duration": "1 hour"
+                        },
+                        {
+                            "time": "2:00 PM",
+                            "title": "Beach Visit",
+                            "description": "Relax at Baga Beach",
+                            "location": "Baga Beach",
+                            "category": "leisure",
+                            "duration": "3 hours"
+                        }
+                    ]
+                },
+                {
+                    "day": 2,
+                    "date": "2024-12-16",
+                    "title": "Day 2: Adventure",
+                    "activities": [
+                        {
+                            "time": "9:00 AM",
+                            "title": "Water Sports",
+                            "description": "Parasailing and jet skiing",
+                            "location": "Calangute Beach",
+                            "category": "adventure",
+                            "duration": "4 hours"
+                        }
+                    ]
+                }
+            ]
+            
+            # Test different editing operations
+            edit_operations = [
+                {
+                    "operation": "move_activity",
+                    "operation_data": {
+                        "from_day": 0,
+                        "to_day": 1,
+                        "activity_index": 1  # Move beach visit from day 1 to day 2
+                    }
+                },
+                {
+                    "operation": "add_destination",
+                    "operation_data": {
+                        "destination": "Old Goa",
+                        "day_index": 1,
+                        "date": "2024-12-17"
+                    }
+                },
+                {
+                    "operation": "lock_service",
+                    "operation_data": {
+                        "service_id": "hotel_goa_premium",
+                        "day_index": 0,
+                        "activity_index": 0
+                    }
+                }
+            ]
+            
+            all_passed = True
+            
+            for operation in edit_operations:
+                payload = {
+                    "session_id": self.session_id,
+                    "itinerary": sample_itinerary,
+                    **operation
+                }
+                
+                response = requests.post(f"{API_BASE}/edit-itinerary", json=payload, timeout=60)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    required_fields = ["edited_itinerary", "operation", "conflict_check", "success"]
+                    
+                    if all(field in data for field in required_fields):
+                        if data["success"]:
+                            edited_itinerary = data["edited_itinerary"]
+                            
+                            # Verify operation was applied
+                            if operation["operation"] == "move_activity":
+                                # Check if activity was moved
+                                day2_activities = edited_itinerary[1]["activities"]
+                                moved_activity_found = any("Beach Visit" in act.get("title", "") for act in day2_activities)
+                                if moved_activity_found:
+                                    print(f"✅ Move activity operation successful")
+                                else:
+                                    print(f"❌ Move activity operation failed")
+                                    all_passed = False
+                                    
+                            elif operation["operation"] == "add_destination":
+                                # Check if new day was added
+                                if len(edited_itinerary) > len(sample_itinerary):
+                                    print(f"✅ Add destination operation successful")
+                                else:
+                                    print(f"❌ Add destination operation failed")
+                                    all_passed = False
+                                    
+                            elif operation["operation"] == "lock_service":
+                                # Check if service was locked
+                                first_activity = edited_itinerary[0]["activities"][0]
+                                if first_activity.get("locked"):
+                                    print(f"✅ Lock service operation successful")
+                                else:
+                                    print(f"❌ Lock service operation failed")
+                                    all_passed = False
+                        else:
+                            print(f"❌ Operation {operation['operation']} returned success=False")
+                            all_passed = False
+                    else:
+                        print(f"❌ Missing required fields for {operation['operation']}: {required_fields}")
+                        all_passed = False
+                else:
+                    print(f"❌ {operation['operation']} failed: HTTP {response.status_code}: {response.text}")
+                    all_passed = False
+            
+            if all_passed:
+                self.log_result("Itinerary Editing API", True, 
+                              f"All 3 editing operations (move_activity, add_destination, lock_service) successful")
+                return True
+            else:
+                self.log_result("Itinerary Editing API", False, "Some editing operations failed")
+                return False
+                
+        except Exception as e:
+            self.log_result("Itinerary Editing API", False, f"Request failed: {str(e)}")
+            return False
+
+    def test_integration_flow(self):
+        """Test the full integration flow: chat -> itinerary -> services -> conflicts"""
+        try:
+            print(f"\n🔄 Testing Full Integration Flow")
+            
+            # Step 1: Chat message to trigger trip planning
+            chat_payload = {
+                "message": "I want to plan a trip to Goa",
+                "session_id": self.session_id
+            }
+            
+            chat_response = requests.post(f"{API_BASE}/chat", json=chat_payload, timeout=60)
+            if chat_response.status_code != 200:
+                self.log_result("Integration Flow - Chat", False, f"Chat failed: {chat_response.status_code}")
+                return False
+            
+            # Step 2: Generate itinerary
+            itinerary_payload = {
+                "session_id": self.session_id,
+                "trip_details": {
+                    "destination": "Goa",
+                    "start_date": "2024-12-15",
+                    "end_date": "2024-12-18",
+                    "adults": 2,
+                    "budget_per_night": 8000
+                },
+                "persona_tags": ["adventurer", "nature_lover"]
+            }
+            
+            itinerary_response = requests.post(f"{API_BASE}/generate-itinerary", json=itinerary_payload, timeout=120)
+            if itinerary_response.status_code != 200:
+                self.log_result("Integration Flow - Itinerary", False, f"Itinerary generation failed: {itinerary_response.status_code}")
+                return False
+            
+            itinerary_data = itinerary_response.json()
+            if not itinerary_data.get("variants") or len(itinerary_data["variants"]) == 0:
+                self.log_result("Integration Flow - Itinerary", False, "No itinerary variants generated")
+                return False
+            
+            # Step 3: Get service recommendations for accommodation
+            service_payload = {
+                "session_id": self.session_id,
+                "service_type": "accommodation",
+                "location": "Goa",
+                "traveler_profile": {
+                    "vacation_style": "adventurous",
+                    "experience_type": "nature",
+                    "budget_level": "moderate"
+                }
+            }
+            
+            service_response = requests.post(f"{API_BASE}/service-recommendations", json=service_payload, timeout=60)
+            if service_response.status_code != 200:
+                self.log_result("Integration Flow - Services", False, f"Service recommendations failed: {service_response.status_code}")
+                return False
+            
+            service_data = service_response.json()
+            if not service_data.get("services") or len(service_data["services"]) != 10:
+                self.log_result("Integration Flow - Services", False, f"Expected 10 services, got {len(service_data.get('services', []))}")
+                return False
+            
+            # Step 4: Check conflicts in generated itinerary
+            first_variant = itinerary_data["variants"][0]
+            conflict_payload = {
+                "session_id": self.session_id,
+                "itinerary": first_variant.get("itinerary", [])
+            }
+            
+            conflict_response = requests.post(f"{API_BASE}/conflict-check", json=conflict_payload, timeout=60)
+            if conflict_response.status_code != 200:
+                self.log_result("Integration Flow - Conflicts", False, f"Conflict check failed: {conflict_response.status_code}")
+                return False
+            
+            conflict_data = conflict_response.json()
+            if "feasibility_score" not in conflict_data:
+                self.log_result("Integration Flow - Conflicts", False, "No feasibility score in conflict response")
+                return False
+            
+            # Success - all steps completed
+            self.log_result("Integration Flow", True, 
+                          f"Complete flow successful: Chat -> Itinerary ({len(itinerary_data['variants'])} variants) -> Services (10 recommendations) -> Conflicts (feasibility: {conflict_data['feasibility_score']:.2f})")
+            return True
+            
+        except Exception as e:
+            self.log_result("Integration Flow", False, f"Integration flow failed: {str(e)}")
+            return False
+
+    def test_advanced_features(self):
+        """Test the advanced features from review request"""
+        print(f"\n🚀 Testing Advanced Features")
         print("=" * 80)
         
-        # Test sequence focusing on the review request scenarios
+        # Test sequence for advanced features
         tests = [
             ("Health Check", self.test_health_check),
-            ("Complete Itinerary Flow", self.test_complete_itinerary_flow)
+            ("Service Recommendations API", self.test_service_recommendations_api),
+            ("Conflict Detection API", self.test_conflict_detection_api),
+            ("Itinerary Editing API", self.test_itinerary_editing_api),
+            ("Integration Flow", self.test_integration_flow)
         ]
         
         passed = 0
