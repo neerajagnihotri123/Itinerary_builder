@@ -145,6 +145,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ Image Proxy Endpoint (/api/image-proxy) working correctly with CORS fix. Returns 404 fallback as expected for unavailable images, proper headers implementation for image serving."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE IMAGE PROXY TESTING COMPLETED: All 3 test scenarios from review request PASSED. 1) Basic Image Proxy Functionality: Returns image data with proper CORS headers (Access-Control-Allow-Origin: *) and caching (Cache-Control: public, max-age=86400). 2) Invalid URL Handling: Correctly returns 404 fallback for invalid domains and malformed URLs. 3) Multiple Image URLs: All HTTPS URLs work consistently with proper headers. ROOT CAUSE IDENTIFIED: Images not displaying in frontend itinerary because frontend generates invalid Unsplash URLs like 'https://images.unsplash.com/800x400/?goa' which return 404. The image proxy is working perfectly - the issue is invalid URL generation in frontend code (lines 471, 843, 5256, 5395 in App.js)."
 
   - task: "Dynamic Pricing API"
     implemented: true
