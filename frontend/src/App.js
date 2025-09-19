@@ -5324,9 +5324,9 @@ function App() {
                                 
                                 <SafeImage 
                                   src={activity.image}
-                                  alt={activity.title}
+                                  alt={activity.title || activity.name}
                                   className="w-16 h-16 object-cover rounded-xl flex-shrink-0"
-                                  category={activity.category}
+                                  category={activity.category || activity.type}
                                   destination={activity.location}
                                 />
                                 <div className="flex-1">
