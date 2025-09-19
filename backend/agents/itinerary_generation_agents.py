@@ -286,7 +286,7 @@ Always create comprehensive, actionable itineraries that travelers can actually 
                         location=act_data["location"],
                         description=act_data["description"],
                         cost=float(act_data["cost"]),
-                        image=f"https://images.unsplash.com/800x400/?{act_data['name'].lower().replace(' ', '-')}-{destination.lower()}",
+                        image=self._get_image_url_for_activity(act_data["name"], act_data["location"], act_data["type"]),
                         sustainability_tags=act_data.get("sustainability_tags", [])
                     )
                     activities.append(activity)
