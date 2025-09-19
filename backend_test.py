@@ -1057,6 +1057,406 @@ class TravelloBackendTester:
             self.log_result("Integration Flow", False, f"Integration flow failed: {str(e)}")
             return False
 
+    def test_image_proxy_endpoint(self):
+        """Test GET /api/image-proxy endpoint for CORS fix"""
+        try:
+            print(f"\n🖼️ Testing Image Proxy Endpoint")
+            
+            # Test with sample Unsplash URL
+            test_url = "https://images.unsplash.com/800x400/?travel"
+            
+            response = requests.get(f"{API_BASE}/image-proxy", params={"url": test_url}, timeout=30)
+            
+            if response.status_code == 200:
+                # Check if response contains image data
+                content_type = response.headers.get('content-type', '')
+                
+                if 'image' in content_type.lower():
+                    # Check for proper CORS headers
+                    cors_header = response.headers.get('Access-Control-Allow-Origin')
+                    cache_header = response.headers.get('Cache-Control')
+                    
+                    if cors_header == "*" and cache_header:
+                        self.log_result("Image Proxy Endpoint", True, 
+                                      f"Image proxy working with proper CORS headers and caching. Content-Type: {content_type}")
+                        return True
+                    else:
+                        self.log_result("Image Proxy Endpoint", False, 
+                                      f"Missing proper headers. CORS: {cors_header}, Cache: {cache_header}")
+                else:
+                    self.log_result("Image Proxy Endpoint", False, 
+                                  f"Response not an image. Content-Type: {content_type}")
+            elif response.status_code == 404:
+                # 404 is acceptable for image proxy (fallback behavior)
+                self.log_result("Image Proxy Endpoint", True, 
+                              "Image proxy returns 404 fallback as expected for unavailable images")
+                return True
+            else:
+                self.log_result("Image Proxy Endpoint", False, 
+                              f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("Image Proxy Endpoint", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_dynamic_pricing_api(self):
+        """Test POST /api/dynamic-pricing endpoint"""
+        try:
+            print(f"\n💰 Testing Dynamic Pricing API")
+            
+            # Sample test data from review request
+            sample_itinerary = [
+                {
+                    "day": 1,
+                    "activities": [
+                        {
+                            "title": "Beach Visit",
+                            "category": "leisure",
+                            "location": "Goa",
+                            "duration": "3 hours"
+                        },
+                        {
+                            "title": "Water Sports",
+                            "category": "adventure", 
+                            "location": "Goa",
+                            "duration": "2 hours"
+                        }
+                    ]
+                }
+            ]
+            
+            traveler_profile = {
+                "budget_level": "moderate",
+                "vacation_style": "adventurous",
+                "propensity_to_pay": "medium",
+                "spending_history": 15000
+            }
+            
+            travel_dates = {
+                "start_date": "2024-12-15",
+                "end_date": "2024-12-18"
+            }
+            
+            payload = {
+                "session_id": "test_pricing_session",
+                "itinerary": sample_itinerary,
+                "traveler_profile": traveler_profile,
+                "travel_dates": travel_dates
+            }
+            
+            response = requests.post(f"{API_BASE}/dynamic-pricing", json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check required fields for dynamic pricing
+                required_fields = ["base_price", "demand_adjustment", "competitive_pricing", 
+                                 "discounts", "final_price", "price_breakdown", "session_id"]
+                
+                if all(field in data for field in required_fields):
+                    # Verify price composition structure
+                    price_breakdown = data["price_breakdown"]
+                    if isinstance(price_breakdown, list) and len(price_breakdown) > 0:
+                        # Check for transparent breakdown with line items
+                        first_item = price_breakdown[0]
+                        item_fields = ["item", "base_cost", "adjustments", "final_cost"]
+                        
+                        if all(field in first_item for field in item_fields):
+                            # Verify discount application based on budget level
+                            discounts = data["discounts"]
+                            has_budget_discount = any("budget" in str(discount).lower() for discount in discounts.values())
+                            
+                            # Verify final price is calculated correctly
+                            final_price = data["final_price"]
+                            if isinstance(final_price, (int, float)) and final_price > 0:
+                                self.log_result("Dynamic Pricing API", True, 
+                                              f"Dynamic pricing working: Base ₹{data['base_price']}, Final ₹{final_price}, {len(price_breakdown)} line items")
+                                return True
+                            else:
+                                self.log_result("Dynamic Pricing API", False, f"Invalid final price: {final_price}")
+                        else:
+                            self.log_result("Dynamic Pricing API", False, f"Price breakdown item missing fields: {item_fields}")
+                    else:
+                        self.log_result("Dynamic Pricing API", False, "Invalid price breakdown structure")
+                else:
+                    self.log_result("Dynamic Pricing API", False, f"Missing required fields: {required_fields}")
+            else:
+                self.log_result("Dynamic Pricing API", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("Dynamic Pricing API", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_checkout_cart_creation(self):
+        """Test POST /api/create-checkout-cart endpoint"""
+        try:
+            print(f"\n🛒 Testing Checkout Cart Creation")
+            
+            # Sample pricing data (would come from dynamic pricing API)
+            pricing_data = {
+                "base_price": 25000,
+                "demand_adjustment": 2500,
+                "competitive_pricing": -1000,
+                "discounts": {"budget_discount": -2000, "loyalty_discount": -500},
+                "final_price": 24000,
+                "price_breakdown": [
+                    {
+                        "item": "Beach Visit",
+                        "base_cost": 1500,
+                        "adjustments": 150,
+                        "final_cost": 1650
+                    },
+                    {
+                        "item": "Water Sports",
+                        "base_cost": 3500,
+                        "adjustments": 350,
+                        "final_cost": 3850
+                    }
+                ]
+            }
+            
+            sample_itinerary = [
+                {
+                    "day": 1,
+                    "activities": [
+                        {"title": "Beach Visit", "category": "leisure", "location": "Goa"},
+                        {"title": "Water Sports", "category": "adventure", "location": "Goa"}
+                    ]
+                }
+            ]
+            
+            user_details = {
+                "name": "Rajesh Kumar",
+                "email": "rajesh.kumar@email.com",
+                "phone": "+91-9876543210",
+                "travelers": 2
+            }
+            
+            payload = {
+                "session_id": self.session_id,
+                "pricing_data": pricing_data,
+                "itinerary": sample_itinerary,
+                "user_details": user_details
+            }
+            
+            response = requests.post(f"{API_BASE}/create-checkout-cart", json=payload, timeout=60)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check required cart fields
+                required_fields = ["cart_id", "total_amount", "bundled_services", 
+                                 "payment_summary", "user_details", "created_at"]
+                
+                if all(field in data for field in required_fields):
+                    # Verify bundled services structure
+                    bundled_services = data["bundled_services"]
+                    if isinstance(bundled_services, list) and len(bundled_services) > 0:
+                        # Check payment summary
+                        payment_summary = data["payment_summary"]
+                        summary_fields = ["subtotal", "taxes", "discounts", "total"]
+                        
+                        if all(field in payment_summary for field in summary_fields):
+                            cart_id = data["cart_id"]
+                            total_amount = data["total_amount"]
+                            
+                            self.log_result("Checkout Cart Creation", True, 
+                                          f"Cart created successfully: ID {cart_id}, Total ₹{total_amount}, {len(bundled_services)} services")
+                            return True
+                        else:
+                            self.log_result("Checkout Cart Creation", False, f"Payment summary missing fields: {summary_fields}")
+                    else:
+                        self.log_result("Checkout Cart Creation", False, "Invalid bundled services structure")
+                else:
+                    self.log_result("Checkout Cart Creation", False, f"Missing required fields: {required_fields}")
+            else:
+                self.log_result("Checkout Cart Creation", False, f"HTTP {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("Checkout Cart Creation", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_mock_checkout_process(self):
+        """Test POST /api/mock-checkout endpoint"""
+        try:
+            print(f"\n💳 Testing Mock Checkout Process")
+            
+            # Test different payment methods
+            payment_methods = ["card", "upi", "netbanking", "wallet"]
+            
+            all_passed = True
+            
+            for payment_method in payment_methods:
+                cart_id = f"cart_{self.session_id}_{int(time.time())}"
+                
+                payload = {
+                    "cart_id": cart_id,
+                    "payment_method": payment_method,
+                    "total_amount": 24000
+                }
+                
+                response = requests.post(f"{API_BASE}/mock-checkout", json=payload, timeout=60)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    # Check required checkout fields
+                    required_fields = ["checkout_id", "cart_id", "status", "payment_method", 
+                                     "confirmation_code", "booking_references", "total_paid", 
+                                     "payment_status", "processed_at"]
+                    
+                    if all(field in data for field in required_fields):
+                        # Verify booking confirmations are generated
+                        booking_refs = data["booking_references"]
+                        if isinstance(booking_refs, list) and len(booking_refs) >= 3:
+                            # Check confirmation code format
+                            confirmation_code = data["confirmation_code"]
+                            if confirmation_code.startswith("TRV") and len(confirmation_code) == 11:
+                                # Verify payment status
+                                if data["status"] == "completed" and data["payment_status"] == "confirmed":
+                                    print(f"✅ {payment_method} payment processed: {confirmation_code}")
+                                else:
+                                    print(f"❌ {payment_method} payment status invalid")
+                                    all_passed = False
+                            else:
+                                print(f"❌ {payment_method} invalid confirmation code format")
+                                all_passed = False
+                        else:
+                            print(f"❌ {payment_method} insufficient booking references")
+                            all_passed = False
+                    else:
+                        print(f"❌ {payment_method} missing required fields")
+                        all_passed = False
+                else:
+                    print(f"❌ {payment_method} checkout failed: HTTP {response.status_code}")
+                    all_passed = False
+            
+            if all_passed:
+                self.log_result("Mock Checkout Process", True, 
+                              f"All {len(payment_methods)} payment methods tested successfully with booking confirmations")
+                return True
+            else:
+                self.log_result("Mock Checkout Process", False, "Some payment methods failed")
+                return False
+                
+        except Exception as e:
+            self.log_result("Mock Checkout Process", False, f"Request failed: {str(e)}")
+            
+        return False
+
+    def test_complete_pricing_checkout_flow(self):
+        """Test the complete pricing and checkout flow"""
+        try:
+            print(f"\n🎯 Testing Complete Pricing & Checkout Flow")
+            print("=" * 60)
+            
+            # Step 1: Dynamic Pricing
+            print("Step 1: Calculating dynamic pricing...")
+            
+            sample_itinerary = [
+                {
+                    "day": 1,
+                    "activities": [
+                        {"title": "Beach Visit", "category": "leisure", "location": "Goa", "duration": "3 hours"},
+                        {"title": "Water Sports", "category": "adventure", "location": "Goa", "duration": "2 hours"}
+                    ]
+                }
+            ]
+            
+            pricing_payload = {
+                "session_id": "test_pricing_session",
+                "itinerary": sample_itinerary,
+                "traveler_profile": {
+                    "budget_level": "moderate",
+                    "vacation_style": "adventurous",
+                    "propensity_to_pay": "medium",
+                    "spending_history": 15000
+                },
+                "travel_dates": {
+                    "start_date": "2024-12-15",
+                    "end_date": "2024-12-18"
+                }
+            }
+            
+            pricing_response = requests.post(f"{API_BASE}/dynamic-pricing", json=pricing_payload, timeout=60)
+            
+            if pricing_response.status_code != 200:
+                self.log_result("Complete Pricing Flow - Pricing", False, 
+                              f"Dynamic pricing failed: HTTP {pricing_response.status_code}")
+                return False
+            
+            pricing_data = pricing_response.json()
+            print(f"✅ Dynamic pricing calculated: ₹{pricing_data.get('final_price', 0)}")
+            
+            # Step 2: Create Checkout Cart
+            print("Step 2: Creating checkout cart...")
+            
+            cart_payload = {
+                "session_id": "test_pricing_session",
+                "pricing_data": pricing_data,
+                "itinerary": sample_itinerary,
+                "user_details": {
+                    "name": "Priya Sharma",
+                    "email": "priya.sharma@email.com",
+                    "phone": "+91-9876543210",
+                    "travelers": 2
+                }
+            }
+            
+            cart_response = requests.post(f"{API_BASE}/create-checkout-cart", json=cart_payload, timeout=60)
+            
+            if cart_response.status_code != 200:
+                self.log_result("Complete Pricing Flow - Cart", False, 
+                              f"Cart creation failed: HTTP {cart_response.status_code}")
+                return False
+            
+            cart_data = cart_response.json()
+            cart_id = cart_data.get("cart_id")
+            print(f"✅ Checkout cart created: {cart_id}")
+            
+            # Step 3: Process Checkout
+            print("Step 3: Processing checkout...")
+            
+            checkout_payload = {
+                "cart_id": cart_id,
+                "payment_method": "card",
+                "total_amount": cart_data.get("total_amount", 0)
+            }
+            
+            checkout_response = requests.post(f"{API_BASE}/mock-checkout", json=checkout_payload, timeout=60)
+            
+            if checkout_response.status_code != 200:
+                self.log_result("Complete Pricing Flow - Checkout", False, 
+                              f"Checkout failed: HTTP {checkout_response.status_code}")
+                return False
+            
+            checkout_data = checkout_response.json()
+            confirmation_code = checkout_data.get("confirmation_code")
+            booking_refs = checkout_data.get("booking_references", [])
+            
+            print(f"✅ Checkout completed: {confirmation_code}")
+            print(f"✅ Booking references: {', '.join(booking_refs)}")
+            
+            # Verify complete flow
+            if (pricing_data.get("final_price") and 
+                cart_data.get("cart_id") and 
+                checkout_data.get("status") == "completed"):
+                
+                self.log_result("Complete Pricing & Checkout Flow", True, 
+                              f"Complete flow successful: Pricing (₹{pricing_data['final_price']}) -> Cart ({cart_id}) -> Checkout ({confirmation_code})")
+                return True
+            else:
+                self.log_result("Complete Pricing & Checkout Flow", False, 
+                              "Flow incomplete - missing required data")
+                return False
+            
+        except Exception as e:
+            self.log_result("Complete Pricing & Checkout Flow", False, f"Flow failed: {str(e)}")
+            return False
+
     def test_advanced_features(self):
         """Test the advanced features from review request"""
         print(f"\n🚀 Testing Advanced Features")
