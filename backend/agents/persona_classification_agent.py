@@ -161,7 +161,7 @@ Default to 'balanced_traveler' if classification is unclear."""
             - Destination: {trip_details.get('destination', 'unknown')}
             - Duration: {trip_details.get('start_date', '')} to {trip_details.get('end_date', '')}
             - Group Size: {trip_details.get('adults', 1)} adults, {trip_details.get('children', 0)} children
-            - Budget per night: ₹{trip_details.get('budget_per_night', 0)}
+            - Budget per night: {trip_details.get('budget_per_night', 0)} INR
             
             PERSONA TYPES TO CHOOSE FROM:
             1. adventurer - Seeks thrills, outdoor activities, extreme sports, off-beat destinations
