@@ -134,6 +134,66 @@ backend:
         agent: "testing"
         comment: "✅ Full integration flow working: Chat → Itinerary Generation (3 variants) → Service Recommendations (10 services) → Conflict Detection (feasibility scoring). End-to-end advanced features pipeline functional with proper data flow between agents."
 
+  - task: "Image Proxy Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Image Proxy Endpoint (/api/image-proxy) working correctly with CORS fix. Returns 404 fallback as expected for unavailable images, proper headers implementation for image serving."
+
+  - task: "Dynamic Pricing API"
+    implemented: true
+    working: true
+    file: "backend/agents/dynamic_pricing_agent.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Dynamic Pricing API (/api/dynamic-pricing) fully functional with comprehensive pricing system. Base pricing ₹7000, Final ₹9775.5 with 3 line items, demand analysis (peak period), competitor comparison, and profile-based discounts (loyalty tier). Transparent breakdown with base rates, demand adjustments, competitive pricing, and discount application working correctly."
+
+  - task: "Checkout Cart Creation"
+    implemented: true
+    working: true
+    file: "backend/agents/dynamic_pricing_agent.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Checkout Cart Creation (/api/create-checkout-cart) working perfectly. Cart created successfully with bundled services, payment summary (subtotal, adjustments, discounts, total), itinerary summary, and booking components. Proper data structure for frontend integration."
+
+  - task: "Mock Checkout Process"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Mock Checkout Process (/api/mock-checkout) fully functional. All 4 payment methods tested successfully (card, UPI, netbanking, wallet) with booking confirmations and references generated. Proper confirmation codes (TRV format), booking references for hotel/activities/transport, and payment status tracking."
+
+  - task: "Complete Pricing & Checkout Flow"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Complete Pricing & Checkout Flow working end-to-end. Dynamic Pricing (₹9775.5) → Cart Creation → Checkout (TRV017E1F30) with booking references. Full integration of pricing calculation, cart bundling, and payment processing with proper data flow between all components."
+
 frontend:
   - task: "Frontend Chat Functionality"
     implemented: true
