@@ -3604,6 +3604,73 @@ function App() {
     }
   };
 
+  // Trip history handlers
+  const saveCurrentTrip = () => {
+    if (selectedVariant && tripDetails) {
+      const newTrip = {
+        id: `trip_${Date.now()}`,
+        title: selectedVariant.title,
+        destination: tripDetails.destination,
+        days: selectedVariant.days,
+        totalActivities: selectedVariant.itinerary?.reduce((sum, day) => sum + (day.activities?.length || 0), 0) || 0,
+        totalCost: pricingData ? pricingData.final_total : selectedVariant.total_cost,
+        image: selectedVariant.image,
+        itinerary: selectedVariant.itinerary,
+        pricing: pricingData,
+        tripDetails: tripDetails,
+        travelerProfile: travelerProfile,
+        status: 'planning',
+        savedAt: new Date().toISOString()
+      };
+      
+      const updatedHistory = [newTrip, ...tripHistory];
+      setTripHistory(updatedHistory);
+      
+      // Save to localStorage for persistence
+      localStorage.setItem('travello_trip_history', JSON.stringify(updatedHistory));
+      
+      // Show success message
+      const message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `✅ Trip saved successfully! You can access it anytime from the "Your Trips" button in the top corner.`,
+      };
+      setMessages(prev => [...prev, message]);
+    }
+  };
+
+  const loadTripFromHistory = (trip) => {
+    setSelectedVariant({
+      ...trip,
+      itinerary: trip.itinerary
+    });
+    setTripDetails(trip.tripDetails || {});
+    setTravelerProfile(trip.travelerProfile || {});
+    setPricingData(trip.pricing || null);
+    setRightPanelContent('variant_details');
+    setShowTripHistory(false);
+    
+    // Add message
+    const message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `🔄 Loaded your saved trip: ${trip.title}! All details have been restored.`,
+    };
+    setMessages(prev => [...prev, message]);
+  };
+
+  // Load trip history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('travello_trip_history');
+    if (savedHistory) {
+      try {
+        setTripHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('Error loading trip history:', error);
+      }
+    }
+  }, []);
+
   const handleCheckout = async () => {
     try {
       // Create checkout cart
