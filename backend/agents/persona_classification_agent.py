@@ -171,9 +171,11 @@ Default to 'balanced_traveler' if classification is unclear."""
             5. eco_conscious_traveler - Sustainable travel, eco-friendly options, nature conservation
             6. family_oriented - Kid-friendly activities, safe destinations, educational experiences
             7. business_traveler - Efficient travel, meeting facilities, good connectivity
+            8. balanced_traveler - Mix of experiences, moderate budget, flexible preferences, variety-seeking
+            9. general_traveler - Standard tourist experiences, popular destinations, moderate preferences
             
             Based on the profile, classify this traveler and provide:
-            - Primary persona type
+            - Primary persona type (MUST be one of the above 9 types)
             - Confidence score (0.0-1.0)
             - Supporting persona tags/traits
             - Propensity to pay score (0.0-1.0) for pricing strategy
@@ -181,7 +183,7 @@ Default to 'balanced_traveler' if classification is unclear."""
             
             Respond in JSON format:
             {{
-                "persona_type": "adventurer|cultural_explorer|luxury_connoisseur|budget_backpacker|eco_conscious_traveler|family_oriented|business_traveler",
+                "persona_type": "adventurer|cultural_explorer|luxury_connoisseur|budget_backpacker|eco_conscious_traveler|family_oriented|business_traveler|balanced_traveler|general_traveler",
                 "confidence": 0.85,
                 "persona_tags": ["primary_persona", "secondary_trait1", "secondary_trait2"],
                 "propensity_to_pay": 0.7,
