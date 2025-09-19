@@ -6033,6 +6033,14 @@ function App() {
         onNewChat={handleNewChat}
         onSelectChat={handleSelectChat}
       />
+      
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={showCheckoutModal}
+        onClose={() => setShowCheckoutModal(false)}
+        cartData={checkoutCart}
+        onPayment={handlePayment}
+      />
     </div>
   );
 }
