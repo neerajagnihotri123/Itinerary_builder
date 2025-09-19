@@ -37,8 +37,8 @@ from agents.persona_classification_agent import PersonaClassificationAgent
 from agents.itinerary_generation_agents import AdventurerAgent, BalancedAgent, LuxuryAgent
 from agents.customization_agent import CustomizationAgent
 from agents.pricing_agent import PricingAgent
-from agents.external_booking_agent import ExternalBookingAgent
-from agents.sustainability_seasonality_agent import SustainabilitySeasonalityAgent
+from agents.service_selection_agent import ServiceSelectionAgent
+from agents.conflict_detection_agent import ConflictDetectionAgent
 from utils.context_store import ContextStore
 from utils.event_bus import EventBus
 from models.schemas import *
