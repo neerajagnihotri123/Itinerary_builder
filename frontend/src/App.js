@@ -857,7 +857,7 @@ const getFallbackImageUrl = (category, destination) => {
 };
 
 // Image component with fallback handling
-const SafeImage = ({ src, alt, className, onError, ...props }) => {
+const SafeImage = ({ src, alt, className, onError, category, destination, ...props }) => {
   const [currentSrc, setCurrentSrc] = useState(getProxiedImageUrl(src));
   const [hasError, setHasError] = useState(false);
   
@@ -869,8 +869,8 @@ const SafeImage = ({ src, alt, className, onError, ...props }) => {
   const handleError = (e) => {
     if (!hasError) {
       setHasError(true);
-      // Try fallback image
-      setCurrentSrc(`https://images.unsplash.com/300x200/?${alt || 'travel'}`);
+      // Use proper fallback image
+      setCurrentSrc(getFallbackImageUrl(category, destination));
     }
     if (onError) onError(e);
   };
