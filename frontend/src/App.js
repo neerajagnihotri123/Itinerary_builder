@@ -6315,6 +6315,14 @@ function App() {
         cartData={checkoutCart}
         onPayment={handlePayment}
       />
+      
+      {/* Trip History Modal */}
+      <TripHistoryModal
+        isOpen={showTripHistory}
+        onClose={() => setShowTripHistory(false)}
+        tripHistory={tripHistory}
+        onSelectTrip={loadTripFromHistory}
+      />
     </div>
   );
 }
