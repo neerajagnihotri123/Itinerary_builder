@@ -587,13 +587,32 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                             "activities": activities
                         })
                     
+                    # Calculate dynamic pricing based on variant type, days, and budget
+                    base_budget_per_day = budget
+                    
+                    if variant_key == 'adventurer':
+                        # Adventure variant: Base budget + activity costs
+                        total_price = int(base_budget_per_day * days * 1.2)  # 20% premium for adventure activities
+                    elif variant_key == 'balanced':
+                        # Balanced variant: Standard budget
+                        total_price = int(base_budget_per_day * days * 1.0)  # Standard pricing
+                    else:  # luxury
+                        # Luxury variant: Premium pricing
+                        total_price = int(base_budget_per_day * days * 1.8)  # 80% premium for luxury experiences
+                    
+                    # Override with LLM price if available and reasonable
+                    llm_price = variant_data.get("price", total_price)
+                    if isinstance(llm_price, (int, float)) and llm_price > 0:
+                        total_price = int(llm_price)
+                    
                     variants.append({
                         "id": f"{variant_key}_{destination.lower().replace(' ', '_')}",
                         "title": variant_data.get("title", f"{variant_key.title()} Experience"),
                         "description": variant_data.get("description", f"Great {variant_key} experience in {destination}"),
                         "persona": variant_key,  # Frontend expects 'persona' not 'type'
                         "days": days,
-                        "price": variant_data.get("price", 20000),  # Frontend expects 'price' not 'total_cost'
+                        "price": total_price,  # Dynamic pricing based on variant type
+                        "price_per_day": int(total_price / days),  # Price breakdown per day
                         "total_activities": days * 3,  # 3 activities per day
                         "activity_types": variant_data.get("highlights", ["Sightseeing", "Culture"]),
                         "highlights": variant_data.get("highlights", ["Experience 1", "Experience 2", "Experience 3", "Experience 4"]),
