@@ -600,10 +600,12 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                         # Luxury variant: Premium pricing
                         total_price = int(base_budget_per_day * days * 1.8)  # 80% premium for luxury experiences
                     
-                    # Override with LLM price if available and reasonable
+                    # Override with LLM price only if it seems reasonable (not too low/high)
                     llm_price = variant_data.get("price", total_price)
                     if isinstance(llm_price, (int, float)) and llm_price > 0:
-                        total_price = int(llm_price)
+                        # Only use LLM price if it's within reasonable range (not too far from calculated price)
+                        if 0.5 * total_price <= llm_price <= 2.0 * total_price:
+                            total_price = int(llm_price)
                     
                     variants.append({
                         "id": f"{variant_key}_{destination.lower().replace(' ', '_')}",
