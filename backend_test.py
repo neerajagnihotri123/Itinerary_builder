@@ -1124,12 +1124,12 @@ class TravelloBackendTester:
 
 def main():
     """Main test execution"""
-    print("🚀 Starting Travello.ai Backend Architecture Test")
+    print("🚀 Starting Travello.ai Advanced Features Test")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print(f"⏰ Started at: {datetime.now().isoformat()}")
     
     tester = TravelloBackendTester()
-    passed, total = tester.test_critical_llm_integration()
+    passed, total = tester.test_advanced_features()
     
     success = tester.print_summary()
     
