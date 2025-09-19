@@ -3387,6 +3387,91 @@ function App() {
     // Implementation depends on specific operation type
   };
 
+  // Dynamic pricing handlers
+  const calculateDynamicPricing = async (itinerary, travelerProfile, travelDates) => {
+    setIsCalculatingPricing(true);
+    try {
+      const response = await fetch(`${API}/dynamic-pricing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          itinerary: itinerary,
+          traveler_profile: travelerProfile,
+          travel_dates: travelDates
+        })
+      });
+      
+      const data = await response.json();
+      setPricingData(data);
+      setShowPricingBreakdown(true);
+      return data;
+    } catch (error) {
+      console.error('Pricing calculation error:', error);
+    } finally {
+      setIsCalculatingPricing(false);
+    }
+  };
+
+  const handleCheckout = async () => {
+    try {
+      // Create checkout cart
+      const cartResponse = await fetch(`${API}/create-checkout-cart`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          pricing_data: pricingData,
+          itinerary: selectedVariant?.itinerary || [],
+          user_details: {
+            profile: travelerProfile,
+            trip_details: tripDetails
+          }
+        })
+      });
+      
+      const cart = await cartResponse.json();
+      setCheckoutCart(cart);
+      setShowCheckoutModal(true);
+    } catch (error) {
+      console.error('Checkout cart creation error:', error);
+    }
+  };
+
+  const handlePayment = async (paymentMethod) => {
+    setIsProcessingCheckout(true);
+    try {
+      const response = await fetch(`${API}/mock-checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cart_id: checkoutCart.cart_id,
+          payment_method: paymentMethod,
+          total_amount: checkoutCart.payment_summary.total
+        })
+      });
+      
+      const result = await response.json();
+      
+      // Show success message
+      const successMessage = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `🎉 Booking Confirmed! Your confirmation code is ${result.confirmation_code}. All booking references have been sent to your email. Your amazing ${selectedVariant?.days}-day adventure is confirmed!`,
+      };
+      setMessages(prev => [...prev, successMessage]);
+      
+      // Close modals
+      setShowCheckoutModal(false);
+      setShowPricingBreakdown(false);
+      
+    } catch (error) {
+      console.error('Payment processing error:', error);
+    } finally {
+      setIsProcessingCheckout(false);
+    }
+  };
+
   const handleSendMessage = async () => {
     console.log('🚀 handleSendMessage called!');
     
