@@ -396,6 +396,51 @@ const API = `${BACKEND_URL}/api`;
 console.log('🔍 BACKEND_URL configured as:', BACKEND_URL || 'RELATIVE URL');
 console.log('🔍 API URL will be:', API);
 
+// Image proxy utility to handle CORS issues
+const getProxiedImageUrl = (imageUrl) => {
+  if (!imageUrl) return null;
+  
+  // If it's already a proxied URL, return as is
+  if (imageUrl.includes('/api/image-proxy')) return imageUrl;
+  
+  // For external URLs that might have CORS issues, use proxy
+  if (imageUrl.startsWith('http') && !imageUrl.includes(BACKEND_URL)) {
+    return `${API}/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+  }
+  
+  return imageUrl;
+};
+
+// Image component with fallback handling
+const SafeImage = ({ src, alt, className, onError, ...props }) => {
+  const [currentSrc, setCurrentSrc] = useState(getProxiedImageUrl(src));
+  const [hasError, setHasError] = useState(false);
+  
+  useEffect(() => {
+    setCurrentSrc(getProxiedImageUrl(src));
+    setHasError(false);
+  }, [src]);
+  
+  const handleError = (e) => {
+    if (!hasError) {
+      setHasError(true);
+      // Try fallback image
+      setCurrentSrc(`https://images.unsplash.com/300x200/?${alt || 'travel'}`);
+    }
+    if (onError) onError(e);
+  };
+  
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      className={className}
+      onError={handleError}
+      {...props}
+    />
+  );
+};
+
 // Animation variants
 const cardVariants = {
   hidden: { opacity: 0, y: 12, scale: 0.995 },
