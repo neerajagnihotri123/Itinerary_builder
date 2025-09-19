@@ -304,9 +304,101 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                     for day_num in range(1, days + 1):
                         day_date = (datetime.fromisoformat(start_date) + timedelta(days=day_num-1)).isoformat()[:10]
                         
-                        # Generate 3-4 activities per day based on variant type
+                        # Generate diverse, day-specific activities based on variant type and day progression
                         activities = []
                         if variant_key == 'adventurer':
+                            if day_num == 1:
+                                activities = [
+                                    {
+                                        "time": "9:00 AM",
+                                        "title": f"Arrival & Welcome to {destination}",
+                                        "description": f"Airport pickup, hotel check-in, and welcome orientation for your adventure in {destination}",
+                                        "location": f"{destination} Airport/Hotel",
+                                        "category": "arrival",
+                                        "duration": "2 hours"
+                                    },
+                                    {
+                                        "time": "2:00 PM",
+                                        "title": f"First Adventure - {highlights[0] if len(highlights) > 0 else 'Local Exploration'}",
+                                        "description": f"Start your adventure with {highlights[0].lower() if len(highlights) > 0 else 'exploring the local area'} - perfect introduction to {destination}",
+                                        "location": f"{destination} Adventure Center",
+                                        "category": "adventure",
+                                        "duration": "4 hours"
+                                    },
+                                    {
+                                        "time": "7:00 PM",
+                                        "title": "Welcome Dinner & Local Culture",
+                                        "description": f"Experience authentic {destination} cuisine and meet local guides for upcoming adventures",
+                                        "location": f"{destination} Cultural Restaurant",
+                                        "category": "dining",
+                                        "duration": "2 hours"
+                                    }
+                                ]
+                            elif day_num == 2:
+                                activities = [
+                                    {
+                                        "time": "7:00 AM",
+                                        "title": f"Epic {highlights[1] if len(highlights) > 1 else 'Mountain'} Adventure",
+                                        "description": f"Full-day {highlights[1].lower() if len(highlights) > 1 else 'mountain adventure'} with professional guides and equipment",
+                                        "location": f"{destination} Adventure Peaks",
+                                        "category": "adventure",
+                                        "duration": "8 hours"
+                                    },
+                                    {
+                                        "time": "6:00 PM",
+                                        "title": "Adventure Recovery & Spa",
+                                        "description": "Relaxing massage and recovery session after intense adventure activities",
+                                        "location": f"{destination} Wellness Center",
+                                        "category": "wellness",
+                                        "duration": "2 hours"
+                                    }
+                                ]
+                            elif day_num == 3:
+                                activities = [
+                                    {
+                                        "time": "8:00 AM",
+                                        "title": f"Water Sports & {highlights[2] if len(highlights) > 2 else 'Beach'} Activities",
+                                        "description": f"Exciting water-based adventures including {highlights[2].lower() if len(highlights) > 2 else 'beach activities'}",
+                                        "location": f"{destination} Waterfront",
+                                        "category": "water_sports",
+                                        "duration": "5 hours"
+                                    },
+                                    {
+                                        "time": "3:00 PM",
+                                        "title": "Local Village & Cultural Experience",
+                                        "description": f"Visit traditional villages, interact with locals, and learn about {destination} culture",
+                                        "location": f"{destination} Traditional Village",
+                                        "category": "culture",
+                                        "duration": "3 hours"
+                                    }
+                                ]
+                            else:
+                                # Generate varied activities for additional days
+                                base_activities = [
+                                    ("Rock Climbing", "Scale challenging cliffs with expert guidance", "adventure"),
+                                    ("Jungle Safari", "Wildlife spotting and nature photography", "nature"),
+                                    ("River Rafting", "Navigate exciting rapids and river systems", "water_sports"),
+                                    ("Paragliding", "Soar above landscapes with tandem flights", "adventure"),
+                                    ("Cave Exploration", "Underground adventure through natural caves", "exploration"),
+                                    ("Cycling Tours", "Scenic bike rides through local landscapes", "adventure"),
+                                    ("Photography Walk", "Capture stunning landscapes and local life", "culture")
+                                ]
+                                
+                                import random
+                                selected_activities = random.sample(base_activities, min(3, len(base_activities)))
+                                
+                                activities = []
+                                times = ["8:00 AM", "1:30 PM", "5:00 PM"]
+                                for i, (act_name, act_desc, act_cat) in enumerate(selected_activities):
+                                    activities.append({
+                                        "time": times[i] if i < len(times) else f"{8 + i*3}:00 AM",
+                                        "title": f"Day {day_num} {act_name}",
+                                        "description": f"{act_desc} in the beautiful {destination} region",
+                                        "location": f"{destination} {act_cat.title()} Zone",
+                                        "category": act_cat,
+                                        "duration": "3-4 hours"
+                                    })
+                        elif variant_key == 'balanced':
                             activities = [
                                 {
                                     "time": "8:00 AM",
