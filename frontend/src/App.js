@@ -5402,7 +5402,7 @@ function App() {
               <div className="p-6">
                 {/* Main Image */}
                 <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
-                  <img
+                  <SafeImage
                     src={selectedTour.hero_image || selectedTour.image}
                     alt={selectedTour.name || selectedTour.title}
                     className="w-full h-full object-cover"
