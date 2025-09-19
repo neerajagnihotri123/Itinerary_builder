@@ -50,72 +50,97 @@ class ServiceSelectionAgent:
             List of top 10 ranked services
         """
         try:
-            # Create prompt for LLM to generate ranked services
-            context_info = ""
-            if activity_context:
-                context_info = f"Context: {activity_context.get('time', '')}, Duration: {activity_context.get('duration', '')}"
+            # Use fallback services first for speed, then enhance with LLM if time allows
+            fallback_services = self._generate_fallback_services(service_type, location, 10)
             
+            # Quick LLM enhancement with simplified prompt
+            try:
+                enhanced_services = await asyncio.wait_for(
+                    self._enhance_services_with_llm(session_id, service_type, location, traveler_profile, fallback_services),
+                    timeout=15.0  # 15 second timeout
+                )
+                return enhanced_services
+            except asyncio.TimeoutError:
+                logger.warning(f"LLM enhancement timed out, using fallback services for {service_type} in {location}")
+                # Rank fallback services by simple heuristics
+                return self._rank_fallback_services(fallback_services, traveler_profile)
+            
+        except Exception as e:
+            logger.error(f"Service recommendation error: {e}")
+            return self._generate_fallback_services(service_type, location, 10)
+    
+    async def _enhance_services_with_llm(self, session_id: str, service_type: str, location: str, 
+                                       traveler_profile: Dict, fallback_services: List[Dict]) -> List[Dict]:
+        """Enhanced services with LLM ranking (with timeout protection)"""
+        try:
+            # Simplified prompt for faster processing
             prompt = f"""
-            Generate 10 {service_type} recommendations for {location} ranked by similarity to this traveler profile:
+            Rank these {service_type} services in {location} for this traveler:
+            Profile: {traveler_profile.get('vacation_style', 'balanced')} style, {traveler_profile.get('budget_level', 'moderate')} budget
             
-            Traveler Profile:
-            - Vacation Style: {traveler_profile.get('vacation_style', 'balanced')}
-            - Experience Type: {traveler_profile.get('experience_type', 'mixed')}
-            - Budget Level: {traveler_profile.get('budget_level', 'moderate')}
-            - Preferences: {traveler_profile.get('preferences', [])}
+            Services: {[s['name'] for s in fallback_services[:5]]}  # Only rank top 5 for speed
             
-            {context_info}
-            
-            Return ONLY a JSON array of 10 services, ranked from most to least suitable:
-            [
-              {{
-                "id": "service_1",
-                "name": "Service Name",
-                "type": "{service_type}",
-                "location": "{location}",
-                "rating": 4.5,
-                "price": 5000,
-                "similarity_score": 0.95,
-                "match_reasons": ["reason1", "reason2"],
-                "description": "Brief description",
-                "features": ["feature1", "feature2", "feature3"],
-                "availability": true,
-                "booking_info": {{"contact": "details", "advance_booking": "1 day"}}
-              }}
-            ]
-            
-            Ensure services are genuinely different and ranked by profile fit.
+            Return ONLY a JSON array of rankings [1,2,3,4,5] where 1=best match:
             """
             
             llm_client = self._get_llm_client(session_id)
             response = await llm_client.send_message(UserMessage(text=prompt))
             
-            # Parse JSON response
+            # Simple parsing
             import json
             import re
             
-            json_text = response
-            if '```json' in json_text:
-                json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
-                if json_match:
-                    json_text = json_match.group(1)
-            elif '```' in json_text:
-                json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
-                if json_match:
-                    json_text = json_match.group(1)
+            json_match = re.search(r'\[[\d,\s]+\]', response)
+            if json_match:
+                rankings = json.loads(json_match.group(0))
+                
+                # Apply rankings to services
+                ranked_services = []
+                for rank in rankings:
+                    if 1 <= rank <= len(fallback_services):
+                        service = fallback_services[rank-1].copy()
+                        service['similarity_score'] = 1.0 - (rank-1) * 0.1  # Convert rank to score
+                        ranked_services.append(service)
+                
+                # Add remaining services
+                for i, service in enumerate(fallback_services):
+                    if i+1 not in rankings:
+                        service['similarity_score'] = 0.5
+                        ranked_services.append(service)
+                
+                return ranked_services[:10]
             
-            services = json.loads(json_text.strip())
-            
-            # Validate and ensure we have exactly 10 services
-            if len(services) < 10:
-                # Generate additional fallback services
-                services.extend(self._generate_fallback_services(service_type, location, 10 - len(services)))
-            
-            return services[:10]  # Ensure exactly 10 services
+            # Fallback to original services if parsing fails
+            return self._rank_fallback_services(fallback_services, traveler_profile)
             
         except Exception as e:
-            logger.error(f"Service recommendation error: {e}")
-            return self._generate_fallback_services(service_type, location, 10)
+            logger.error(f"LLM enhancement failed: {e}")
+            return self._rank_fallback_services(fallback_services, traveler_profile)
+    
+    def _rank_fallback_services(self, services: List[Dict], traveler_profile: Dict) -> List[Dict]:
+        """Rank services using simple heuristics"""
+        budget_level = traveler_profile.get('budget_level', 'moderate')
+        vacation_style = traveler_profile.get('vacation_style', 'balanced')
+        
+        for i, service in enumerate(services):
+            score = 0.8 - i * 0.05  # Base descending score
+            
+            # Budget matching
+            if budget_level == 'luxury' and service['price'] > 3000:
+                score += 0.1
+            elif budget_level == 'budget' and service['price'] < 2000:
+                score += 0.1
+            elif budget_level == 'moderate' and 2000 <= service['price'] <= 4000:
+                score += 0.1
+            
+            # Style matching  
+            if vacation_style == 'adventurous' and service.get('rating', 4.0) > 4.2:
+                score += 0.05
+            
+            service['similarity_score'] = max(0.1, min(1.0, score))
+        
+        # Sort by similarity score
+        return sorted(services, key=lambda x: x['similarity_score'], reverse=True)
     
     def _generate_fallback_services(self, service_type: str, location: str, count: int) -> List[Dict]:
         """Generate fallback services if LLM fails"""
