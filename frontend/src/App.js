@@ -5349,8 +5349,8 @@ function App() {
                                   <div className="mb-3">
                                     <div className="text-xs text-slate-600 mb-1">Service Options:</div>
                                     <ServiceSelectionDropdown
-                                      serviceType={activity.category === 'accommodation' ? 'accommodation' : 
-                                                  activity.category === 'transport' || activity.category === 'transportation' ? 'transportation' : 'activities'}
+                                      serviceType={(activity.category || activity.type) === 'accommodation' ? 'accommodation' : 
+                                                  (activity.category || activity.type) === 'transport' || (activity.category || activity.type) === 'transportation' ? 'transportation' : 'activities'}
                                       location={activity.location}
                                       currentService={activity.selectedService}
                                       onServiceChange={(service) => handleServiceChange(service, dayIndex, actIndex)}
