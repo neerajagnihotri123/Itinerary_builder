@@ -4787,13 +4787,10 @@ function App() {
                                   </div>
                                 </div>
                                 
-                                <img 
+                                <SafeImage 
                                   src={activity.image || `https://images.unsplash.com/300x300/?${activity.category}`}
                                   alt={activity.title}
                                   className="w-16 h-16 object-cover rounded-xl flex-shrink-0"
-                                  onError={(e) => {
-                                    e.target.src = 'https://images.unsplash.com/300x300/?activity';
-                                  }}
                                 />
                                 <div className="flex-1">
                                   <div className="flex items-start justify-between mb-2">
