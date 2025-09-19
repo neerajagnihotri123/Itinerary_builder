@@ -1417,7 +1417,7 @@ class TravelloBackendTester:
                 return False
             
             pricing_data = pricing_response.json()
-            print(f"✅ Dynamic pricing calculated: ₹{pricing_data.get('final_price', 0)}")
+            print(f"✅ Dynamic pricing calculated: ₹{pricing_data.get('final_total', 0)}")
             
             # Step 2: Create Checkout Cart
             print("Step 2: Creating checkout cart...")
@@ -1451,7 +1451,7 @@ class TravelloBackendTester:
             checkout_payload = {
                 "cart_id": cart_id,
                 "payment_method": "card",
-                "total_amount": cart_data.get("total_amount", 0)
+                "total_amount": cart_data.get("payment_summary", {}).get("total", 0)
             }
             
             checkout_response = requests.post(f"{API_BASE}/mock-checkout", json=checkout_payload, timeout=60)
@@ -1469,12 +1469,12 @@ class TravelloBackendTester:
             print(f"✅ Booking references: {', '.join(booking_refs)}")
             
             # Verify complete flow
-            if (pricing_data.get("final_price") and 
+            if (pricing_data.get("final_total") and 
                 cart_data.get("cart_id") and 
                 checkout_data.get("status") == "completed"):
                 
                 self.log_result("Complete Pricing & Checkout Flow", True, 
-                              f"Complete flow successful: Pricing (₹{pricing_data['final_price']}) -> Cart ({cart_id}) -> Checkout ({confirmation_code})")
+                              f"Complete flow successful: Pricing (₹{pricing_data['final_total']}) -> Cart ({cart_id}) -> Checkout ({confirmation_code})")
                 return True
             else:
                 self.log_result("Complete Pricing & Checkout Flow", False, 
