@@ -105,9 +105,12 @@ class ServiceSelectionAgent:
                 # Add remaining services
                 for i, service in enumerate(fallback_services):
                     if i+1 not in rankings:
-                        service['similarity_score'] = 0.5
-                        ranked_services.append(service)
+                        service_copy = service.copy()
+                        service_copy['similarity_score'] = 0.5
+                        ranked_services.append(service_copy)
                 
+                # Sort by similarity score (descending) to ensure proper ranking
+                ranked_services.sort(key=lambda x: x['similarity_score'], reverse=True)
                 return ranked_services[:10]
             
             # Fallback to original services if parsing fails
