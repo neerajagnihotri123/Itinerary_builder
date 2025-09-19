@@ -3086,6 +3086,14 @@ function App() {
   const [isEditing, setIsEditing] = useState(false);
   const [editingItinerary, setEditingItinerary] = useState(null);
   const [travelerProfile, setTravelerProfile] = useState({});
+  
+  // Dynamic pricing state
+  const [pricingData, setPricingData] = useState(null);
+  const [showPricingBreakdown, setShowPricingBreakdown] = useState(false);
+  const [isCalculatingPricing, setIsCalculatingPricing] = useState(false);
+  const [checkoutCart, setCheckoutCart] = useState(null);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
   // Original state variables
   const [messages, setMessages] = useState([
