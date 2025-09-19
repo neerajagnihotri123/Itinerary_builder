@@ -3173,6 +3173,10 @@ function App() {
   const [checkoutCart, setCheckoutCart] = useState(null);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
+  
+  // Trip history state
+  const [tripHistory, setTripHistory] = useState([]);
+  const [showTripHistory, setShowTripHistory] = useState(false);
 
   // Original state variables
   const [messages, setMessages] = useState([
