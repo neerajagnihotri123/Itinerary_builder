@@ -1058,15 +1058,17 @@ class TravelloBackendTester:
             return False
 
     def test_image_proxy_endpoint(self):
-        """Test GET /api/image-proxy endpoint for CORS fix"""
+        """Test GET /api/image-proxy endpoint - comprehensive testing as requested"""
         try:
-            print(f"\n🖼️ Testing Image Proxy Endpoint")
+            print(f"\n🖼️ Testing Image Proxy Endpoint - Comprehensive Tests")
             
-            # Test with sample Unsplash URL
-            test_url = "https://images.unsplash.com/800x400/?travel"
+            # Test 1: Basic Image Proxy Functionality
+            print("Test 1: Basic Image Proxy Functionality")
+            test_url = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=200&fit=crop"
             
             response = requests.get(f"{API_BASE}/image-proxy", params={"url": test_url}, timeout=30)
             
+            test1_passed = False
             if response.status_code == 200:
                 # Check if response contains image data
                 content_type = response.headers.get('content-type', '')
@@ -1077,28 +1079,112 @@ class TravelloBackendTester:
                     cache_header = response.headers.get('Cache-Control')
                     
                     if cors_header == "*" and cache_header:
-                        self.log_result("Image Proxy Endpoint", True, 
-                                      f"Image proxy working with proper CORS headers and caching. Content-Type: {content_type}")
-                        return True
+                        print(f"✅ Test 1 PASSED: Image proxy working with proper CORS headers. Content-Type: {content_type}")
+                        test1_passed = True
                     else:
-                        self.log_result("Image Proxy Endpoint", False, 
-                                      f"Missing proper headers. CORS: {cors_header}, Cache: {cache_header}")
+                        print(f"❌ Test 1 FAILED: Missing proper headers. CORS: {cors_header}, Cache: {cache_header}")
                 else:
-                    self.log_result("Image Proxy Endpoint", False, 
-                                  f"Response not an image. Content-Type: {content_type}")
+                    print(f"❌ Test 1 FAILED: Response not an image. Content-Type: {content_type}")
             elif response.status_code == 404:
                 # 404 is acceptable for image proxy (fallback behavior)
-                self.log_result("Image Proxy Endpoint", True, 
-                              "Image proxy returns 404 fallback as expected for unavailable images")
+                print(f"✅ Test 1 PASSED: Image proxy returns 404 fallback as expected")
+                test1_passed = True
+            else:
+                print(f"❌ Test 1 FAILED: HTTP {response.status_code}: {response.text}")
+            
+            # Test 2: Invalid URL Handling
+            print("\nTest 2: Invalid URL Handling")
+            
+            # Test with invalid URL
+            invalid_url = "https://invalid-domain-that-does-not-exist.com/image.jpg"
+            response2 = requests.get(f"{API_BASE}/image-proxy", params={"url": invalid_url}, timeout=30)
+            
+            test2a_passed = False
+            if response2.status_code == 404:
+                print(f"✅ Test 2a PASSED: Invalid URL returns 404 fallback")
+                test2a_passed = True
+            else:
+                print(f"❌ Test 2a FAILED: Invalid URL returned {response2.status_code} instead of 404")
+            
+            # Test with malformed URL parameters
+            try:
+                response2b = requests.get(f"{API_BASE}/image-proxy", params={"url": "not-a-valid-url"}, timeout=30)
+                test2b_passed = response2b.status_code == 404
+                if test2b_passed:
+                    print(f"✅ Test 2b PASSED: Malformed URL returns 404 fallback")
+                else:
+                    print(f"❌ Test 2b FAILED: Malformed URL returned {response2b.status_code}")
+            except Exception as e:
+                print(f"✅ Test 2b PASSED: Malformed URL properly handled with exception: {str(e)}")
+                test2b_passed = True
+            
+            # Test 3: Multiple Image URLs
+            print("\nTest 3: Multiple Image URLs")
+            
+            test_urls = [
+                "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=300&fit=crop",  # HTTPS
+                "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop",  # Different image
+                "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop"   # Another image
+            ]
+            
+            test3_results = []
+            for i, url in enumerate(test_urls):
+                try:
+                    response3 = requests.get(f"{API_BASE}/image-proxy", params={"url": url}, timeout=30)
+                    
+                    if response3.status_code == 200:
+                        content_type = response3.headers.get('content-type', '')
+                        cors_header = response3.headers.get('Access-Control-Allow-Origin')
+                        
+                        if 'image' in content_type.lower() and cors_header == "*":
+                            print(f"✅ Test 3.{i+1} PASSED: URL {i+1} returned image with CORS headers")
+                            test3_results.append(True)
+                        else:
+                            print(f"❌ Test 3.{i+1} FAILED: URL {i+1} invalid response format")
+                            test3_results.append(False)
+                    elif response3.status_code == 404:
+                        print(f"✅ Test 3.{i+1} PASSED: URL {i+1} returned 404 fallback (acceptable)")
+                        test3_results.append(True)
+                    else:
+                        print(f"❌ Test 3.{i+1} FAILED: URL {i+1} returned {response3.status_code}")
+                        test3_results.append(False)
+                        
+                except Exception as e:
+                    print(f"❌ Test 3.{i+1} FAILED: URL {i+1} exception: {str(e)}")
+                    test3_results.append(False)
+            
+            test3_passed = all(test3_results)
+            
+            # Overall assessment
+            all_tests_passed = test1_passed and test2a_passed and test2b_passed and test3_passed
+            
+            if all_tests_passed:
+                self.log_result("Image Proxy Endpoint - Comprehensive", True, 
+                              f"All 3 test categories passed: Basic functionality ✅, Invalid URL handling ✅, Multiple URLs ✅")
+                
+                # Additional diagnostic for frontend image loading issue
+                print(f"\n🔍 DIAGNOSTIC: Image proxy endpoint is working correctly.")
+                print(f"🔍 If images aren't displaying in frontend itinerary, the issue is likely:")
+                print(f"   1. Frontend not using the proxy endpoint")
+                print(f"   2. Frontend making direct requests to image URLs (causing CORS)")
+                print(f"   3. Frontend image rendering logic issues")
+                print(f"   4. Network/firewall blocking image requests")
+                
                 return True
             else:
-                self.log_result("Image Proxy Endpoint", False, 
-                              f"HTTP {response.status_code}: {response.text}")
+                failed_tests = []
+                if not test1_passed: failed_tests.append("Basic functionality")
+                if not test2a_passed: failed_tests.append("Invalid URL handling")
+                if not test2b_passed: failed_tests.append("Malformed URL handling")
+                if not test3_passed: failed_tests.append("Multiple URLs")
+                
+                self.log_result("Image Proxy Endpoint - Comprehensive", False, 
+                              f"Failed tests: {', '.join(failed_tests)}")
+                return False
                 
         except Exception as e:
-            self.log_result("Image Proxy Endpoint", False, f"Request failed: {str(e)}")
-            
-        return False
+            self.log_result("Image Proxy Endpoint - Comprehensive", False, f"Test suite failed: {str(e)}")
+            return False
 
     def test_dynamic_pricing_api(self):
         """Test POST /api/dynamic-pricing endpoint"""
