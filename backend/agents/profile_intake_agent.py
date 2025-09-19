@@ -140,7 +140,86 @@ Always provide helpful, specific, and engaging responses that move the conversat
             )
 
     async def _analyze_intent(self, message: str, profile: Dict, trip_details: Dict) -> Dict[str, Any]:
-        """Analyze user message intent using LLM with better classification"""
+        """Analyze user message intent using LLM with caching and optimization"""
+        try:
+            # Check cache first
+            cache_key = self._get_cache_key(message, profile)
+            cached_result = self._get_cached_response(cache_key)
+            if cached_result:
+                logger.info(f"🚀 Using cached intent analysis for: {message[:50]}...")
+                return cached_result
+            
+            # Quick heuristic checks before LLM call
+            message_lower = message.lower().strip()
+            
+            # Fast pattern matching for common cases
+            if any(word in message_lower for word in ['hello', 'hi', 'hey', 'good morning', 'good evening']):
+                result = {
+                    "intent": "general",
+                    "confidence": 0.9,
+                    "reasoning": "Greeting detected",
+                    "extracted_info": {}
+                }
+                self._cache_response(cache_key, result)
+                return result
+            
+            if any(phrase in message_lower for phrase in ['plan a trip', 'want to visit', 'travel to', 'vacation to', 'trip to']):
+                # Extract destination if mentioned
+                destinations = ['goa', 'kerala', 'mumbai', 'delhi', 'rajasthan', 'bangalore', 'chennai', 'kolkata', 'hyderabad', 'pune']
+                found_destination = next((dest for dest in destinations if dest in message_lower), None)
+                
+                result = {
+                    "intent": "trip_planning",
+                    "confidence": 0.95,
+                    "reasoning": "Trip planning keywords detected",
+                    "extracted_info": {
+                        "destination": found_destination.title() if found_destination else None
+                    }
+                }
+                self._cache_response(cache_key, result)
+                return result
+            
+            if any(word in message_lower for word in ['hotel', 'resort', 'accommodation', 'stay', 'lodging']):
+                result = {
+                    "intent": "accommodation",
+                    "confidence": 0.9,
+                    "reasoning": "Accommodation keywords detected",
+                    "extracted_info": {}
+                }
+                self._cache_response(cache_key, result)
+                return result
+            
+            # Use LLM for complex cases with timeout
+            result = await asyncio.wait_for(
+                self._llm_intent_analysis(message, profile, trip_details),
+                timeout=8.0  # 8 second timeout
+            )
+            
+            # Cache successful result
+            self._cache_response(cache_key, result)
+            return result
+            
+        except asyncio.TimeoutError:
+            logger.warning(f"Intent analysis timeout for: {message[:50]}...")
+            # Fallback to general intent on timeout
+            result = {
+                "intent": "general",
+                "confidence": 0.6,
+                "reasoning": "Timeout fallback",
+                "extracted_info": {}
+            }
+            return result
+        except Exception as e:
+            logger.error(f"Intent analysis error: {e}")
+            return {
+                "intent": "general",
+                "confidence": 0.5,
+                "reasoning": "Error fallback",
+                "extracted_info": {}
+            }
+    
+    async def _llm_intent_analysis(self, message: str, profile: Dict, trip_details: Dict) -> Dict[str, Any]:
+        """LLM-based intent analysis with optimized prompt"""
         try:
             context = f"""
             You are an expert at analyzing travel-related messages. Analyze this user message carefully:
