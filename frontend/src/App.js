@@ -5531,7 +5531,7 @@ function App() {
               <div className="p-6">
                 {/* Main Image */}
                 <div className="relative h-48 rounded-2xl overflow-hidden mb-6">
-                  <img
+                  <SafeImage
                     src={selectedActivity.hero_image || selectedActivity.image}
                     alt={selectedActivity.name || selectedActivity.title}
                     className="w-full h-full object-cover"
