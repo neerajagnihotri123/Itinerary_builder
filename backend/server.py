@@ -47,9 +47,23 @@ from models.schemas import *
 context_store = ContextStore()
 event_bus = EventBus()
 
-# Initialize new agents
+# Initialize all agents
+profile_intake = ProfileIntakeAgent()
+persona_classifier = PersonaClassificationAgent()
+adventurer_agent = AdventurerAgent()
+balanced_agent = BalancedAgent()
+luxury_agent = LuxuryAgent()
+customization_agent = CustomizationAgent()
+pricing_agent = PricingAgent()
 service_selector = ServiceSelectionAgent()
 conflict_detector = ConflictDetectionAgent()
+
+# Initialize placeholder agents (to be implemented later)
+class PlaceholderAgent:
+    pass
+
+booking_agent = PlaceholderAgent()
+sustainability_agent = PlaceholderAgent()
 
 # Register agents with event bus
 event_bus.register_agent("profile_intake", profile_intake)
@@ -59,6 +73,8 @@ event_bus.register_agent("balanced", balanced_agent)
 event_bus.register_agent("luxury", luxury_agent)
 event_bus.register_agent("customization", customization_agent)
 event_bus.register_agent("pricing", pricing_agent)
+event_bus.register_agent("service_selector", service_selector)
+event_bus.register_agent("conflict_detector", conflict_detector)
 event_bus.register_agent("booking", booking_agent)
 event_bus.register_agent("sustainability", sustainability_agent)
 
