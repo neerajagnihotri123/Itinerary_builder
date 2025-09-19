@@ -399,32 +399,86 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                                         "duration": "3-4 hours"
                                     })
                         elif variant_key == 'balanced':
-                            activities = [
-                                {
-                                    "time": "8:00 AM",
-                                    "title": f"Morning Adventure - {highlights[0] if day_num == 1 else f'Day {day_num} Outdoor Activity'}",
-                                    "description": f"Start your day with exciting {highlights[0].lower() if day_num == 1 else 'outdoor adventures'} in {destination}",
-                                    "location": f"{destination} Adventure Zone",
-                                    "category": "adventure",
-                                    "duration": "3 hours"
-                                },
-                                {
-                                    "time": "1:00 PM",
-                                    "title": f"Afternoon Exploration - {highlights[1] if day_num <= len(highlights) else f'Scenic Tour'}",
-                                    "description": f"Explore {highlights[1].lower() if day_num <= len(highlights) else 'scenic locations'} and local attractions",
-                                    "location": f"{destination} City Center",
-                                    "category": "sightseeing",
-                                    "duration": "2.5 hours"
-                                },
-                                {
-                                    "time": "6:00 PM",
-                                    "title": f"Evening Activity - {highlights[2] if day_num <= len(highlights) else f'Local Culture'}",
-                                    "description": f"Wind down with {highlights[2].lower() if day_num <= len(highlights) else 'cultural experiences'} and local cuisine",
-                                    "location": f"{destination} Cultural District",
-                                    "category": "culture",
-                                    "duration": "2 hours"
-                                }
-                            ]
+                            if day_num == 1:
+                                activities = [
+                                    {
+                                        "time": "10:00 AM",
+                                        "title": f"Welcome to {destination} - City Overview",
+                                        "description": f"Guided city tour covering major landmarks and orientation to {destination}",
+                                        "location": f"{destination} City Center",
+                                        "category": "sightseeing",
+                                        "duration": "3 hours"
+                                    },
+                                    {
+                                        "time": "2:30 PM",
+                                        "title": "Cultural Heritage Experience",
+                                        "description": f"Visit museums, galleries, and heritage sites to understand {destination}'s rich history",
+                                        "location": f"{destination} Heritage District",
+                                        "category": "culture",
+                                        "duration": "2.5 hours"
+                                    },
+                                    {
+                                        "time": "6:00 PM",
+                                        "title": "Local Market & Shopping",
+                                        "description": f"Explore traditional markets, shop for local crafts, and taste street food",
+                                        "location": f"{destination} Local Market",
+                                        "category": "shopping",
+                                        "duration": "2 hours"
+                                    }
+                                ]
+                            elif day_num == 2:
+                                activities = [
+                                    {
+                                        "time": "9:00 AM",
+                                        "title": f"Nature & {highlights[0] if len(highlights) > 0 else 'Garden'} Walk",
+                                        "description": f"Peaceful morning exploring {highlights[0].lower() if len(highlights) > 0 else 'beautiful gardens'} and natural areas",
+                                        "location": f"{destination} Nature Reserve",
+                                        "category": "nature",
+                                        "duration": "3 hours"
+                                    },
+                                    {
+                                        "time": "1:00 PM",
+                                        "title": "Traditional Cooking Class",
+                                        "description": f"Learn to cook authentic {destination} dishes with local chefs",
+                                        "location": f"{destination} Cooking School",
+                                        "category": "culture",
+                                        "duration": "3 hours"
+                                    },
+                                    {
+                                        "time": "5:30 PM",
+                                        "title": "Sunset Viewing & Photography",
+                                        "description": f"Capture stunning sunset views from the best vantage points in {destination}",
+                                        "location": f"{destination} Scenic Viewpoint",
+                                        "category": "photography",
+                                        "duration": "2 hours"
+                                    }
+                                ]
+                            else:
+                                # Varied balanced activities for other days
+                                balanced_activities = [
+                                    ("Historic Temple Tour", "Explore ancient temples and spiritual sites", "culture"),
+                                    ("Local Art Workshop", "Hands-on experience with traditional crafts", "culture"),
+                                    ("Scenic Boat Ride", "Relaxing cruise through waterways", "leisure"),
+                                    ("Food Tour", "Taste diverse local cuisines and specialties", "dining"),
+                                    ("Traditional Dance Show", "Evening cultural performance", "entertainment"),
+                                    ("Nature Photography", "Capture landscapes and wildlife", "photography"),
+                                    ("Local Farm Visit", "Experience rural life and agriculture", "culture")
+                                ]
+                                
+                                import random
+                                selected_activities = random.sample(balanced_activities, min(3, len(balanced_activities)))
+                                
+                                activities = []
+                                times = ["9:30 AM", "2:00 PM", "6:00 PM"]
+                                for i, (act_name, act_desc, act_cat) in enumerate(selected_activities):
+                                    activities.append({
+                                        "time": times[i] if i < len(times) else f"{9 + i*3}:00 AM",
+                                        "title": f"Day {day_num} {act_name}",
+                                        "description": f"{act_desc} - perfect blend of culture and relaxation",
+                                        "location": f"{destination} {act_cat.title()} Area",
+                                        "category": act_cat,
+                                        "duration": "2-3 hours"
+                                    })
                         elif variant_key == 'balanced':
                             activities = [
                                 {
