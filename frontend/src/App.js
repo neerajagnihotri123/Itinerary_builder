@@ -3407,6 +3407,9 @@ function App() {
   // Trip history state
   const [tripHistory, setTripHistory] = useState([]);
   const [showTripHistory, setShowTripHistory] = useState(false);
+  
+  // Request callback state
+  const [showRequestCallback, setShowRequestCallback] = useState(false);
 
   // Original state variables
   const [messages, setMessages] = useState([
