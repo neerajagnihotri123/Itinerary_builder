@@ -5,6 +5,9 @@ Uses dynamic questioning to build a travel persona
 
 import os
 import logging
+import asyncio
+import json
+import hashlib
 from typing import Dict, List, Any, Optional
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from models.schemas import ChatResponse, UIAction, ProfileIntakeResponse
@@ -21,7 +24,45 @@ class ProfileIntakeAgent:
         self.event_bus = event_bus
         self.api_key = os.environ.get('EMERGENT_LLM_KEY')
         
+        # Response cache for performance optimization
+        self.response_cache = {}
+        self.cache_ttl = 3600  # 1 hour cache TTL
+        
         # LLM client will be initialized per session
+    
+    def _get_cache_key(self, message: str, user_profile: Dict) -> str:
+        """Generate cache key for response caching"""
+        cache_data = {
+            'message': message.lower().strip(),
+            'profile_keys': sorted(user_profile.keys()) if user_profile else []
+        }
+        return hashlib.md5(json.dumps(cache_data, sort_keys=True).encode()).hexdigest()
+    
+    def _get_cached_response(self, cache_key: str) -> Optional[Dict]:
+        """Get cached response if still valid"""
+        if cache_key in self.response_cache:
+            cached_data = self.response_cache[cache_key]
+            import time
+            if time.time() - cached_data['timestamp'] < self.cache_ttl:
+                return cached_data['response']
+            else:
+                # Remove expired cache
+                del self.response_cache[cache_key]
+        return None
+    
+    def _cache_response(self, cache_key: str, response: Dict):
+        """Cache response for future use"""
+        import time
+        self.response_cache[cache_key] = {
+            'response': response,
+            'timestamp': time.time()
+        }
+        
+        # Limit cache size (keep only last 100 entries)
+        if len(self.response_cache) > 100:
+            oldest_key = min(self.response_cache.keys(), 
+                           key=lambda k: self.response_cache[k]['timestamp'])
+            del self.response_cache[oldest_key]
     
     def _get_llm_client(self, session_id: str) -> LlmChat:
         """Get LLM client for session"""
