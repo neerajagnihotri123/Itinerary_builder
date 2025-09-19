@@ -779,6 +779,149 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
         logger.error(f"Itinerary generation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ===== NEW ADVANCED FEATURES ENDPOINTS =====
+
+@app.post("/api/service-recommendations")
+async def get_service_recommendations(request: dict):
+    """Get top 10 service recommendations for itinerary slots"""
+    try:
+        session_id = request.get("session_id")
+        service_type = request.get("service_type")  # 'accommodation', 'activities', 'transportation'
+        location = request.get("location")
+        traveler_profile = request.get("traveler_profile", {})
+        activity_context = request.get("activity_context", {})
+        
+        logger.info(f"🔧 Getting {service_type} recommendations for {location}")
+        
+        services = await service_selector.get_service_recommendations(
+            session_id=session_id,
+            service_type=service_type,
+            location=location,
+            traveler_profile=traveler_profile,
+            activity_context=activity_context
+        )
+        
+        return {
+            "services": services,
+            "service_type": service_type,
+            "location": location,
+            "total_options": len(services),
+            "auto_selected": services[0] if services else None,  # Auto-select top-ranked
+            "session_id": session_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Service recommendations error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/conflict-check")
+async def check_itinerary_conflicts(request: dict):
+    """Check itinerary for conflicts and unrealistic elements"""
+    try:
+        session_id = request.get("session_id")
+        itinerary = request.get("itinerary", [])
+        
+        logger.info(f"🚨 Checking conflicts for {len(itinerary)}-day itinerary")
+        
+        conflict_results = await conflict_detector.check_itinerary_conflicts(
+            session_id=session_id,
+            itinerary=itinerary
+        )
+        
+        # Get resolution suggestions if conflicts exist
+        resolutions = []
+        if conflict_results["has_conflicts"]:
+            resolutions = await conflict_detector.suggest_conflict_resolutions(
+                session_id=session_id,
+                conflicts=conflict_results["conflicts"],
+                itinerary=itinerary
+            )
+        
+        return {
+            **conflict_results,
+            "resolutions": resolutions,
+            "session_id": session_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Conflict check error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/edit-itinerary")
+async def edit_itinerary(request: dict):
+    """Handle itinerary editing operations"""
+    try:
+        session_id = request.get("session_id")
+        operation = request.get("operation")  # 'reorder_days', 'move_activity', 'add_destination', 'remove_destination', 'lock_service'
+        itinerary = request.get("itinerary", [])
+        operation_data = request.get("operation_data", {})
+        
+        logger.info(f"✏️ Editing itinerary: {operation}")
+        
+        # Handle different edit operations
+        if operation == "reorder_days":
+            new_order = operation_data.get("new_order", [])
+            edited_itinerary = [itinerary[i] for i in new_order if i < len(itinerary)]
+            
+        elif operation == "move_activity":
+            from_day = operation_data.get("from_day")
+            to_day = operation_data.get("to_day")
+            activity_index = operation_data.get("activity_index")
+            
+            edited_itinerary = itinerary.copy()
+            if from_day < len(edited_itinerary) and to_day < len(edited_itinerary):
+                activity = edited_itinerary[from_day]["activities"].pop(activity_index)
+                edited_itinerary[to_day]["activities"].append(activity)
+                
+        elif operation == "add_destination":
+            new_destination = operation_data.get("destination")
+            day_index = operation_data.get("day_index", len(itinerary))
+            
+            new_day = {
+                "day": day_index + 1,
+                "date": operation_data.get("date"),
+                "title": f"Day {day_index + 1}: {new_destination} Exploration",
+                "activities": []
+            }
+            
+            edited_itinerary = itinerary.copy()
+            edited_itinerary.insert(day_index, new_day)
+            
+        elif operation == "remove_destination":
+            day_index = operation_data.get("day_index")
+            edited_itinerary = [day for i, day in enumerate(itinerary) if i != day_index]
+            
+        elif operation == "lock_service":
+            service_id = operation_data.get("service_id")
+            day_index = operation_data.get("day_index")
+            activity_index = operation_data.get("activity_index")
+            
+            edited_itinerary = itinerary.copy()
+            if day_index < len(edited_itinerary) and activity_index < len(edited_itinerary[day_index]["activities"]):
+                edited_itinerary[day_index]["activities"][activity_index]["locked"] = True
+                edited_itinerary[day_index]["activities"][activity_index]["locked_service_id"] = service_id
+        
+        else:
+            raise HTTPException(status_code=400, detail=f"Unknown operation: {operation}")
+        
+        # Check conflicts in edited itinerary
+        conflict_check = await conflict_detector.check_itinerary_conflicts(session_id, edited_itinerary)
+        
+        return {
+            "edited_itinerary": edited_itinerary,
+            "operation": operation,
+            "conflict_check": conflict_check,
+            "success": True,
+            "session_id": session_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Itinerary edit error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/api/customize-itinerary")
 async def customize_itinerary_endpoint(request: CustomizationRequest):
     """Customize itinerary endpoint"""
