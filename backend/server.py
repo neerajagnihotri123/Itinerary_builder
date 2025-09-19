@@ -479,33 +479,7 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                                         "category": act_cat,
                                         "duration": "2-3 hours"
                                     })
-                        elif variant_key == 'balanced':
-                            activities = [
-                                {
-                                    "time": "9:00 AM",
-                                    "title": f"Morning Sightseeing - {highlights[0] if day_num == 1 else f'Day {day_num} Landmarks'}",
-                                    "description": f"Visit famous {highlights[0].lower() if day_num == 1 else 'landmarks and attractions'} in {destination}",
-                                    "location": f"{destination} Historic District",
-                                    "category": "sightseeing",
-                                    "duration": "3 hours"
-                                },
-                                {
-                                    "time": "2:00 PM",
-                                    "title": f"Afternoon Culture - {highlights[1] if day_num <= len(highlights) else f'Museums & Art'}",
-                                    "description": f"Immerse in {highlights[1].lower() if day_num <= len(highlights) else 'local culture and heritage'}",
-                                    "location": f"{destination} Museum Quarter",
-                                    "category": "culture", 
-                                    "duration": "2 hours"
-                                },
-                                {
-                                    "time": "5:30 PM",
-                                    "title": f"Evening Relaxation - {highlights[2] if day_num <= len(highlights) else f'Local Markets'}",
-                                    "description": f"Enjoy {highlights[2].lower() if day_num <= len(highlights) else 'shopping and local experiences'}",
-                                    "location": f"{destination} Market Area",
-                                    "category": "shopping",
-                                    "duration": "2.5 hours"
-                                }
-                            ]
+
                         else:  # luxury
                             activities = [
                                 {
