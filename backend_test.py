@@ -1482,6 +1482,31 @@ class TravelloBackendTester:
         
         return passed, total
 
+    def test_dynamic_pricing_checkout_system(self):
+        """Test the new Dynamic Pricing & Checkout system from review request"""
+        print(f"\n🚀 Testing Dynamic Pricing & Checkout System")
+        print("=" * 80)
+        
+        # Test sequence for Dynamic Pricing & Checkout system
+        tests = [
+            ("Image Proxy Endpoint", self.test_image_proxy_endpoint),
+            ("Dynamic Pricing API", self.test_dynamic_pricing_api),
+            ("Checkout Cart Creation", self.test_checkout_cart_creation),
+            ("Mock Checkout Process", self.test_mock_checkout_process),
+            ("Complete Pricing & Checkout Flow", self.test_complete_pricing_checkout_flow)
+        ]
+        
+        passed = 0
+        total = len(tests)
+        
+        for test_name, test_func in tests:
+            print(f"\n🔍 Running {test_name}...")
+            if test_func():
+                passed += 1
+            time.sleep(2)  # Brief pause between tests
+        
+        return passed, total
+
     def print_summary(self):
         """Print test summary"""
         print("\n" + "=" * 80)
