@@ -1030,13 +1030,88 @@ async def image_proxy(url: str):
     except Exception as e:
         logger.error(f"Image proxy error: {e}")
         return Response(content=b"", status_code=404)
-        booking_details = request.booking_details
+
+@app.post("/api/dynamic-pricing")
+async def calculate_dynamic_pricing(request: dict):
+    """Calculate dynamic pricing with competitor analysis and profile discounts"""
+    try:
+        session_id = request.get("session_id")
+        itinerary = request.get("itinerary", [])
+        traveler_profile = request.get("traveler_profile", {})
+        travel_dates = request.get("travel_dates", {})
         
-        logger.info(f"🔗 External booking for session {session_id}")
+        logger.info(f"💰 Calculating dynamic pricing for {len(itinerary)}-day itinerary")
         
-        result = await booking_agent.handle_booking(session_id, booking_details)
+        pricing_data = await dynamic_pricing_agent.calculate_dynamic_pricing(
+            session_id=session_id,
+            itinerary=itinerary,
+            traveler_profile=traveler_profile,
+            travel_dates=travel_dates
+        )
         
-        return result
+        return {**pricing_data, "session_id": session_id}
+        
+    except Exception as e:
+        logger.error(f"Dynamic pricing error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/create-checkout-cart")
+async def create_checkout_cart(request: dict):
+    """Create checkout cart with bundled services"""
+    try:
+        session_id = request.get("session_id")
+        pricing_data = request.get("pricing_data", {})
+        itinerary = request.get("itinerary", [])
+        user_details = request.get("user_details", {})
+        
+        logger.info(f"🛒 Creating checkout cart for session {session_id}")
+        
+        cart = await dynamic_pricing_agent.create_checkout_cart(
+            session_id=session_id,
+            pricing_data=pricing_data,
+            itinerary=itinerary,
+            user_details=user_details
+        )
+        
+        return cart
+        
+    except Exception as e:
+        logger.error(f"Checkout cart creation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/mock-checkout")
+async def mock_checkout_process(request: dict):
+    """Mock checkout process for POC"""
+    try:
+        cart_id = request.get("cart_id")
+        payment_method = request.get("payment_method", "card")
+        
+        logger.info(f"💳 Processing mock checkout for cart {cart_id}")
+        
+        # Simulate checkout process
+        checkout_result = {
+            "checkout_id": f"checkout_{cart_id}_{int(time.time())}",
+            "cart_id": cart_id,
+            "status": "completed",
+            "payment_method": payment_method,
+            "confirmation_code": f"TRV{uuid.uuid4().hex[:8].upper()}",
+            "booking_references": [
+                f"HTL{uuid.uuid4().hex[:6].upper()}",  # Hotel booking
+                f"ACT{uuid.uuid4().hex[:6].upper()}",  # Activities booking
+                f"TRN{uuid.uuid4().hex[:6].upper()}"   # Transport booking
+            ],
+            "total_paid": request.get("total_amount", 0),
+            "payment_status": "confirmed",
+            "estimated_processing_time": "2-4 hours",
+            "customer_support": "+91-800-123-4567",
+            "processed_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        return checkout_result
+        
+    except Exception as e:
+        logger.error(f"Mock checkout error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         
     except Exception as e:
         logger.error(f"External booking error: {e}")
