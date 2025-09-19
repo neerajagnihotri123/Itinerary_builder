@@ -315,7 +315,7 @@ Always create comprehensive, actionable itineraries that travelers can actually 
                 location=f"Central {destination}",
                 description=f"Guided exploration of {destination}'s main attractions",
                 cost=3000,
-                image=f"https://images.unsplash.com/800x400/?explore-{destination.lower()}",
+                image=self._get_image_url_for_activity(f"Explore {destination}", f"Central {destination}", "sightseeing"),
                 sustainability_tags=["local_guides"]
             ),
             Activity(
