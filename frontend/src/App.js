@@ -188,7 +188,243 @@ const ConflictWarnings = ({ conflicts, warnings, onResolve }) => {
   );
 };
 
-// Interactive Trip Map Component
+// Dynamic Pricing Breakdown Component
+const PricingBreakdown = ({ pricingData, onCheckout, isLoading = false }) => {
+  if (!pricingData) return null;
+
+  const {
+    base_total,
+    adjusted_total,
+    final_total,
+    total_savings,
+    line_items = [],
+    discounts_applied = [],
+    demand_analysis = {},
+    competitor_comparison = {},
+    justification = ""
+  } = pricingData;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-lg">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-bold">Smart Pricing Breakdown</h3>
+            <p className="text-green-100 text-sm mt-1">
+              {justification || "Dynamic pricing applied based on current market conditions"}
+            </p>
+          </div>
+          {total_savings > 0 && (
+            <div className="text-right">
+              <div className="text-2xl font-bold">₹{total_savings.toLocaleString()}</div>
+              <div className="text-green-100 text-sm">You Save</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Line Items */}
+      <div className="p-6">
+        <h4 className="font-semibold text-slate-900 mb-4">Price Components</h4>
+        <div className="space-y-3">
+          {line_items.map((item, index) => (
+            <div key={item.id || index} className="flex items-center justify-between py-2 border-b border-slate-100">
+              <div className="flex-1">
+                <div className="font-medium text-slate-900">{item.title}</div>
+                <div className="text-sm text-slate-600 capitalize">
+                  {item.category?.replace('_', ' ')}
+                  {item.demand_level && (
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
+                      item.demand_level === 'high' ? 'bg-red-100 text-red-700' :
+                      item.demand_level === 'low' ? 'bg-green-100 text-green-700' :
+                      'bg-yellow-100 text-yellow-700'
+                    }`}>
+                      {item.demand_level} demand
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="text-right">
+                {item.base_price !== item.current_price && (
+                  <div className="text-xs text-slate-500 line-through">₹{item.base_price?.toLocaleString()}</div>
+                )}
+                <div className="font-semibold text-slate-900">₹{item.current_price?.toLocaleString()}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Discounts */}
+        {discounts_applied.length > 0 && (
+          <div className="mt-6 p-4 bg-green-50 rounded-xl">
+            <h5 className="font-semibold text-green-800 mb-2">Discounts Applied</h5>
+            {discounts_applied.map((discount, index) => (
+              <div key={index} className="flex items-center justify-between text-sm">
+                <span className="text-green-700">{discount.description}</span>
+                <span className="font-semibold text-green-700">-₹{discount.amount?.toLocaleString()}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Total Summary */}
+        <div className="mt-6 pt-4 border-t border-slate-200">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-slate-600">
+              <span>Subtotal</span>
+              <span>₹{base_total?.toLocaleString()}</span>
+            </div>
+            {adjusted_total !== base_total && (
+              <div className="flex justify-between text-sm text-slate-600">
+                <span>Market Adjustments</span>
+                <span>₹{(adjusted_total - base_total)?.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-lg font-bold text-slate-900 pt-2 border-t">
+              <span>Total Amount</span>
+              <span>₹{final_total?.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Checkout Button */}
+        <button
+          onClick={onCheckout}
+          disabled={isLoading}
+          className="w-full mt-6 bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-xl hover:from-orange-700 hover:to-orange-800 transform hover:scale-[1.02] transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center gap-2">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Processing...
+            </div>
+          ) : (
+            <>🚀 Proceed to Checkout</>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Checkout Modal Component
+const CheckoutModal = ({ isOpen, onClose, cartData, onPayment }) => {
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handlePayment = async () => {
+    setIsProcessing(true);
+    try {
+      await onPayment(paymentMethod);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (!isOpen || !cartData) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-200">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900">Checkout</h2>
+            <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-lg">
+              <X className="w-5 h-5 text-slate-600" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          {/* Order Summary */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-slate-900 mb-3">Order Summary</h3>
+            <div className="bg-slate-50 rounded-xl p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-slate-600">Trip Duration</span>
+                <span className="font-medium">{cartData.itinerary_summary?.total_days} days</span>
+              </div>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-slate-600">Total Activities</span>
+                <span className="font-medium">{cartData.itinerary_summary?.total_activities}</span>
+              </div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-slate-600">Destinations</span>
+                <span className="font-medium">{cartData.itinerary_summary?.destinations?.length}</span>
+              </div>
+              <div className="border-t border-slate-200 pt-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span>Total Amount</span>
+                  <span>₹{cartData.payment_summary?.total?.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Method */}
+          <div className="mb-6">
+            <h3 className="font-semibold text-slate-900 mb-3">Payment Method</h3>
+            <div className="space-y-3">
+              {[
+                { id: 'card', label: 'Credit/Debit Card', icon: '💳' },
+                { id: 'upi', label: 'UPI Payment', icon: '📱' },
+                { id: 'netbanking', label: 'Net Banking', icon: '🏦' },
+                { id: 'wallet', label: 'Digital Wallet', icon: '👛' }
+              ].map((method) => (
+                <label key={method.id} className="flex items-center p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={method.id}
+                    checked={paymentMethod === method.id}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="mr-3"
+                  />
+                  <span className="mr-2">{method.icon}</span>
+                  <span className="font-medium">{method.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Terms */}
+          <div className="mb-6 p-4 bg-yellow-50 rounded-xl">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> This is a demo checkout. No actual payment will be processed. 
+              You'll receive booking confirmations for testing purposes.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+            <button
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handlePayment}
+              disabled={isProcessing}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:to-green-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isProcessing ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Processing...
+                </div>
+              ) : (
+                `Pay ₹${cartData.payment_summary?.total?.toLocaleString()}`
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 const InteractiveTripMap = ({ selectedVariant, tripDetails }) => {
   const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 }); // India center
   const [showNavigation, setShowNavigation] = useState(false);
