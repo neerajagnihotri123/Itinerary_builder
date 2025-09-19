@@ -3689,21 +3689,27 @@ function App() {
     try {
       console.log('📡 Making API call...');
       
+      console.log('🌐 Sending message to backend:', currentInput);
+      console.log('🔗 Backend URL:', BACKEND_URL);
+      console.log('📡 Full API URL:', `${BACKEND_URL}/api/chat`);
+      
       const response = await Promise.race([
         fetch(`${BACKEND_URL}/api/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json',
           },
           body: JSON.stringify({
             message: currentInput,
             session_id: sessionId,
             user_profile: userProfile,
             trip_details: tripDetails
-          })
+          }),
+          timeout: 30000 // 30 second timeout
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout after 20 seconds')), 20000) // Reduced from 45s to 20s
+          setTimeout(() => reject(new Error('Request timeout after 30 seconds - Backend may be processing')), 30000)
         )
       ]);
 
