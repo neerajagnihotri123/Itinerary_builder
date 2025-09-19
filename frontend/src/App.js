@@ -3250,6 +3250,18 @@ function App() {
       checkItineraryConflicts(variantWithCorrectDuration.itinerary);
     }
     
+    // Calculate dynamic pricing
+    if (variantWithCorrectDuration.itinerary && tripDetails.startDate) {
+      calculateDynamicPricing(
+        variantWithCorrectDuration.itinerary,
+        travelerProfile,
+        {
+          start_date: tripDetails.startDate,
+          end_date: tripDetails.endDate
+        }
+      );
+    }
+    
     // Add confirmation message to chat
     const message = {
       id: Date.now().toString(),
