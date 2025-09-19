@@ -3780,7 +3780,7 @@ function App() {
           })
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout after 45 seconds')), 45000)
+          setTimeout(() => reject(new Error('Request timeout after 20 seconds')), 20000) // Reduced from 45s to 20s
         )
       ]);
 
