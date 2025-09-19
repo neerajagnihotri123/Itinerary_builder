@@ -4658,12 +4658,46 @@ function App() {
                     />
                   </div>
 
-                  {/* Conflict Warnings */}
-                  <ConflictWarnings 
-                    conflicts={conflicts} 
-                    warnings={warnings} 
-                    onResolve={handleResolveConflicts}
-                  />
+                  {/* Conflict Warnings - Always show for testing, or when conflicts exist */}
+                  {(conflicts?.length > 0 || warnings?.length > 0) ? (
+                    <ConflictWarnings 
+                      conflicts={conflicts} 
+                      warnings={warnings} 
+                      onResolve={handleResolveConflicts}
+                    />
+                  ) : (
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-green-600">✅</span>
+                        <h3 className="font-semibold text-green-800">No Conflicts Detected</h3>
+                      </div>
+                      <p className="text-green-700 text-sm">Your itinerary looks great! All activities are properly scheduled.</p>
+                      <button
+                        onClick={() => {
+                          // Add test conflicts for demo
+                          setConflicts([
+                            {
+                              type: "time_overlap",
+                              day: 1,
+                              message: "Activity 'Beach Visit' overlaps with 'Water Sports' on Day 1",
+                              suggestion: "Adjust timing or reduce duration of activities"
+                            }
+                          ]);
+                          setWarnings([
+                            {
+                              type: "busy_day",
+                              day: 1,
+                              message: "Day 1 has 8.5 hours of activities (quite busy)",
+                              suggestion: "Consider adding rest time between activities"
+                            }
+                          ]);
+                        }}
+                        className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        🧪 Test Conflict Detection (Demo)
+                      </button>
+                    </div>
+                  )}
 
                   {/* Detailed Day-by-Day Itinerary */}
                   <div className="space-y-6">
