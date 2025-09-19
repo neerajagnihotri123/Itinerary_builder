@@ -25,7 +25,7 @@ app = FastAPI(title="Travello.ai Backend", version="2.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://ai-concierge-6.preview.emergentagent.com"],
+    allow_origins=["http://localhost:3000", "https://trip-architect-4.preview.emergentagent.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
