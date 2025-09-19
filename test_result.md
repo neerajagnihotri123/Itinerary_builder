@@ -83,6 +83,54 @@ backend:
         agent: "testing"
         comment: "✅ Destination extraction works correctly. 'Goa' properly extracted from trip planning messages and included in responses and UI actions."
 
+  - task: "Service Selection API"
+    implemented: true
+    working: false
+    file: "backend/agents/service_selection_agent.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ Service Selection API (/api/service-recommendations) experiencing timeout issues. LLM processing for service recommendations takes longer than 60 seconds, causing client timeouts. Backend logs show successful LLM calls but response time needs optimization. Core functionality works but performance needs improvement."
+
+  - task: "Conflict Detection API"
+    implemented: true
+    working: true
+    file: "backend/agents/conflict_detection_agent.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Conflict Detection API (/api/conflict-check) working perfectly. Successfully detected 3 conflicts and 2 warnings in test itinerary with time overlaps and scheduling issues. Feasibility score calculation working (0.47 for problematic itinerary). LLM analysis integration functional."
+
+  - task: "Itinerary Editing API"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Itinerary Editing API (/api/edit-itinerary) fully functional. All 3 operations tested successfully: move_activity (relocates activities between days), add_destination (adds new day to itinerary), lock_service (locks specific services). Conflict checking integration working after edits."
+
+  - task: "Advanced Features Integration"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ Full integration flow working: Chat → Itinerary Generation (3 variants) → Service Recommendations (10 services) → Conflict Detection (feasibility scoring). End-to-end advanced features pipeline functional with proper data flow between agents."
+
 frontend:
   - task: "Frontend Chat Functionality"
     implemented: true
