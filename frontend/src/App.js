@@ -4986,6 +4986,23 @@ function App() {
 
         {/* Right Panel - Feature Canvas */}
         <div className="w-[52%] flex flex-col bg-gradient-to-br from-white/40 to-white/60 backdrop-blur-xl relative z-10">
+          
+          {/* Top Right Corner - Your Trips Button */}
+          {tripHistory.length > 0 && (
+            <div className="absolute top-4 right-4 z-50">
+              <button
+                onClick={() => setShowTripHistory(true)}
+                className="bg-white/90 backdrop-blur-sm border border-slate-200 hover:border-blue-300 px-4 py-2 rounded-xl text-sm font-medium text-slate-700 hover:text-blue-600 transition-all duration-200 shadow-sm hover:shadow-lg flex items-center gap-2"
+              >
+                <Route className="w-4 h-4" />
+                Your Trips
+                <span className="bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                  {tripHistory.length}
+                </span>
+              </button>
+            </div>
+          )}
+          
           {rightPanelContent === 'itinerary' ? (
             /* Professional Itinerary View - Mindtrip.ai Style */
             <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
