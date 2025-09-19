@@ -233,10 +233,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Service Selection API"
-    - "Conflict Detection API" 
-    - "Itinerary Editing API"
-    - "Advanced Features Integration"
+    - "Image Proxy Endpoint"
+    - "Dynamic Pricing API" 
+    - "Checkout Cart Creation"
+    - "Mock Checkout Process"
+    - "Complete Pricing & Checkout Flow"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
