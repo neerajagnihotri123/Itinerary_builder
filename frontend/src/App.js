@@ -4402,6 +4402,9 @@ function App() {
                     <div className="text-center">
                       <div className="text-3xl font-bold text-green-600">₹{(selectedVariant.price || 0).toLocaleString()}</div>
                       <div className="text-sm text-slate-600">Total Cost</div>
+                      {selectedVariant.price_per_day && (
+                        <div className="text-xs text-slate-500 mt-1">₹{selectedVariant.price_per_day.toLocaleString()} per day</div>
+                      )}
                     </div>
                   </div>
 
