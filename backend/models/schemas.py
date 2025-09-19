@@ -16,6 +16,8 @@ class PersonaType(str, Enum):
     ECO_CONSCIOUS = "eco_conscious_traveler"
     FAMILY_ORIENTED = "family_oriented"
     BUSINESS_TRAVELER = "business_traveler"
+    BALANCED_TRAVELER = "balanced_traveler"  # Added missing persona type
+    GENERAL_TRAVELER = "general_traveler"    # Added fallback persona type
 
 class ItineraryVariantType(str, Enum):
     """Itinerary variant types"""
