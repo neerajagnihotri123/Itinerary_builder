@@ -221,123 +221,57 @@ Always provide helpful, specific, and engaging responses that move the conversat
     async def _llm_intent_analysis(self, message: str, profile: Dict, trip_details: Dict) -> Dict[str, Any]:
         """LLM-based intent analysis with optimized prompt"""
         try:
-            context = f"""
-            You are an expert at analyzing travel-related messages. Analyze this user message carefully:
+            # Simplified, faster prompt for LLM
+            prompt = f"""Analyze this travel message in one sentence:
+Message: "{message}"
+Profile: {len(profile)} fields, Trip: {bool(trip_details)}
+
+Reply ONLY with JSON:
+{{"intent": "trip_planning|accommodation|general|profile_continuation", "confidence": 0.0-1.0, "destination": "city if mentioned or null"}}
+
+Rules:
+- trip_planning: mentions planning/visiting destinations  
+- accommodation: asks about hotels/stays
+- general: greetings, questions, unclear
+- profile_continuation: answering travel preferences"""
+
+            llm_client = self._get_llm_client("intent_analysis")
+            response = await llm_client.send_message(UserMessage(text=prompt))
             
-            User message: "{message}"
-            Current profile: {len(profile)} fields collected
-            Trip details: {trip_details}
-            
-            STRICT CLASSIFICATION RULES:
-            
-            1. "trip_planning" ONLY if:
-               - User explicitly mentions planning/booking a trip
-               - Mentions specific destinations with travel intent
-               - Asks about itineraries, travel plans, or trip advice
-               - Examples: "plan a trip to goa", "I want to visit Paris", "help me plan my vacation"
-            
-            2. "accommodation" ONLY if:
-               - Specifically asks about hotels, resorts, stays, lodging
-               - Examples: "find hotels in Mumbai", "best resorts in Goa"
-            
-            3. "general" for:
-               - Greetings: "hello", "hi", "good morning"
-               - General questions: "what can you do?", "how can you help?"
-               - Non-travel topics or unclear messages
-               - Casual conversation
-            
-            4. "profile_continuation" ONLY if:
-               - User is providing travel preferences/details
-               - Answering follow-up questions about their travel style
-            
-            BE CONSERVATIVE - when in doubt, classify as "general" rather than "trip_planning".
-            
-            Extract information:
-            - destination (only if clearly mentioned with travel intent)
-            - travel_style, budget_preference, group_info if mentioned
-            
-            Respond in JSON:
-            {{
-                "intent": "trip_planning|accommodation|general|profile_continuation",
-                "confidence": 0.0-1.0,
-                "destination": "extracted destination or null",
-                "travel_style": "extracted style or null", 
-                "budget_preference": "luxury|mid-range|budget or null",
-                "group_info": "extracted group info or null",
-                "reasoning": "detailed explanation of why this classification"
-            }}
-            """
-            
-            user_msg = UserMessage(text=context)
-            llm_client = self._get_llm_client("temp_session")  # Use temp session for intent analysis
-            response = await llm_client.send_message(user_msg)
-            
-            # Parse JSON response (handle markdown-wrapped JSON)
+            # Fast JSON parsing
             import json
             import re
-            try:
-                # Remove markdown code blocks if present
-                json_text = response
-                if '```json' in json_text:
-                    json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
-                    if json_match:
-                        json_text = json_match.group(1)
-                elif '```' in json_text:
-                    json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
-                    if json_match:
-                        json_text = json_match.group(1)
+            
+            json_match = re.search(r'\{[^{}]*\}', response)
+            if json_match:
+                result = json.loads(json_match.group(0))
                 
-                result = json.loads(json_text.strip())
+                # Ensure required fields
+                result.setdefault("intent", "general")
+                result.setdefault("confidence", 0.7)
+                result.setdefault("reasoning", "LLM classification")
+                result.setdefault("extracted_info", {})
                 
-                # Additional validation - be conservative
-                if result.get("intent") == "trip_planning":
-                    # Double-check if it's really trip planning
-                    message_lower = message.lower()
-                    trip_keywords = ["plan", "trip", "travel", "visit", "vacation", "itinerary", "tour"]
-                    
-                    if not any(keyword in message_lower for keyword in trip_keywords):
-                        # Override to general if no clear trip planning keywords
-                        result["intent"] = "general"
-                        result["reasoning"] = "Overridden to general - no clear trip planning intent"
+                if result.get("destination"):
+                    result["extracted_info"]["destination"] = result["destination"]
                 
                 return result
-                
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON parsing failed: {e}, response: {response}")
-                # Improved fallback parsing
-                message_lower = message.lower()
-                
-                # Check for clear trip planning intent
-                if any(phrase in message_lower for phrase in [
-                    "plan a trip", "plan my trip", "travel to", "visit to", 
-                    "vacation to", "tour to", "itinerary for"
-                ]):
-                    intent = "trip_planning"
-                # Check for accommodation
-                elif any(word in message_lower for word in ["hotel", "resort", "accommodation", "stay", "lodge"]):
-                    intent = "accommodation"
-                # Check for greetings and general questions
-                elif any(word in message_lower for word in [
-                    "hello", "hi", "hey", "good morning", "good evening",
-                    "what can you", "how can you", "what do you", "help me with"
-                ]):
-                    intent = "general"
-                else:
-                    intent = "general"  # Default to general when uncertain
-                
-                return {
-                    "intent": intent,
-                    "confidence": 0.7,
-                    "destination": self._extract_destination(message),
-                    "reasoning": "Fallback analysis - conservative classification"
-                }
+            
+            # Fallback if JSON parsing fails
+            return {
+                "intent": "general",
+                "confidence": 0.6,
+                "reasoning": "JSON parsing failed",
+                "extracted_info": {}
+            }
             
         except Exception as e:
-            logger.error(f"Intent analysis error: {e}")
+            logger.error(f"LLM intent analysis error: {e}")
             return {
                 "intent": "general", 
-                "confidence": 0.5, 
-                "reasoning": f"Error occurred: {str(e)}"
+                "confidence": 0.5,
+                "reasoning": f"LLM error: {str(e)[:50]}",
+                "extracted_info": {}
             }
 
     async def _handle_trip_planning(self, session_id: str, message: str, intent_analysis: Dict) -> ChatResponse:
