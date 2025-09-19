@@ -425,10 +425,12 @@ const CheckoutModal = ({ isOpen, onClose, cartData, onPayment }) => {
     </div>
   );
 };
-const InteractiveTripMap = ({ selectedVariant, tripDetails }) => {
+const InteractiveTripMap = ({ selectedVariant, tripDetails, onLocationClick }) => {
   const [mapCenter, setMapCenter] = useState({ lat: 20.5937, lng: 78.9629 }); // India center
   const [showNavigation, setShowNavigation] = useState(false);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [mapView, setMapView] = useState('overview'); // 'overview', 'satellite', 'terrain'
   
   useEffect(() => {
     // Get user's current location for live navigation
@@ -445,50 +447,267 @@ const InteractiveTripMap = ({ selectedVariant, tripDetails }) => {
     }
   }, []);
   
+  // Enhanced coordinate mapping with more detailed locations
+  const getLocationCoordinates = (location) => {
+    const coordinates = {
+      // Goa locations
+      'Goa': { lat: 15.2993, lng: 74.1240 },
+      'Panaji': { lat: 15.4909, lng: 73.8278 },
+      'Calangute': { lat: 15.5439, lng: 73.7553 },
+      'Baga': { lat: 15.5565, lng: 73.7516 },
+      'Anjuna': { lat: 15.5735, lng: 73.7405 },
+      
+      // Kerala locations
+      'Kerala': { lat: 10.8505, lng: 76.2711 },
+      'Kochi': { lat: 9.9312, lng: 76.2673 },
+      'Munnar': { lat: 10.0889, lng: 77.0595 },
+      'Alleppey': { lat: 9.4981, lng: 76.3388 },
+      'Wayanad': { lat: 11.6054, lng: 76.0839 },
+      
+      // Other major destinations
+      'Mumbai': { lat: 19.0760, lng: 72.8777 },
+      'Delhi': { lat: 28.7041, lng: 77.1025 },
+      'Rajasthan': { lat: 27.0238, lng: 74.2179 },
+      'Jaipur': { lat: 26.9124, lng: 75.7873 },
+      'Udaipur': { lat: 24.5854, lng: 73.7125 },
+      'Chennai': { lat: 13.0827, lng: 80.2707 },
+      'Bangalore': { lat: 12.9716, lng: 77.5946 },
+      'Rishikesh': { lat: 30.0869, lng: 78.2676 },
+      'Manali': { lat: 32.2432, lng: 77.1892 },
+      'Shimla': { lat: 31.1048, lng: 77.1734 }
+    };
+    
+    // Find exact match first, then partial match
+    let locationKey = Object.keys(coordinates).find(key => 
+      location.toLowerCase() === key.toLowerCase()
+    );
+    
+    if (!locationKey) {
+      locationKey = Object.keys(coordinates).find(key => 
+        location.toLowerCase().includes(key.toLowerCase()) || 
+        key.toLowerCase().includes(location.toLowerCase())
+      );
+    }
+    
+    return locationKey ? coordinates[locationKey] : { lat: 20.5937, lng: 78.9629 };
+  };
+  
   // Generate trip route points from itinerary
   const getRoutePoints = () => {
     if (!selectedVariant?.itinerary) return [];
     
     const points = [];
-    selectedVariant.itinerary.forEach((day, index) => {
+    selectedVariant.itinerary.forEach((day, dayIndex) => {
       day.activities?.forEach((activity, actIndex) => {
-        // Simulate coordinates based on location names (in real app, use geocoding API)
-        const baseCoords = getLocationCoordinates(activity.location);
+        const coordinates = getLocationCoordinates(activity.location || tripDetails?.destination || 'India');
         points.push({
           id: `${day.day}-${actIndex}`,
           day: day.day,
+          dayIndex: dayIndex,
+          activityIndex: actIndex,
           title: activity.title,
-          location: activity.location,
+          location: activity.location || tripDetails?.destination,
           time: activity.time,
-          coordinates: baseCoords,
-          category: activity.category
+          duration: activity.duration,
+          description: activity.description,
+          coordinates: coordinates,
+          category: activity.category,
+          image: activity.image
         });
       });
     });
     return points;
   };
   
-  // Simple coordinate mapping (in production, use real geocoding)
-  const getLocationCoordinates = (location) => {
-    const coordinates = {
-      'Goa': { lat: 15.2993, lng: 74.1240 },
-      'Kerala': { lat: 10.8505, lng: 76.2711 },
-      'Mumbai': { lat: 19.0760, lng: 72.8777 },
-      'Delhi': { lat: 28.7041, lng: 77.1025 },
-      'Rajasthan': { lat: 27.0238, lng: 74.2179 },
-      'Chennai': { lat: 13.0827, lng: 80.2707 },
-      'Bangalore': { lat: 12.9716, lng: 77.5946 }
-    };
-    
-    // Find matching coordinate or return default
-    const locationKey = Object.keys(coordinates).find(key => 
-      location.toLowerCase().includes(key.toLowerCase())
-    );
-    
-    return locationKey ? coordinates[locationKey] : { lat: 20.5937, lng: 78.9629 };
+  const routePoints = getRoutePoints();
+  
+  const handlePointClick = (point) => {
+    setSelectedPoint(point);
+    setMapCenter(point.coordinates);
+    if (onLocationClick) {
+      onLocationClick(point);
+    }
   };
   
-  const routePoints = getRoutePoints();
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'adventure': '🏔️',
+      'culture': '🏛️',
+      'dining': '🍽️',
+      'accommodation': '🏨',
+      'transport': '🚗',
+      'nature': '🌿',
+      'beach': '🏖️',
+      'shopping': '🛍️',
+      'nightlife': '🌙'
+    };
+    return icons[category] || '📍';
+  };
+  
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      {/* Enhanced Map Header */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Route className="w-6 h-6" />
+            <div>
+              <h3 className="text-lg font-bold">Interactive Trip Map</h3>
+              <p className="text-blue-100 text-sm">
+                {selectedVariant ? `${selectedVariant.days} days • ${routePoints.length} locations` : 'Select an itinerary to view route'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <select 
+              value={mapView} 
+              onChange={(e) => setMapView(e.target.value)}
+              className="bg-blue-700 text-white text-sm rounded-lg px-2 py-1 border-0"
+            >
+              <option value="overview">Overview</option>
+              <option value="satellite">Satellite</option>
+              <option value="terrain">Terrain</option>
+            </select>
+            <button
+              onClick={() => setShowNavigation(!showNavigation)}
+              className={`p-2 rounded-lg transition-colors ${
+                showNavigation ? 'bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+              title="Toggle Live Navigation"
+            >
+              <Navigation className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Enhanced Map Container */}
+      <div className="relative h-96 bg-gradient-to-br from-blue-50 to-green-50">
+        {selectedVariant ? (
+          <div className="w-full h-full p-4">
+            {/* Map Legend */}
+            <div className="absolute top-4 left-4 bg-white rounded-lg p-3 shadow-lg z-10 max-w-xs">
+              <h4 className="font-semibold text-slate-800 mb-2 text-sm">Trip Overview</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span>Activities</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span>Selected</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-red-500" />
+                  <span>Your Location</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Route className="w-3 h-3 text-purple-500" />
+                  <span>Route</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Live Navigation Panel */}
+            {showNavigation && currentLocation && (
+              <div className="absolute top-4 right-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg p-3 shadow-lg z-10 max-w-xs">
+                <div className="flex items-center gap-2 mb-2">
+                  <Navigation className="w-4 h-4" />
+                  <span className="text-sm font-bold">Live Navigation</span>
+                </div>
+                <div className="text-xs text-green-100 space-y-1">
+                  <p>📍 Current: {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}</p>
+                  <p>🎯 Next: {routePoints[0]?.location || 'Destination'}</p>
+                  <p>⏱️ Est. Time: {routePoints[0]?.time || 'TBD'}</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Interactive Map Grid */}
+            <div className="mt-16 grid grid-cols-4 gap-2 h-full">
+              {routePoints.map((point, index) => {
+                const isSelected = selectedPoint?.id === point.id;
+                const dayColor = `hsl(${(point.day * 60) % 360}, 70%, 50%)`;
+                
+                return (
+                  <div
+                    key={point.id}
+                    onClick={() => handlePointClick(point)}
+                    className={`cursor-pointer rounded-xl p-3 transition-all duration-200 hover:scale-105 ${
+                      isSelected 
+                        ? 'bg-green-500 text-white shadow-lg scale-105' 
+                        : 'bg-white hover:bg-slate-50 shadow-md'
+                    }`}
+                    style={{
+                      gridColumn: Math.floor(index % 4) + 1,
+                      gridRow: Math.floor(index / 4) + 1,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div 
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white`}
+                        style={{ backgroundColor: isSelected ? 'rgba(255,255,255,0.3)' : dayColor }}
+                      >
+                        {point.day}
+                      </div>
+                      <span className="text-lg">{getCategoryIcon(point.category)}</span>
+                    </div>
+                    <h5 className={`text-xs font-semibold truncate ${isSelected ? 'text-white' : 'text-slate-900'}`}>
+                      {point.title}
+                    </h5>
+                    <p className={`text-xs truncate ${isSelected ? 'text-green-100' : 'text-slate-600'}`}>
+                      {point.time} • {point.location}
+                    </p>
+                    <div className="mt-1 text-xs opacity-75">
+                      📍 {point.coordinates.lat.toFixed(2)}, {point.coordinates.lng.toFixed(2)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Selected Point Details */}
+            {selectedPoint && (
+              <div className="absolute bottom-4 left-4 right-4 bg-white rounded-xl p-4 shadow-lg border">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">{getCategoryIcon(selectedPoint.category)}</span>
+                      <h4 className="font-bold text-slate-900">{selectedPoint.title}</h4>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        Day {selectedPoint.day}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-2">{selectedPoint.description}</p>
+                    <div className="flex items-center gap-4 text-xs text-slate-500">
+                      <span>📍 {selectedPoint.location}</span>
+                      <span>⏰ {selectedPoint.time}</span>
+                      <span>⏱️ {selectedPoint.duration}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedPoint(null)}
+                    className="p-1 hover:bg-slate-100 rounded"
+                  >
+                    <X className="w-4 h-4 text-slate-400" />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <MapPin className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 font-medium">Select an itinerary to view interactive map</p>
+              <p className="text-slate-400 text-sm mt-1">Click on locations to explore details</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
   
   return (
     <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
