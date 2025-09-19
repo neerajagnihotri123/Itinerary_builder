@@ -27,13 +27,44 @@ class BaseItineraryAgent:
         # Subscribe to itinerary generation requests
         self.event_bus.subscribe(EventTypes.ITINERARY_GENERATION_REQUESTED, self._handle_generation_request)
     
-    def _get_llm_client(self, session_id: str) -> LlmChat:
-        """Get LLM client for session"""
-        return LlmChat(
-            api_key=self.api_key,
-            session_id=session_id,
-            system_message=self._get_system_message()
-        ).with_model("openai", "gpt-4o-mini")
+    def _get_image_url_for_activity(self, activity_title: str, location: str, category: str) -> str:
+        """Generate appropriate image URL for activity"""
+        # Category-based image mapping
+        image_mapping = {
+            'adventure': 'https://images.unsplash.com/photo-1544966503-7cc51d6d6657?w=400&h=300&fit=crop',
+            'culture': 'https://images.unsplash.com/photo-1564677051169-a46a76359e41?w=400&h=300&fit=crop', 
+            'dining': 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=300&fit=crop',
+            'accommodation': 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop',
+            'transport': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400&h=300&fit=crop',
+            'nature': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=300&fit=crop',
+            'beach': 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=400&h=300&fit=crop',
+            'shopping': 'https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=300&fit=crop',
+            'nightlife': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=300&fit=crop',
+            'sightseeing': 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6b?w=400&h=300&fit=crop'
+        }
+        
+        # Location-specific images
+        location_images = {
+            'goa': 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400&h=300&fit=crop',
+            'kerala': 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?w=400&h=300&fit=crop',
+            'mumbai': 'https://images.unsplash.com/photo-1595655406003-65bb1acc49ad?w=400&h=300&fit=crop',
+            'delhi': 'https://images.unsplash.com/photo-1587474260584-136574528ed5?w=400&h=300&fit=crop',
+            'rajasthan': 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400&h=300&fit=crop'
+        }
+        
+        # Try location first, then category, then default
+        location_key = location.lower() if location else ''
+        category_key = category.lower() if category else ''
+        
+        for loc in location_images:
+            if loc in location_key:
+                return location_images[loc]
+        
+        if category_key in image_mapping:
+            return image_mapping[category_key]
+        
+        # Default travel image
+        return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop'
     
     def _get_system_message(self) -> str:
         return f"""You are Travello.ai's {self.variant_type.value.title()} Itinerary Generation Agent. 
