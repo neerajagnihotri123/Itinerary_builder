@@ -729,24 +729,24 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                         "activities": daily_activities
                     })
                 
-                # Create variant object
+                # Create variant object with dynamic pricing
                 variant_config = {
                     'adventurer': {
                         'title': 'Adventure Explorer',
                         'description': f'Thrilling outdoor experiences and adventure sports in {destination}',
-                        'price': 25000 * days,
+                        'price': int(budget * days * 1.2),  # 20% premium for adventure
                         'highlights': ['Adventure Sports', 'Outdoor Activities', 'Scenic Exploration', 'Local Culture']
                     },
                     'balanced': {
                         'title': 'Balanced Explorer', 
                         'description': f'Perfect mix of adventure, culture, and relaxation in {destination}',
-                        'price': 20000 * days,
+                        'price': int(budget * days * 1.0),  # Standard pricing
                         'highlights': ['City Tours', 'Cultural Sites', 'Shopping', 'Local Cuisine']
                     },
                     'luxury': {
                         'title': 'Luxury Experience',
                         'description': f'Premium accommodations and exclusive experiences in {destination}',
-                        'price': 45000 * days,
+                        'price': int(budget * days * 1.8),  # 80% premium for luxury
                         'highlights': ['5-Star Experience', 'Fine Dining', 'Spa Treatments', 'Personal Service']
                     }
                 }
@@ -758,6 +758,7 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                     "persona": variant_type,
                     "days": days,
                     "price": variant_config[variant_type]['price'],
+                    "price_per_day": int(variant_config[variant_type]['price'] / days),  # Price breakdown
                     "total_activities": days * 3,  # 3 activities per day
                     "activity_types": variant_config[variant_type]['highlights'],
                     "highlights": variant_config[variant_type]['highlights'],
