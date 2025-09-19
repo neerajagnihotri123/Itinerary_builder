@@ -6462,6 +6462,14 @@ function App() {
         tripHistory={tripHistory}
         onSelectTrip={loadTripFromHistory}
       />
+      
+      {/* Request Callback Modal */}
+      <RequestCallbackModal
+        isOpen={showRequestCallback}
+        onClose={() => setShowRequestCallback(false)}
+        tripDetails={tripDetails}
+        selectedVariant={selectedVariant}
+      />
     </div>
   );
 }
