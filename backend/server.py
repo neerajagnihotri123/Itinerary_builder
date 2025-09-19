@@ -42,6 +42,7 @@ from agents.customization_agent import CustomizationAgent
 from agents.pricing_agent import PricingAgent
 from agents.service_selection_agent import ServiceSelectionAgent
 from agents.conflict_detection_agent import ConflictDetectionAgent
+from agents.dynamic_pricing_agent import DynamicPricingAgent
 from utils.context_store import ContextStore
 from utils.event_bus import EventBus
 from models.schemas import *
