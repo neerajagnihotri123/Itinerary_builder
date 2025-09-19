@@ -2799,6 +2799,14 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters,
 };
 
 function App() {
+  // Advanced features state
+  const [conflicts, setConflicts] = useState([]);
+  const [warnings, setWarnings] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingItinerary, setEditingItinerary] = useState(null);
+  const [travelerProfile, setTravelerProfile] = useState({});
+
+  // Original state variables
   const [messages, setMessages] = useState([
     {
       id: '1',
