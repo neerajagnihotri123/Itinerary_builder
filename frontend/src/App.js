@@ -5675,7 +5675,7 @@ function App() {
                         console.log('Opening image:', index);
                       }}
                     >
-                      <img
+                      <SafeImage
                         src={image}
                         alt={`${selectedMapDestination.name} ${index + 1}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
