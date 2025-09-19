@@ -4648,13 +4648,10 @@ function App() {
                 <div className="p-6">
                   {/* Variant Header */}
                   <div className="relative rounded-2xl overflow-hidden mb-6">
-                    <img 
+                    <SafeImage 
                       src={selectedVariant.image || `https://images.unsplash.com/800x400/?${selectedVariant.destination?.toLowerCase()}`}
                       alt={selectedVariant.title}
                       className="w-full h-64 object-cover"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/800x400/?travel';
-                      }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                     <div className="absolute bottom-6 left-6 text-white">
