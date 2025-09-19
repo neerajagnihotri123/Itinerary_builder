@@ -1207,23 +1207,32 @@ class TravelloBackendTester:
             
             # Sample pricing data (would come from dynamic pricing API)
             pricing_data = {
-                "base_price": 25000,
-                "demand_adjustment": 2500,
-                "competitive_pricing": -1000,
-                "discounts": {"budget_discount": -2000, "loyalty_discount": -500},
-                "final_price": 24000,
-                "price_breakdown": [
+                "base_total": 7000,
+                "adjusted_total": 10500,
+                "final_total": 9975.0,
+                "total_savings": -2975.0,
+                "line_items": [
                     {
-                        "item": "Beach Visit",
-                        "base_cost": 1500,
-                        "adjustments": 150,
-                        "final_cost": 1650
+                        "id": "day_1_Beach Visit",
+                        "title": "Beach Visit",
+                        "category": "leisure",
+                        "base_price": 1500,
+                        "current_price": 2250
                     },
                     {
-                        "item": "Water Sports",
-                        "base_cost": 3500,
-                        "adjustments": 350,
-                        "final_cost": 3850
+                        "id": "day_1_Water Sports",
+                        "title": "Water Sports",
+                        "category": "adventure",
+                        "base_price": 1500,
+                        "current_price": 2250
+                    }
+                ],
+                "discounts_applied": [
+                    {
+                        "type": "loyalty",
+                        "tier": "bronze",
+                        "amount": 525.0,
+                        "description": "Bronze member discount"
                     }
                 ]
             }
@@ -1257,29 +1266,37 @@ class TravelloBackendTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check required cart fields
-                required_fields = ["cart_id", "total_amount", "bundled_services", 
-                                 "payment_summary", "user_details", "created_at"]
+                # Check required cart fields (actual response format)
+                required_fields = ["cart_id", "session_id", "created_at", "status", 
+                                 "user_details", "pricing", "itinerary_summary", 
+                                 "booking_components", "payment_summary"]
                 
                 if all(field in data for field in required_fields):
-                    # Verify bundled services structure
-                    bundled_services = data["bundled_services"]
-                    if isinstance(bundled_services, list) and len(bundled_services) > 0:
+                    # Verify booking components structure
+                    booking_components = data["booking_components"]
+                    if isinstance(booking_components, list) and len(booking_components) > 0:
                         # Check payment summary
                         payment_summary = data["payment_summary"]
-                        summary_fields = ["subtotal", "taxes", "discounts", "total"]
+                        summary_fields = ["subtotal", "adjustments", "discounts", "total", "currency"]
                         
                         if all(field in payment_summary for field in summary_fields):
-                            cart_id = data["cart_id"]
-                            total_amount = data["total_amount"]
+                            # Verify itinerary summary
+                            itinerary_summary = data["itinerary_summary"]
+                            summary_check_fields = ["total_days", "total_activities", "destinations"]
                             
-                            self.log_result("Checkout Cart Creation", True, 
-                                          f"Cart created successfully: ID {cart_id}, Total ₹{total_amount}, {len(bundled_services)} services")
-                            return True
+                            if all(field in itinerary_summary for field in summary_check_fields):
+                                cart_id = data["cart_id"]
+                                total_amount = payment_summary["total"]
+                                
+                                self.log_result("Checkout Cart Creation", True, 
+                                              f"Cart created successfully: ID {cart_id}, Total ₹{total_amount}, {len(booking_components)} services")
+                                return True
+                            else:
+                                self.log_result("Checkout Cart Creation", False, f"Itinerary summary missing fields: {summary_check_fields}")
                         else:
                             self.log_result("Checkout Cart Creation", False, f"Payment summary missing fields: {summary_fields}")
                     else:
-                        self.log_result("Checkout Cart Creation", False, "Invalid bundled services structure")
+                        self.log_result("Checkout Cart Creation", False, "Invalid booking components structure")
                 else:
                     self.log_result("Checkout Cart Creation", False, f"Missing required fields: {required_fields}")
             else:
