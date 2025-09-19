@@ -5332,7 +5332,7 @@ function App() {
                                 <div className="flex-1">
                                   <div className="flex items-start justify-between mb-2">
                                     <div>
-                                      <h5 className="font-bold text-slate-900 text-base">{activity.title}</h5>
+                                      <h5 className="font-bold text-slate-900 text-base">{activity.title || activity.name}</h5>
                                       <p className="text-slate-600 flex items-center gap-1 text-sm">
                                         <MapPin className="w-3 h-3" />
                                         {activity.location}
