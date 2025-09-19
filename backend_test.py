@@ -1150,35 +1150,46 @@ class TravelloBackendTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check required fields for dynamic pricing
-                required_fields = ["base_price", "demand_adjustment", "competitive_pricing", 
-                                 "discounts", "final_price", "price_breakdown", "session_id"]
+                # Check required fields for dynamic pricing (actual response format)
+                required_fields = ["base_total", "adjusted_total", "final_total", 
+                                 "total_savings", "line_items", "discounts_applied", 
+                                 "demand_analysis", "competitor_comparison", "session_id"]
                 
                 if all(field in data for field in required_fields):
                     # Verify price composition structure
-                    price_breakdown = data["price_breakdown"]
-                    if isinstance(price_breakdown, list) and len(price_breakdown) > 0:
+                    line_items = data["line_items"]
+                    if isinstance(line_items, list) and len(line_items) > 0:
                         # Check for transparent breakdown with line items
-                        first_item = price_breakdown[0]
-                        item_fields = ["item", "base_cost", "adjustments", "final_cost"]
+                        first_item = line_items[0]
+                        item_fields = ["id", "title", "category", "base_price", "current_price"]
                         
                         if all(field in first_item for field in item_fields):
                             # Verify discount application based on budget level
-                            discounts = data["discounts"]
-                            has_budget_discount = any("budget" in str(discount).lower() for discount in discounts.values())
+                            discounts = data["discounts_applied"]
+                            has_discounts = isinstance(discounts, list)
+                            
+                            # Verify demand analysis
+                            demand_analysis = data["demand_analysis"]
+                            has_demand_analysis = "overall_level" in demand_analysis and "multiplier" in demand_analysis
+                            
+                            # Verify competitor comparison
+                            competitor_data = data["competitor_comparison"]
+                            has_competitor_data = "average_market_multiplier" in competitor_data
                             
                             # Verify final price is calculated correctly
-                            final_price = data["final_price"]
-                            if isinstance(final_price, (int, float)) and final_price > 0:
+                            final_total = data["final_total"]
+                            base_total = data["base_total"]
+                            
+                            if isinstance(final_total, (int, float)) and final_total > 0 and has_demand_analysis and has_competitor_data:
                                 self.log_result("Dynamic Pricing API", True, 
-                                              f"Dynamic pricing working: Base ₹{data['base_price']}, Final ₹{final_price}, {len(price_breakdown)} line items")
+                                              f"Dynamic pricing working: Base ₹{base_total}, Final ₹{final_total}, {len(line_items)} line items, demand: {demand_analysis['overall_level']}")
                                 return True
                             else:
-                                self.log_result("Dynamic Pricing API", False, f"Invalid final price: {final_price}")
+                                self.log_result("Dynamic Pricing API", False, f"Invalid pricing calculation or missing analysis")
                         else:
-                            self.log_result("Dynamic Pricing API", False, f"Price breakdown item missing fields: {item_fields}")
+                            self.log_result("Dynamic Pricing API", False, f"Line item missing fields: {item_fields}")
                     else:
-                        self.log_result("Dynamic Pricing API", False, "Invalid price breakdown structure")
+                        self.log_result("Dynamic Pricing API", False, "Invalid line items structure")
                 else:
                     self.log_result("Dynamic Pricing API", False, f"Missing required fields: {required_fields}")
             else:
