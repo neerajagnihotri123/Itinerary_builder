@@ -18,7 +18,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv('/app/frontend/.env')
 
-BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://trip-architect-4.preview.emergentagent.com')
+BACKEND_URL = os.getenv('REACT_APP_BACKEND_URL', 'https://travel-planner-api.preview.emergentagent.com')
 API_BASE = f"{BACKEND_URL}/api"
 
 print(f"🔍 Testing Enhanced Master Travel Planner against: {BACKEND_URL}")
