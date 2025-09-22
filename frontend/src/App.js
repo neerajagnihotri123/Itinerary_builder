@@ -4187,10 +4187,6 @@ function App() {
           setTimeout(() => reject(new Error('Persona classification timeout - Using balanced')), 5000)
         )
       ]);
-          },
-          profile_data: responses
-        })
-      });
       
       if (!personaResponse.ok) {
         throw new Error(`Persona classification failed: ${personaResponse.status}`);
