@@ -227,7 +227,7 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
         start_time = time.time()
         
         try:
-            # Execute agents in parallel with aggressive timeout (7 seconds each)
+            # Execute agents in parallel with ultra-aggressive timeout (5 seconds each)
             results = await asyncio.wait_for(
                 asyncio.gather(
                     generate_optimized_variant(adventurer_agent, session_id, trip_details, persona_tags, "adventurer"),
@@ -235,7 +235,7 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                     generate_optimized_variant(luxury_agent, session_id, trip_details, persona_tags, "luxury"),
                     return_exceptions=True
                 ),
-                timeout=8.0  # Total timeout 8 seconds for all agents
+                timeout=6.0  # Ultra-aggressive 6-second total timeout
             )
             
             parallel_time = time.time() - start_time
