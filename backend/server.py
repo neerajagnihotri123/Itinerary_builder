@@ -208,134 +208,71 @@ async def persona_classification_endpoint(request: PersonaClassificationRequest)
 
 @app.post("/api/generate-itinerary")
 async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
-    """Generate enhanced itinerary variants using Master Travel Planner agents"""
+    """Generate enhanced itinerary variants using parallel Master Travel Planner agents"""
     try:
         session_id = request.session_id
         trip_details = request.trip_details
         persona_tags = request.persona_tags
         
-        logger.info(f"🗓️ Generating enhanced Master Travel Planner itinerary for session {session_id}")
-        logger.info(f"🗓️ Trip details: {trip_details}")
-        logger.info(f"🗓️ Persona tags: {persona_tags}")
+        logger.info(f"🚀 PARALLEL: Generating itinerary variants for session {session_id}")
         
-        # Use enhanced agents to generate comprehensive itinerary variants
-        import asyncio
+        # Check cache first for common destinations
+        cache_key = f"{trip_details.get('destination', 'unknown')}_{len(persona_tags)}_{trip_details.get('start_date', '')}_{trip_details.get('adults', 2)}"
+        cached_result = await get_cached_itinerary(cache_key)
+        if cached_result:
+            logger.info(f"⚡ CACHE HIT: Returning cached itinerary for {cache_key}")
+            return cached_result
+        
+        # Start all three agents concurrently with optimized timeouts
+        start_time = time.time()
         
         try:
-            # Generate all variants using enhanced agents with timeout
-            adventurer_task = adventurer_agent.generate_itinerary(session_id, trip_details, persona_tags)
-            balanced_task = balanced_agent.generate_itinerary(session_id, trip_details, persona_tags)
-            luxury_task = luxury_agent.generate_itinerary(session_id, trip_details, persona_tags)
-            
-            # Wait for all enhanced variants with shorter timeout
-            adventurer_result, balanced_result, luxury_result = await asyncio.wait_for(
-                asyncio.gather(adventurer_task, balanced_task, luxury_task),
-                timeout=20.0  # 20 second timeout for all agents
+            # Execute agents in parallel with aggressive timeout (7 seconds each)
+            results = await asyncio.wait_for(
+                asyncio.gather(
+                    generate_optimized_variant(adventurer_agent, session_id, trip_details, persona_tags, "adventurer"),
+                    generate_optimized_variant(balanced_agent, session_id, trip_details, persona_tags, "balanced"),  
+                    generate_optimized_variant(luxury_agent, session_id, trip_details, persona_tags, "luxury"),
+                    return_exceptions=True
+                ),
+                timeout=8.0  # Total timeout 8 seconds for all agents
             )
-        except (asyncio.TimeoutError, Exception) as e:
-            logger.warning(f"Enhanced agents failed or timed out: {e}, using fallback")
-            return await generate_simple_itinerary_fallback(request)
-        
-        # Convert enhanced agent results to frontend-compatible format
-        variants = []
-        
-        for agent_result, variant_type in [
-            (adventurer_result, "adventurer"),
-            (balanced_result, "balanced"), 
-            (luxury_result, "luxury")
-        ]:
-            if agent_result and "daily_itinerary" in agent_result:
-                # Convert enhanced agent format to frontend format
-                variant = {
-                    "id": f"{variant_type}_{trip_details.get('destination', 'destination').lower().replace(' ', '_')}",
-                    "title": agent_result.get("variant_title", f"{variant_type.title()} Experience"),
-                    "description": f"Enhanced {variant_type} experience with explainable recommendations",
-                    "persona": variant_type,
-                    "days": agent_result.get("total_days", 3),
-                    "price": agent_result.get("total_cost", 15000),
-                    "price_per_day": int(agent_result.get("total_cost", 15000) / agent_result.get("total_days", 3)),
-                    "total_activities": sum(len(day.get("activities", [])) for day in agent_result.get("daily_itinerary", [])),
-                    "activity_types": [],
-                    "highlights": [],
-                    "recommended": variant_type == "adventurer",
-                    "optimization_score": agent_result.get("optimization_score", 0.85),
-                    "conflict_warnings": agent_result.get("conflict_warnings", []),
-                    "itinerary": []
-                }
+            
+            parallel_time = time.time() - start_time
+            logger.info(f"⚡ PARALLEL EXECUTION: Completed in {parallel_time:.2f}s")
+            
+            # Process results - handle any exceptions gracefully
+            adventurer_result, balanced_result, luxury_result = results
+            
+            # Filter successful results
+            successful_results = []
+            for result, variant_type in [(adventurer_result, "adventurer"), (balanced_result, "balanced"), (luxury_result, "luxury")]:
+                if not isinstance(result, Exception) and result:
+                    successful_results.append((result, variant_type))
+                else:
+                    logger.warning(f"Agent failed for {variant_type}: {result}")
+            
+            # If we have at least one successful result, proceed
+            if successful_results:
+                variants = await process_parallel_results(successful_results, trip_details)
                 
-                # Convert daily itinerary to frontend format
-                for day_data in agent_result.get("daily_itinerary", []):
-                    day_activities = []
-                    
-                    for activity in day_data.get("activities", []):
-                        # Ensure enhanced fields are present
-                        enhanced_activity = {
-                            "time": activity.get("time_slot", activity.get("time", "10:00 AM")),
-                            "title": activity.get("title", "Activity"),
-                            "description": activity.get("description", "Activity description"),
-                            "location": activity.get("location", trip_details.get("destination", "Location")),
-                            "category": activity.get("category", "sightseeing"),
-                            "duration": activity.get("duration", "2 hours"),
-                            "cost": activity.get("cost", 2000),
-                            "rating": activity.get("rating", 4.2),
-                            "image": activity.get("image", "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"),
-                            # Enhanced fields as requested
-                            "selected_reason": activity.get("selected_reason", f"🎯 Perfect for your {variant_type} travel style with excellent reviews and optimal location."),
-                            "alternatives": activity.get("alternatives", []),
-                            "travel_logistics": activity.get("travel_logistics", {
-                                "from_previous": "Previous location",
-                                "distance_km": 2.5,
-                                "travel_time": "15 minutes",
-                                "transport_mode": "Taxi",
-                                "transport_cost": 200
-                            }),
-                            "booking_info": activity.get("booking_info", {
-                                "advance_booking": "Recommended",
-                                "availability": "Available",
-                                "cancellation": "Free cancellation up to 24h"
-                            })
-                        }
-                        
-                        # Ensure alternatives has exactly 9 options
-                        if len(enhanced_activity["alternatives"]) != 9:
-                            enhanced_activity["alternatives"] = [
-                                {
-                                    "name": f"Alternative Option {i+1}",
-                                    "cost": enhanced_activity["cost"] + (i * 200) - 400,
-                                    "rating": 4.0 + (i * 0.1),
-                                    "reason": f"{'Budget-friendly' if i < 3 else 'Premium' if i > 6 else 'Balanced'} option with good reviews",
-                                    "distance_km": 1.5 + (i * 0.3),
-                                    "travel_time": f"{10 + (i * 2)} minutes"
-                                }
-                                for i in range(9)
-                            ]
-                        
-                        day_activities.append(enhanced_activity)
-                    
-                    variant["itinerary"].append({
-                        "day": day_data.get("day", 1),
-                        "date": day_data.get("date", "2024-12-25"),
-                        "title": day_data.get("theme", f"Day {day_data.get('day', 1)} Experience"),
-                        "activities": day_activities
-                    })
+                # Cache successful result
+                await cache_itinerary(cache_key, {"variants": variants}, ttl=3600)  # 1 hour cache
                 
-                variants.append(variant)
-        
-        # Return enhanced response
-        from fastapi.responses import JSONResponse
-        response_data = {
-            "variants": variants,
-            "session_id": session_id,
-            "generated_at": datetime.now(timezone.utc).isoformat()
-        }
-        
-        logger.info(f"✅ Generated {len(variants)} enhanced itinerary variants with explainable AI")
-        return JSONResponse(content=response_data)
-        
+                logger.info(f"✅ PARALLEL SUCCESS: Generated {len(variants)} variants in {parallel_time:.2f}s")
+                return {"variants": variants}
+            else:
+                logger.warning("All parallel agents failed, using progressive fallback")
+                return await generate_progressive_fallback(request, start_time)
+                
+        except asyncio.TimeoutError:
+            elapsed = time.time() - start_time
+            logger.warning(f"⏰ PARALLEL TIMEOUT: {elapsed:.2f}s - Using progressive fallback")
+            return await generate_progressive_fallback(request, start_time)
+            
     except Exception as e:
-        logger.error(f"Enhanced itinerary generation error: {e}")
-        # Fallback to simple generation if enhanced fails
-        return await generate_simple_itinerary_fallback(request)
+        logger.error(f"❌ PARALLEL ERROR: {e}")
+        return await generate_progressive_fallback(request, time.time())
 
 async def generate_simple_itinerary_fallback(request: ItineraryGenerationRequest):
     """Fallback to simple itinerary generation if enhanced agents fail"""
