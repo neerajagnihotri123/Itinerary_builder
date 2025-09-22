@@ -941,10 +941,88 @@ async def cache_itinerary(cache_key: str, result: dict, ttl: int = 3600):
     
     logger.info(f"💾 CACHED: {cache_key} (TTL: {ttl}s)")
 
-async def get_user_profile_embedding_cache(session_id: str, persona_tags: List[str]) -> Optional[Dict]:
-    """Cache user profile embeddings for quick filtering"""
-    cache_key = f"profile_{session_id}_{hash(tuple(sorted(persona_tags)))}"
-    return await get_cached_itinerary(cache_key)
+def generate_immediate_variant_fallback(trip_details: dict, variant_type: str) -> dict:
+    """Generate immediate fallback variant for demo speed"""
+    from datetime import datetime, timedelta
+    
+    destination = trip_details.get('destination', 'India')
+    start_date = datetime.fromisoformat(trip_details.get('start_date', '2024-12-25'))
+    end_date = datetime.fromisoformat(trip_details.get('end_date', '2024-12-28'))
+    days = (end_date - start_date).days + 1
+    
+    # Quick activity templates by variant
+    activities = {
+        'adventurer': [
+            {'title': f'Adventure Sports in {destination}', 'category': 'adventure', 'cost': 3500},
+            {'title': f'Trekking Experience', 'category': 'nature', 'cost': 2500},
+            {'title': f'Water Sports Activity', 'category': 'adventure', 'cost': 4000}
+        ],
+        'balanced': [
+            {'title': f'City Tour of {destination}', 'category': 'sightseeing', 'cost': 2000},
+            {'title': f'Cultural Experience', 'category': 'culture', 'cost': 2500},
+            {'title': f'Local Cuisine Tour', 'category': 'dining', 'cost': 1800}
+        ],
+        'luxury': [
+            {'title': f'Premium Experience in {destination}', 'category': 'luxury', 'cost': 6000},
+            {'title': f'Spa & Wellness', 'category': 'wellness', 'cost': 4500},
+            {'title': f'Fine Dining', 'category': 'dining', 'cost': 3500}
+        ]
+    }
+    
+    variant_activities = activities.get(variant_type, activities['balanced'])
+    daily_itinerary = []
+    total_cost = 0
+    
+    for day in range(1, days + 1):
+        current_date = start_date + timedelta(days=day-1)
+        day_activities = []
+        
+        for i, activity in enumerate(variant_activities[:3]):  # Max 3 activities
+            enhanced_activity = {
+                "time": ["10:00 AM", "2:00 PM", "6:00 PM"][i],
+                "title": activity['title'],
+                "category": activity['category'],
+                "location": f"{destination}",
+                "description": f"Exciting {variant_type} experience",
+                "duration": "2-3 hours",
+                "cost": activity['cost'],
+                "rating": 4.3 + (i * 0.1),
+                "image": f"https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop",
+                "selected_reason": f"Perfect for {variant_type} travelers",
+                "alternatives": [
+                    {"name": f"Alternative {j+1}", "cost": activity['cost'] + (j*200), "rating": 4.0 + (j*0.1), "reason": "Great option"}
+                    for j in range(3)
+                ],
+                "travel_logistics": {
+                    "from_previous": "Previous location",
+                    "distance_km": 2.0,
+                    "travel_time": "15 minutes",
+                    "transport_mode": "Taxi",
+                    "transport_cost": 150
+                },
+                "booking_info": {
+                    "advance_booking": "Recommended",
+                    "availability": "Available",
+                    "cancellation": "Standard policy"
+                }
+            }
+            day_activities.append(enhanced_activity)
+            total_cost += activity['cost']
+        
+        daily_itinerary.append({
+            "day": day,
+            "date": current_date.strftime('%Y-%m-%d'),
+            "activities": day_activities
+        })
+    
+    return {
+        "variant_title": f"{variant_type.title()} {destination}",
+        "total_days": days,
+        "total_cost": total_cost,
+        "optimization_score": 0.85,
+        "conflict_warnings": [],
+        "daily_itinerary": daily_itinerary
+    }
 
 async def cache_user_profile_embedding(session_id: str, persona_tags: List[str], profile_data: Dict):
     """Cache user profile data"""
