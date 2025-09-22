@@ -914,6 +914,7 @@ const API = `${BACKEND_URL}/api`;
 
 console.log('🔍 BACKEND_URL configured as:', BACKEND_URL || 'RELATIVE URL');
 console.log('🔍 API URL will be:', API);
+console.log('⚡ Frontend optimizations: Reduced timeouts, enhanced error handling, performance tracking');
 
 // Image proxy utility to handle CORS issues
 const getProxiedImageUrl = (imageUrl) => {
