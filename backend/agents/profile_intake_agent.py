@@ -192,7 +192,7 @@ Always provide helpful, specific, and engaging responses that move the conversat
             # Use LLM for complex cases with timeout
             result = await asyncio.wait_for(
                 self._llm_intent_analysis(message, profile, trip_details),
-                timeout=8.0  # 8 second timeout
+                timeout=4.0  # Aggressive 4 second timeout
             )
             
             # Cache successful result
