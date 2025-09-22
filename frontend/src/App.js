@@ -4187,24 +4187,30 @@ function App() {
       
       // Step 3: Generate itinerary variants using real LLM agents
       console.log('🗓️ Step 3: Generating LLM-powered itinerary variants...');
-      const itineraryResponse = await fetch(`${BACKEND_URL}/api/generate-itinerary`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          trip_details: {
-            destination: tripDetails.destination,
-            start_date: tripDetails.startDate || '2024-12-15',
-            end_date: tripDetails.endDate || '2024-12-20',
-            adults: tripDetails.adults || 2,
-            children: tripDetails.children || 0,
-            budget_per_night: tripDetails.budget || 8000
+      // Itinerary generation with optimized timeout (matches backend 6s + buffer)
+      const itineraryResponse = await Promise.race([
+        fetch(`${BACKEND_URL}/api/generate-itinerary`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          persona_tags: personaResult.persona_tags || []
-        })
-      });
+          body: JSON.stringify({
+            session_id: sessionId,
+            trip_details: {
+              destination: tripDetails.destination,
+              start_date: tripDetails.startDate || '2024-12-15',
+              end_date: tripDetails.endDate || '2024-12-20',
+              adults: tripDetails.adults || 2,
+              children: tripDetails.children || 0,
+              budget_per_night: tripDetails.budget || 8000
+            },
+            persona_tags: personaResult.persona_tags || []
+          })
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Itinerary generation timeout - Using fallback')), 10000)
+        )
+      ]);
       
       if (!itineraryResponse.ok) {
         throw new Error(`Itinerary generation failed: ${itineraryResponse.status}`);
