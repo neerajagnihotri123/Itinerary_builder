@@ -1,6 +1,6 @@
 """
-Itinerary Generation Agents - Separate agents for Adventurer, Balanced, and Luxury variants
-Generate top service recommendations for flights, hotels, cabs, and sightseeing
+Master Travel Planner - Itinerary Generation Agents
+Real-time access to global flight, hotel, cab and activity inventories with intelligent recommendations
 """
 
 import os
