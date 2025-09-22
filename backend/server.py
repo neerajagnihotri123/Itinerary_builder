@@ -14,7 +14,7 @@ import uuid
 import httpx
 import asyncio
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 from pydantic import BaseModel, Field
 
 # Load environment variables
