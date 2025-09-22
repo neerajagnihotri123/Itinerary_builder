@@ -3879,6 +3879,7 @@ function App() {
     console.log('🔥 API URL:', `${BACKEND_URL}/api/chat`);
 
     const currentInput = inputMessage;
+    const startTime = performance.now(); // Track performance
     setInputMessage('');
     setIsLoading(true);
     
