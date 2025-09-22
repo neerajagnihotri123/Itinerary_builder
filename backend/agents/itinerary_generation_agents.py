@@ -574,6 +574,75 @@ Create {days}-day {self.variant_type.value} experience with 4-5 activities per d
         """Generate fallback itinerary when LLM fails"""
         return self._generate_fallback_itinerary_data(trip_details, days)
 
+    async def _fast_parse_response(self, response: str, days: int, trip_details: Dict[str, Any]) -> Dict[str, Any]:
+        """Fast parsing with minimal validation"""
+        try:
+            import json
+            import re
+            
+            # Quick JSON extraction
+            json_text = response
+            if '```json' in json_text:
+                json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            elif '```' in json_text:
+                json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            
+            # Parse with minimal validation
+            data = json.loads(json_text.strip())
+            
+            # Ensure basic structure exists
+            if 'daily_itinerary' not in data:
+                data['daily_itinerary'] = []
+            
+            # Quick cost calculation
+            total_cost = 0
+            for day in data.get('daily_itinerary', []):
+                for activity in day.get('activities', []):
+                    total_cost += activity.get('cost', 1500)
+            
+            data['total_cost'] = total_cost
+            return data
+            
+        except Exception as e:
+            logger.error(f"Fast parsing failed: {e}")
+            return await self._get_cached_fallback(trip_details, days)
+
+    async def _get_cached_fallback(self, trip_details: Dict[str, Any], days: int) -> Dict[str, Any]:
+        """Get cached fallback itinerary for fast response"""
+        destination = trip_details.get('destination', 'India')
+        start_date = datetime.fromisoformat(trip_details.get('start_date', '2024-12-25'))
+        
+        # Ultra-fast fallback with minimal activities
+        return {
+            "variant_title": f"{self.variant_type.value.title()} {destination}",
+            "total_days": days,
+            "total_cost": days * 2500,
+            "optimization_score": 0.7,
+            "conflict_warnings": [],
+            "daily_itinerary": [
+                {
+                    "day": day,
+                    "date": (start_date + timedelta(days=day-1)).strftime('%Y-%m-%d'),
+                    "theme": f"Day {day} - {self.variant_type.value.title()} Experience",
+                    "activities": [
+                        {
+                            "time": "10:00 AM",
+                            "title": f"{self.variant_type.value.title()} Activity in {destination}",
+                            "category": "sightseeing",
+                            "location": destination,
+                            "cost": 2500,
+                            "rating": 4.0,
+                            "selected_reason": f"Perfect for {self.variant_type.value} travelers"
+                        }
+                    ]
+                } for day in range(1, days + 1)
+            ]
+        }
+
     async def _generate_day_itinerary(self, day: int, date: datetime, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> DayItinerary:
         """Generate itinerary for a specific day"""
         destination = trip_details.get("destination", "India")
