@@ -2131,14 +2131,398 @@ class TravelloBackendTester:
         
         return passed == total
 
+    def test_optimized_llm_performance(self):
+        """Test optimized LLM response time improvements with 6-second timeout"""
+        try:
+            print(f"\n⚡ Testing Optimized LLM Performance - 6-Second Timeout")
+            print("=" * 60)
+            
+            # Test fast itinerary generation with performance measurement
+            start_time = time.time()
+            
+            payload = {
+                "session_id": f"perf_test_{uuid.uuid4().hex[:8]}",
+                "trip_details": {
+                    "destination": "Goa",
+                    "start_date": "2024-12-25",
+                    "end_date": "2024-12-28",
+                    "adults": 2,
+                    "budget_per_night": 5000
+                },
+                "persona_tags": ["adventurer", "nature_lover"]
+            }
+            
+            response = requests.post(f"{API_BASE}/generate-itinerary", json=payload, timeout=15)
+            
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure
+                if "variants" in data and len(data["variants"]) > 0:
+                    variants_count = len(data["variants"])
+                    
+                    # Check if response time meets target (under 10 seconds)
+                    if response_time <= 10.0:
+                        self.log_result("Optimized LLM Performance", True, 
+                                      f"✅ PERFORMANCE TARGET MET: Generated {variants_count} variants in {response_time:.2f}s (target: <10s)", 
+                                      {"response_time": response_time, "variants_count": variants_count})
+                        
+                        print(f"⚡ Response Time: {response_time:.2f}s (Target: <10s)")
+                        print(f"📊 Variants Generated: {variants_count}")
+                        return True
+                    else:
+                        self.log_result("Optimized LLM Performance", False, 
+                                      f"❌ PERFORMANCE TARGET MISSED: {response_time:.2f}s > 10s target", 
+                                      {"response_time": response_time, "variants_count": variants_count})
+                        
+                        print(f"⏰ Response Time: {response_time:.2f}s (EXCEEDS 10s target)")
+                        return False
+                else:
+                    self.log_result("Optimized LLM Performance", False, 
+                                  f"Invalid response structure: {data}")
+                    return False
+            else:
+                self.log_result("Optimized LLM Performance", False, 
+                              f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Optimized LLM Performance", False, f"Performance test failed: {str(e)}")
+            return False
+
+    def test_enhanced_caching_system(self):
+        """Test enhanced caching system with TTL and cache hits"""
+        try:
+            print(f"\n💾 Testing Enhanced Caching System with TTL")
+            print("=" * 60)
+            
+            # Use consistent payload for cache testing
+            cache_test_payload = {
+                "session_id": f"cache_test_{uuid.uuid4().hex[:8]}",
+                "trip_details": {
+                    "destination": "Mumbai",
+                    "start_date": "2024-12-20",
+                    "end_date": "2024-12-23",
+                    "adults": 2,
+                    "budget_per_night": 4000
+                },
+                "persona_tags": ["balanced_traveler"]
+            }
+            
+            # First request - should be cache miss
+            print("Test 1: First request (cache miss)")
+            start_time1 = time.time()
+            response1 = requests.post(f"{API_BASE}/generate-itinerary", json=cache_test_payload, timeout=15)
+            response_time1 = time.time() - start_time1
+            
+            if response1.status_code != 200:
+                self.log_result("Enhanced Caching - First Request", False, 
+                              f"First request failed: HTTP {response1.status_code}")
+                return False
+            
+            data1 = response1.json()
+            print(f"✅ First request completed in {response_time1:.2f}s")
+            
+            # Second request immediately - should be cache hit
+            print("Test 2: Second request (cache hit)")
+            start_time2 = time.time()
+            response2 = requests.post(f"{API_BASE}/generate-itinerary", json=cache_test_payload, timeout=15)
+            response_time2 = time.time() - start_time2
+            
+            if response2.status_code != 200:
+                self.log_result("Enhanced Caching - Second Request", False, 
+                              f"Second request failed: HTTP {response2.status_code}")
+                return False
+            
+            data2 = response2.json()
+            print(f"✅ Second request completed in {response_time2:.2f}s")
+            
+            # Verify cache hit (second request should be significantly faster)
+            cache_hit_improvement = response_time1 - response_time2
+            cache_hit_ratio = response_time2 / response_time1
+            
+            # Cache hit should be at least 50% faster
+            if cache_hit_ratio < 0.5:
+                self.log_result("Enhanced Caching System", True, 
+                              f"✅ CACHE HIT VERIFIED: First: {response_time1:.2f}s, Second: {response_time2:.2f}s, Improvement: {cache_hit_improvement:.2f}s ({(1-cache_hit_ratio)*100:.1f}% faster)", 
+                              {
+                                  "first_request_time": response_time1,
+                                  "second_request_time": response_time2,
+                                  "cache_improvement": cache_hit_improvement,
+                                  "cache_hit_ratio": cache_hit_ratio
+                              })
+                
+                print(f"💾 Cache Performance:")
+                print(f"   First Request (miss): {response_time1:.2f}s")
+                print(f"   Second Request (hit): {response_time2:.2f}s")
+                print(f"   Improvement: {cache_hit_improvement:.2f}s ({(1-cache_hit_ratio)*100:.1f}% faster)")
+                return True
+            else:
+                self.log_result("Enhanced Caching System", False, 
+                              f"❌ CACHE NOT EFFECTIVE: Second request only {(1-cache_hit_ratio)*100:.1f}% faster", 
+                              {
+                                  "first_request_time": response_time1,
+                                  "second_request_time": response_time2,
+                                  "cache_hit_ratio": cache_hit_ratio
+                              })
+                
+                print(f"❌ Cache not effective - second request only {(1-cache_hit_ratio)*100:.1f}% faster")
+                return False
+                
+        except Exception as e:
+            self.log_result("Enhanced Caching System", False, f"Cache test failed: {str(e)}")
+            return False
+
+    def test_progressive_fallback_mechanisms(self):
+        """Test progressive fallback mechanisms under timeout scenarios"""
+        try:
+            print(f"\n🔄 Testing Progressive Fallback Mechanisms")
+            print("=" * 60)
+            
+            # Test with a payload that might cause agent timeouts
+            fallback_payload = {
+                "session_id": f"fallback_test_{uuid.uuid4().hex[:8]}",
+                "trip_details": {
+                    "destination": "Complex Multi-City Tour",  # Complex destination
+                    "start_date": "2024-12-15",
+                    "end_date": "2024-12-25",  # Long duration (10 days)
+                    "adults": 4,  # More travelers
+                    "children": 2,
+                    "budget_per_night": 15000  # High budget requiring complex planning
+                },
+                "persona_tags": ["luxury_connoisseur", "cultural_explorer", "family_oriented"]  # Multiple complex personas
+            }
+            
+            print("Testing fallback with complex itinerary request...")
+            start_time = time.time()
+            
+            response = requests.post(f"{API_BASE}/generate-itinerary", json=fallback_payload, timeout=20)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify fallback still produces valid results
+                if "variants" in data and len(data["variants"]) > 0:
+                    variants = data["variants"]
+                    
+                    # Check if at least one variant is returned (fallback working)
+                    if len(variants) >= 1:
+                        # Verify fallback variants have proper structure
+                        first_variant = variants[0]
+                        required_fields = ["id", "title", "description", "persona", "days", "price", "itinerary"]
+                        
+                        if all(field in first_variant for field in required_fields):
+                            # Check if itinerary has activities
+                            if first_variant["itinerary"] and len(first_variant["itinerary"]) > 0:
+                                first_day = first_variant["itinerary"][0]
+                                if "activities" in first_day and len(first_day["activities"]) > 0:
+                                    self.log_result("Progressive Fallback Mechanisms", True, 
+                                                  f"✅ FALLBACK WORKING: Generated {len(variants)} variant(s) in {response_time:.2f}s with proper structure", 
+                                                  {
+                                                      "response_time": response_time,
+                                                      "variants_count": len(variants),
+                                                      "fallback_structure_valid": True
+                                                  })
+                                    
+                                    print(f"✅ Fallback Response Time: {response_time:.2f}s")
+                                    print(f"✅ Variants Generated: {len(variants)}")
+                                    print(f"✅ Structure Validation: PASSED")
+                                    return True
+                                else:
+                                    self.log_result("Progressive Fallback Mechanisms", False, 
+                                                  "Fallback variant missing activities")
+                            else:
+                                self.log_result("Progressive Fallback Mechanisms", False, 
+                                              "Fallback variant missing itinerary")
+                        else:
+                            missing_fields = [f for f in required_fields if f not in first_variant]
+                            self.log_result("Progressive Fallback Mechanisms", False, 
+                                          f"Fallback variant missing fields: {missing_fields}")
+                    else:
+                        self.log_result("Progressive Fallback Mechanisms", False, 
+                                      "No variants returned by fallback mechanism")
+                else:
+                    self.log_result("Progressive Fallback Mechanisms", False, 
+                                  f"Invalid fallback response structure: {data}")
+            else:
+                self.log_result("Progressive Fallback Mechanisms", False, 
+                              f"Fallback test failed: HTTP {response.status_code}: {response.text}")
+            
+            return False
+            
+        except Exception as e:
+            self.log_result("Progressive Fallback Mechanisms", False, f"Fallback test failed: {str(e)}")
+            return False
+
+    def test_optimized_profile_intake_performance(self):
+        """Test profile intake with optimized 4-second timeout"""
+        try:
+            print(f"\n🏷️ Testing Optimized Profile Intake Performance")
+            print("=" * 60)
+            
+            start_time = time.time()
+            
+            payload = {
+                "session_id": f"profile_perf_{uuid.uuid4().hex[:8]}",
+                "responses": {
+                    "vacation_style": "adventurous",
+                    "experience_type": "nature",
+                    "attraction_preference": "both",
+                    "accommodation": ["boutique_hotels", "luxury_hotels"],
+                    "interests": ["hiking", "food", "photography", "wildlife", "water_sports"],
+                    "custom_inputs": ["I love mountain trekking and want to try paragliding and scuba diving"]
+                }
+            }
+            
+            response = requests.post(f"{API_BASE}/profile-intake", json=payload, timeout=10)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure and performance
+                if "persona_tags" in data and len(data["persona_tags"]) > 0:
+                    # Check if response time meets optimized target (under 6 seconds)
+                    if response_time <= 6.0:
+                        self.log_result("Optimized Profile Intake Performance", True, 
+                                      f"✅ PROFILE INTAKE OPTIMIZED: Processed in {response_time:.2f}s (target: <6s), generated {len(data['persona_tags'])} persona tags", 
+                                      {
+                                          "response_time": response_time,
+                                          "persona_tags_count": len(data["persona_tags"]),
+                                          "persona_tags": data["persona_tags"]
+                                      })
+                        
+                        print(f"⚡ Profile Intake Time: {response_time:.2f}s (Target: <6s)")
+                        print(f"🏷️ Persona Tags Generated: {len(data['persona_tags'])}")
+                        return True
+                    else:
+                        self.log_result("Optimized Profile Intake Performance", False, 
+                                      f"❌ PROFILE INTAKE SLOW: {response_time:.2f}s > 6s target")
+                        return False
+                else:
+                    self.log_result("Optimized Profile Intake Performance", False, 
+                                  "Profile intake response missing persona tags")
+                    return False
+            else:
+                self.log_result("Optimized Profile Intake Performance", False, 
+                              f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Optimized Profile Intake Performance", False, f"Profile intake performance test failed: {str(e)}")
+            return False
+
+    def test_persona_classification_speed(self):
+        """Test persona classification with new 3-second timeout"""
+        try:
+            print(f"\n🎭 Testing Persona Classification Speed")
+            print("=" * 60)
+            
+            start_time = time.time()
+            
+            payload = {
+                "session_id": f"persona_speed_{uuid.uuid4().hex[:8]}",
+                "trip_details": {
+                    "destination": "Goa",
+                    "start_date": "2024-12-15",
+                    "end_date": "2024-12-20",
+                    "adults": 2,
+                    "budget_per_night": 8000
+                },
+                "profile_data": {
+                    "vacation_style": "adventurous",
+                    "experience_type": "nature",
+                    "interests": ["hiking", "water_sports", "photography"]
+                }
+            }
+            
+            response = requests.post(f"{API_BASE}/persona-classification", json=payload, timeout=8)
+            response_time = time.time() - start_time
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify response structure and performance
+                required_fields = ["persona_type", "persona_tags", "confidence"]
+                if all(field in data for field in required_fields):
+                    # Check if response time meets optimized target (under 5 seconds)
+                    if response_time <= 5.0:
+                        self.log_result("Persona Classification Speed", True, 
+                                      f"✅ PERSONA CLASSIFICATION OPTIMIZED: Classified as {data['persona_type']} in {response_time:.2f}s (target: <5s), confidence: {data['confidence']:.2f}", 
+                                      {
+                                          "response_time": response_time,
+                                          "persona_type": data["persona_type"],
+                                          "confidence": data["confidence"],
+                                          "persona_tags": data["persona_tags"]
+                                      })
+                        
+                        print(f"⚡ Classification Time: {response_time:.2f}s (Target: <5s)")
+                        print(f"🎭 Persona Type: {data['persona_type']}")
+                        print(f"📊 Confidence: {data['confidence']:.2f}")
+                        return True
+                    else:
+                        self.log_result("Persona Classification Speed", False, 
+                                      f"❌ PERSONA CLASSIFICATION SLOW: {response_time:.2f}s > 5s target")
+                        return False
+                else:
+                    missing_fields = [f for f in required_fields if f not in data]
+                    self.log_result("Persona Classification Speed", False, 
+                                  f"Response missing fields: {missing_fields}")
+                    return False
+            else:
+                self.log_result("Persona Classification Speed", False, 
+                              f"HTTP {response.status_code}: {response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Persona Classification Speed", False, f"Persona classification speed test failed: {str(e)}")
+            return False
+
+    def test_llm_optimization_suite(self):
+        """Run the complete LLM optimization test suite"""
+        print(f"\n🚀 Starting LLM Optimization Test Suite")
+        print(f"🔍 Testing against: {BACKEND_URL}")
+        print(f"📅 Test session: {self.session_id}")
+        print("=" * 80)
+        
+        # LLM Optimization tests
+        optimization_tests = [
+            ("Optimized LLM Performance", self.test_optimized_llm_performance),
+            ("Enhanced Caching System", self.test_enhanced_caching_system),
+            ("Progressive Fallback Mechanisms", self.test_progressive_fallback_mechanisms),
+            ("Optimized Profile Intake Performance", self.test_optimized_profile_intake_performance),
+            ("Persona Classification Speed", self.test_persona_classification_speed)
+        ]
+        
+        passed = 0
+        total = len(optimization_tests)
+        
+        for test_name, test_func in optimization_tests:
+            try:
+                result = test_func()
+                if result:
+                    passed += 1
+                    print(f"✅ {test_name}: PASSED")
+                else:
+                    print(f"❌ {test_name}: FAILED")
+            except Exception as e:
+                print(f"❌ {test_name}: ERROR - {str(e)}")
+        
+        print(f"\n📊 LLM Optimization Results: {passed}/{total} tests passed ({passed/total*100:.1f}%)")
+        
+        return passed, total
+
 def main():
     """Main test execution"""
-    print("🚀 Starting Travello.ai Dynamic Pricing & Checkout System Test")
+    print("🚀 Starting Travello.ai LLM Optimization Testing")
     print(f"🌐 Testing against: {BACKEND_URL}")
     print(f"⏰ Started at: {datetime.now().isoformat()}")
     
     tester = TravelloBackendTester()
-    passed, total = tester.test_dynamic_pricing_checkout_system()
+    passed, total = tester.test_llm_optimization_suite()
     
     success = tester.print_summary()
     
