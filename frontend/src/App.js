@@ -4210,7 +4210,7 @@ function App() {
       
       // Step 3: Generate itinerary variants using real LLM agents
       console.log('🗓️ Step 3: Generating LLM-powered itinerary variants...');
-      // Itinerary generation with optimized timeout (matches backend 6s + buffer)
+      // Itinerary generation with optimized timeout (8s backend + buffer)
       const itineraryResponse = await Promise.race([
         fetch(`${BACKEND_URL}/api/generate-itinerary`, {
           method: 'POST',
@@ -4231,7 +4231,7 @@ function App() {
           })
         }),
         new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Itinerary generation timeout - Using fallback')), 10000)
+          setTimeout(() => reject(new Error('Itinerary generation taking longer than expected')), 15000)
         )
       ]);
       
