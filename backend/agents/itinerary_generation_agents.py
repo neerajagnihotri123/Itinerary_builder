@@ -69,10 +69,14 @@ class BaseItineraryAgent:
         return profile_mapping.get(primary_persona, profile_mapping['balanced_traveler'])
 
     async def _fast_parse_response(self, response: str, days: int, trip_details: Dict[str, Any]) -> Dict[str, Any]:
-        """Fast JSON parsing with minimal validation"""
+        """Fast JSON parsing with minimal validation and control character handling"""
         try:
             import json
             import re
+            
+            # Clean response first - remove invalid control characters
+            response = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', response)  # Remove control characters
+            response = response.replace('\n', ' ').replace('\r', ' ')  # Replace newlines
             
             # Remove markdown code blocks if present
             json_text = response
@@ -84,6 +88,9 @@ class BaseItineraryAgent:
                 json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
                 if json_match:
                     json_text = json_match.group(1)
+            
+            # Clean JSON text further
+            json_text = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_text)
             
             # Parse JSON
             data = json.loads(json_text.strip())
