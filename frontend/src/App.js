@@ -4162,22 +4162,31 @@ function App() {
       const profileResult = await profileResponse.json();
       console.log('✅ Profile intake result:', profileResult);
       
-      // Step 2: Trigger persona classification and itinerary generation
+      // Step 2: Trigger persona classification (optimized 3s timeout)
       console.log('🎭 Step 2: Persona classification...');
-      const personaResponse = await fetch(`${BACKEND_URL}/api/persona-classification`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          trip_details: {
-            destination: tripDetails.destination,
-            start_date: tripDetails.startDate || '2024-12-15',
-            end_date: tripDetails.endDate || '2024-12-20',
-            adults: tripDetails.adults || 2,
-            children: tripDetails.children || 0,
-            budget_per_night: tripDetails.budget || 8000
+      const personaResponse = await Promise.race([
+        fetch(`${BACKEND_URL}/api/persona-classification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            trip_details: {
+              destination: tripDetails.destination,
+              start_date: tripDetails.startDate || '2024-12-15',
+              end_date: tripDetails.endDate || '2024-12-20',
+              adults: tripDetails.adults || 2,
+              children: tripDetails.children || 0,
+              budget_per_night: tripDetails.budget || 8000
+            },
+            profile_data: profileResult.profile_data || {}
+          })
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Persona classification timeout - Using balanced')), 5000)
+        )
+      ]);
           },
           profile_data: responses
         })
