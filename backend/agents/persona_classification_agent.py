@@ -194,7 +194,10 @@ Default to 'balanced_traveler' if classification is unclear."""
             
             user_msg = UserMessage(text=analysis_context)
             llm_client = self._get_llm_client(session_id)
-            response = await llm_client.send_message(user_msg)
+            response = await asyncio.wait_for(
+                llm_client.send_message(user_msg),
+                timeout=3.0  # Ultra-aggressive 3 second timeout for classification
+            )
             
             # Parse LLM response (handle markdown-wrapped JSON)
             import json
