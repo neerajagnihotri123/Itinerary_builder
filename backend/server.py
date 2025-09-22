@@ -904,17 +904,62 @@ async def mock_checkout_process(request: dict):
 # ===== PARALLEL PROCESSING HELPER FUNCTIONS =====
 
 async def get_cached_itinerary(cache_key: str):
-    """Get cached itinerary result"""
-    # Simple in-memory cache for demo - in production use Redis
+    """Get cached itinerary result with intelligent caching"""
     if not hasattr(get_cached_itinerary, 'cache'):
         get_cached_itinerary.cache = {}
-    return get_cached_itinerary.cache.get(cache_key)
+    
+    cached_item = get_cached_itinerary.cache.get(cache_key)
+    if cached_item:
+        # Check TTL
+        if time.time() - cached_item.get('timestamp', 0) < cached_item.get('ttl', 3600):
+            logger.info(f"⚡ CACHE HIT: {cache_key}")
+            return cached_item['data']
+        else:
+            # Expired, remove from cache
+            del get_cached_itinerary.cache[cache_key]
+            logger.info(f"⏰ CACHE EXPIRED: {cache_key}")
+    
+    return None
 
 async def cache_itinerary(cache_key: str, result: dict, ttl: int = 3600):
-    """Cache itinerary result"""
+    """Enhanced caching with TTL and cleanup"""
     if not hasattr(get_cached_itinerary, 'cache'):
         get_cached_itinerary.cache = {}
-    get_cached_itinerary.cache[cache_key] = result
+    
+    # Store with timestamp and TTL
+    get_cached_itinerary.cache[cache_key] = {
+        'data': result,
+        'timestamp': time.time(),
+        'ttl': ttl
+    }
+    
+    # Cleanup old entries (keep cache under 100 entries)
+    if len(get_cached_itinerary.cache) > 100:
+        oldest_key = min(get_cached_itinerary.cache.keys(), 
+                        key=lambda k: get_cached_itinerary.cache[k].get('timestamp', 0))
+        del get_cached_itinerary.cache[oldest_key]
+    
+    logger.info(f"💾 CACHED: {cache_key} (TTL: {ttl}s)")
+
+async def get_user_profile_embedding_cache(session_id: str, persona_tags: List[str]) -> Optional[Dict]:
+    """Cache user profile embeddings for quick filtering"""
+    cache_key = f"profile_{session_id}_{hash(tuple(sorted(persona_tags)))}"
+    return await get_cached_itinerary(cache_key)
+
+async def cache_user_profile_embedding(session_id: str, persona_tags: List[str], profile_data: Dict):
+    """Cache user profile data"""
+    cache_key = f"profile_{session_id}_{hash(tuple(sorted(persona_tags)))}"
+    await cache_itinerary(cache_key, profile_data, ttl=7200)  # 2 hour cache
+
+async def get_destination_data_cache(destination: str) -> Optional[Dict]:
+    """Cache common destination data"""
+    cache_key = f"destination_{destination.lower().replace(' ', '_')}"
+    return await get_cached_itinerary(cache_key)
+
+async def cache_destination_data(destination: str, data: Dict):
+    """Cache destination-specific data"""
+    cache_key = f"destination_{destination.lower().replace(' ', '_')}"
+    await cache_itinerary(cache_key, data, ttl=86400)  # 24 hour cache
 
 async def generate_optimized_variant(agent, session_id: str, trip_details: dict, persona_tags: list, variant_type: str):
     """Generate optimized variant with timeout handling"""
