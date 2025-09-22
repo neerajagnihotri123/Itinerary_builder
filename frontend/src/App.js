@@ -3884,14 +3884,15 @@ function App() {
     setInputMessage('');
     setIsLoading(true);
     
-    // Start progressive loading messages (optimized for faster backend)
+    // Start progressive loading messages (demo-focused)
     const loadingMessages = [
-      '⚡ Processing your request...',
-      '🔍 Analyzing preferences...',
-      '🌍 Finding destinations...',
-      '✨ Creating personalized options...'
+      '🤖 AI agents analyzing your preferences...',
+      '🧠 Adventurer agent crafting exciting activities...',
+      '⚖️ Balanced agent finding perfect harmony...',
+      '✨ Luxury agent curating premium experiences...',
+      '🚀 Finalizing your personalized itinerary...'
     ];
-    const loadingInterval = progressiveLoading(loadingMessages, 6000);
+    const loadingInterval = progressiveLoading(loadingMessages, 20000);
 
     // Add user message immediately
     const userMessage = {
