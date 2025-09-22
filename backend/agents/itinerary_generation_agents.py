@@ -127,12 +127,13 @@ Generate comprehensive, intelligent, and perfectly optimized travel experiences.
             persona_type = event.data.get("persona_type")
             trip_details = event.data.get("trip_details", {})
             profile_data = event.data.get("profile_data", {})
+            persona_tags = event.data.get("persona_tags", [persona_type] if persona_type else [])
             
             # Check if this agent should handle this request based on persona matching
             if self._should_handle_request(persona_type, profile_data):
                 logger.info(f"🗓️ {self.variant_type.value.title()} agent generating itinerary for session {session_id}")
                 
-                itinerary = await self.generate_itinerary(session_id, trip_details, profile_data)
+                itinerary = await self.generate_itinerary(session_id, trip_details, persona_tags, profile_data)
                 
                 await self.event_bus.emit(EventTypes.ITINERARY_VARIANT_GENERATED, {
                     "variant_type": self.variant_type.value,
