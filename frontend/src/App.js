@@ -3882,14 +3882,14 @@ function App() {
     setInputMessage('');
     setIsLoading(true);
     
-    // Start progressive loading messages
+    // Start progressive loading messages (optimized for faster backend)
     const loadingMessages = [
-      '🤖 Understanding your request...',
-      '🔍 Analyzing your preferences...',
-      '🌍 Gathering destination information...',
+      '⚡ Processing your request...',
+      '🔍 Analyzing preferences...',
+      '🌍 Finding destinations...',
       '✨ Creating personalized options...'
     ];
-    const loadingInterval = progressiveLoading(loadingMessages, 8000);
+    const loadingInterval = progressiveLoading(loadingMessages, 6000);
 
     // Add user message immediately
     const userMessage = {
