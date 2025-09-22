@@ -962,7 +962,7 @@ async def cache_destination_data(destination: str, data: Dict):
     await cache_itinerary(cache_key, data, ttl=86400)  # 24 hour cache
 
 async def generate_optimized_variant(agent, session_id: str, trip_details: dict, persona_tags: list, variant_type: str):
-    """Generate optimized variant with ultra-aggressive timeout"""
+    """Generate optimized variant with ultra-fast timeout for demo"""
     try:
         # Check cache first for this specific variant
         cache_key = f"{variant_type}_{trip_details.get('destination', '')}_{len(persona_tags)}_{trip_details.get('start_date', '')}"
@@ -971,10 +971,10 @@ async def generate_optimized_variant(agent, session_id: str, trip_details: dict,
             logger.info(f"⚡ VARIANT CACHE HIT: {variant_type}")
             return cached_result
         
-        # Ultra-aggressive timeout (4 seconds per agent)
+        # Ultra-aggressive timeout (2 seconds per agent for demo speed)
         result = await asyncio.wait_for(
             agent.generate_itinerary(session_id, trip_details, persona_tags),
-            timeout=4.0  # Reduced from 7 to 4 seconds
+            timeout=2.0  # Reduced to 2 seconds for demo
         )
         
         # Cache successful result
@@ -983,12 +983,12 @@ async def generate_optimized_variant(agent, session_id: str, trip_details: dict,
             
         return result
     except asyncio.TimeoutError:
-        logger.warning(f"⏰ {variant_type} agent ultra-timeout")
-        # Return fast fallback instead of None
-        return generate_simple_variant_fallback(trip_details, variant_type)
+        logger.warning(f"⏰ {variant_type} agent ultra-timeout (2s)")
+        # Return immediate fallback
+        return generate_immediate_variant_fallback(trip_details, variant_type)
     except Exception as e:
         logger.error(f"❌ {variant_type} agent failed: {e}")
-        return generate_simple_variant_fallback(trip_details, variant_type)
+        return generate_immediate_variant_fallback(trip_details, variant_type)
 
 async def process_parallel_results(successful_results: list, trip_details: dict):
     """Process successful parallel results into frontend format"""
