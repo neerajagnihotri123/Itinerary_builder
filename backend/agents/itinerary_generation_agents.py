@@ -147,7 +147,7 @@ Generate comprehensive, intelligent, and perfectly optimized travel experiences.
         # All agents generate variants for comparison
         return True
 
-    async def generate_itinerary(self, session_id: str, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> ItineraryVariant:
+    async def generate_itinerary(self, session_id: str, trip_details: Dict[str, Any], persona_tags: List[str], profile_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """Generate itinerary variant"""
         try:
             # Calculate trip duration
