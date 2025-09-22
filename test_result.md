@@ -185,6 +185,18 @@ backend:
         agent: "testing"
         comment: "✅ Mock Checkout Process (/api/mock-checkout) fully functional. All 4 payment methods tested successfully (card, UPI, netbanking, wallet) with booking confirmations and references generated. Proper confirmation codes (TRV format), booking references for hotel/activities/transport, and payment status tracking."
 
+  - task: "Enhanced Master Travel Planner Itinerary Generation"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ Enhanced Master Travel Planner partially implemented but has performance issues. The enhanced agents (AdventurerAgent, BalancedAgent, LuxuryAgent) are correctly imported and initialized, and the /api/generate-itinerary endpoint has been modified to use them. However, the enhanced agents take >20 seconds to generate comprehensive itineraries with explainable AI features (selected_reason, 9 alternatives per activity, travel_logistics, booking_info, optimization_score, conflict_warnings). The current implementation includes a 20-second timeout with fallback to simple generation, but the enhanced structure is not being returned in the expected format. Backend logs show LLM calls are being made successfully, but the comprehensive structure requested in the review (explainable recommendations, 9 alternatives per activity slot, travel optimization) is not being delivered within acceptable response times."
+
   - task: "Complete Pricing & Checkout Flow"
     implemented: true
     working: true
