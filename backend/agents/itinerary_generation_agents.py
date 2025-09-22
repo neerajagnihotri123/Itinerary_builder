@@ -645,24 +645,6 @@ Generate comprehensive, intelligent, and perfectly optimized travel experiences.
         """Determine if this variant should be recommended"""
         return False  # Override in subclasses
 
-    def _get_fallback_itinerary(self, trip_details: Dict[str, Any]) -> ItineraryVariant:
-        """Get fallback itinerary when generation fails"""
-        return ItineraryVariant(
-            id=str(uuid.uuid4()),
-            type=self.variant_type,
-            title=self._get_variant_title(),
-            description="A curated travel experience",
-            days=3,
-            total_cost=15000,
-            daily_itinerary=[],
-            highlights=["Curated experiences"],
-            persona_match=0.5,
-            sustainability_score=0.5,
-            recommended=False,
-            total_activities=0,
-            activity_types=[]
-        )
-
 
 class AdventurerAgent(BaseItineraryAgent):
     """Agent for generating adventurous itineraries"""
