@@ -208,7 +208,6 @@ class EnhancedMasterPlannerTester:
             # Use the same payload as Test 1
             payload = {
                 "session_id": "test_structure_check",
-                "persona_type": "adventurer",
                 "trip_details": {
                     "destination": "Goa, India",
                     "start_date": "2024-12-25",
@@ -216,12 +215,7 @@ class EnhancedMasterPlannerTester:
                     "adults": 2,
                     "budget_per_night": 4000
                 },
-                "profile_data": {
-                    "vacation_style": ["adventurous"],
-                    "experience_type": ["adventure"],
-                    "interests": ["hiking", "water_sports", "nightlife"],
-                    "budget_level": "moderate"
-                }
+                "persona_tags": ["adventurer", "adventure_seeker", "outdoor_enthusiast"]
             }
             
             response = requests.post(f"{API_BASE}/generate-itinerary", json=payload, timeout=120)
