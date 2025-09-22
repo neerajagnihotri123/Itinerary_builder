@@ -310,26 +310,17 @@ class BaseItineraryAgent:
         ).with_model("openai", "gpt-4o-mini")
     
     def _get_system_message(self) -> str:
-        return f"""TRAVEL PLANNER: {self.variant_type.value.upper()} SPECIALIST
+        focus_map = {
+            "adventurer": "Adventure/outdoor activities", 
+            "balanced": "Mix of culture, nature, relaxation",
+            "luxury": "Premium experiences, fine dining"
+        }
+        
+        return f"""FAST {self.variant_type.value.upper()} TRAVEL PLANNER
 
-PROFILE: {self.variant_type.value} expert with real-time inventory access
-OUTPUT: Fast, optimized JSON itineraries with reasoning
+Focus: {focus_map.get(self.variant_type.value, "Balanced")}
+Output: Minimal JSON, 4-5 activities/day max
 
-CORE RULES:
-• {self.variant_type.value.title()} focus: {"Adventure/thrills" if self.variant_type.value == "adventurer" else "Balance/comfort" if self.variant_type.value == "balanced" else "Luxury/premium"}
-• 4-6 activities per day max
-• Include: time, cost, rating, reason, location
-• Must have "selected_reason" for each activity
-• Generate 2-3 alternatives per activity (not 9 - simplified)
-• NO repeated venues across days
-
-SPEED OPTIMIZATION:
-• Concise descriptions only
-• Essential data fields only  
-• Quick decision making
-• No excessive elaboration
-
-RESPONSE FORMAT:
 {{
   "variant_title": "{self.variant_type.value.title()} [Destination]",
   "total_days": N,
@@ -342,21 +333,17 @@ RESPONSE FORMAT:
           "time": "10:00 AM",
           "title": "Activity Name",
           "category": "category",
-          "location": "Location", 
+          "location": "Location",
           "cost": 1500,
           "rating": 4.5,
-          "selected_reason": "🎯 Perfect for {self.variant_type.value} style - [specific reason]",
-          "alternatives": [
-            {{"name": "Alt 1", "cost": 1200, "reason": "Budget option"}},
-            {{"name": "Alt 2", "cost": 1800, "reason": "Premium option"}}
-          ]
+          "selected_reason": "Perfect for {self.variant_type.value} - brief reason"
         }}
       ]
     }}
   ]
 }}
 
-Generate optimized {self.variant_type.value} experiences quickly."""
+No alternatives needed. Fast response required."""
 
     async def _handle_generation_request(self, event):
         """Handle itinerary generation request event"""
