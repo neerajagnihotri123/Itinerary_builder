@@ -68,54 +68,126 @@ class BaseItineraryAgent:
         primary_persona = persona_tags[0] if persona_tags else 'balanced_traveler'
         return profile_mapping.get(primary_persona, profile_mapping['balanced_traveler'])
 
-    async def _parse_comprehensive_response(self, response: str, days: int, trip_details: Dict) -> Dict[str, Any]:
-        """Parse comprehensive LLM response with enhanced structure"""
+    async def _fast_parse_response(self, response: str, days: int, trip_details: Dict[str, Any]) -> Dict[str, Any]:
+        """Fast JSON parsing with minimal validation"""
         try:
-            # Parse JSON from response
             import json
             import re
             
             # Remove markdown code blocks if present
-            if '```json' in response:
-                json_match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
+            json_text = response
+            if '```json' in json_text:
+                json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
                 if json_match:
-                    response = json_match.group(1)
-            elif '```' in response:
-                json_match = re.search(r'```\s*(.*?)\s*```', response, re.DOTALL)
+                    json_text = json_match.group(1)
+            elif '```' in json_text:
+                json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
                 if json_match:
-                    response = json_match.group(1)
+                    json_text = json_match.group(1)
             
             # Parse JSON
-            data = json.loads(response.strip())
+            data = json.loads(json_text.strip())
             
-            # Validate and enhance structure
-            if 'daily_itinerary' in data:
-                total_cost = 0
-                for day_data in data['daily_itinerary']:
-                    for activity in day_data.get('activities', []):
-                        # Ensure image URL
-                        if not activity.get('image'):
-                            activity['image'] = self._get_image_url_for_activity(
-                                activity.get('title', 'Activity'),
-                                activity.get('location', trip_details.get('destination', 'India')),
-                                activity.get('category', 'sightseeing')
-                            )
-                        
-                        # Add cost to total
-                        total_cost += activity.get('cost', 0)
-                        
-                        # Ensure alternatives exist
-                        if not activity.get('alternatives'):
-                            activity['alternatives'] = self._generate_default_alternatives(activity)
+            # Add missing fields quickly
+            if 'daily_itinerary' not in data:
+                data['daily_itinerary'] = []
                 
-                # Update total cost
+            # Quick cost calculation
+            if 'total_cost' not in data or data['total_cost'] == 0:
+                total_cost = 0
+                for day in data.get('daily_itinerary', []):
+                    for activity in day.get('activities', []):
+                        total_cost += activity.get('cost', 2000)
                 data['total_cost'] = total_cost
+            
+            # Add enhanced fields quickly to activities
+            for day in data.get('daily_itinerary', []):
+                for activity in day.get('activities', []):
+                    if 'image' not in activity:
+                        activity['image'] = self._get_image_url_for_activity(
+                            activity.get('title', 'Activity'),
+                            activity.get('location', trip_details.get('destination', 'India')),
+                            activity.get('category', 'sightseeing')
+                        )
+                    if 'alternatives' not in activity:
+                        activity['alternatives'] = self._generate_default_alternatives(activity)
+                    if 'travel_logistics' not in activity:
+                        activity['travel_logistics'] = {
+                            "from_previous": "Previous location",
+                            "distance_km": 2.0,
+                            "travel_time": "15 minutes",
+                            "transport_mode": "Taxi",
+                            "transport_cost": 150
+                        }
+                    if 'booking_info' not in activity:
+                        activity['booking_info'] = {
+                            "advance_booking": "Recommended",
+                            "availability": "Available", 
+                            "cancellation": "Standard policy"
+                        }
             
             return data
             
         except Exception as e:
-            logger.error(f"Error parsing comprehensive response: {e}")
-            return self._generate_fallback_itinerary_data(trip_details, days)
+            logger.error(f"Fast parse error: {e}")
+            return await self._get_cached_fallback(trip_details, days)
+
+    async def _get_cached_fallback(self, trip_details: Dict[str, Any], days: int) -> Dict[str, Any]:
+        """Ultra-fast fallback with cached data"""
+        destination = trip_details.get('destination', 'India')
+        start_date = datetime.fromisoformat(trip_details.get('start_date', '2024-12-25'))
+        
+        # Generate minimal structure
+        daily_itinerary = []
+        for day in range(1, days + 1):
+            current_date = start_date + timedelta(days=day-1)
+            
+            activities = []
+            times = ["10:00 AM", "2:00 PM", "6:00 PM", "8:00 PM"]
+            categories = ["sightseeing", "culture", "adventure", "dining"]
+            
+            for i in range(min(4, len(times))):
+                activity = {
+                    "time": times[i],
+                    "title": f"Day {day} {categories[i].title()}",
+                    "category": categories[i],
+                    "location": f"{destination} Area",
+                    "description": f"Explore {destination} with {categories[i]} focus",
+                    "duration": "2-3 hours",
+                    "cost": 2000 + (i * 500),
+                    "rating": 4.2 + (i * 0.1),
+                    "image": self._get_image_url_for_activity(f"{categories[i]} {destination}", destination, categories[i]),
+                    "selected_reason": f"Perfect {self.variant_type.value} activity for {destination}",
+                    "alternatives": self._generate_default_alternatives({"title": f"{categories[i]} activity", "cost": 2000}),
+                    "travel_logistics": {
+                        "from_previous": "Previous location",
+                        "distance_km": 2.0,
+                        "travel_time": "15 minutes",
+                        "transport_mode": "Taxi",
+                        "transport_cost": 150
+                    },
+                    "booking_info": {
+                        "advance_booking": "Recommended",
+                        "availability": "Available",
+                        "cancellation": "Standard policy"
+                    }
+                }
+                activities.append(activity)
+            
+            daily_itinerary.append({
+                "day": day,
+                "date": current_date.strftime('%Y-%m-%d'),
+                "activities": activities
+            })
+        
+        return {
+            "variant_title": f"{self.variant_type.value.title()} {destination}",
+            "total_days": days,
+            "total_cost": days * 4 * 2250,  # Average cost calculation
+            "optimization_score": 0.85,
+            "conflict_warnings": [],
+            "daily_itinerary": daily_itinerary
+        }
 
     async def _quality_assurance_check(self, itinerary_data: Dict, trip_details: Dict, profile_data: Dict) -> Dict[str, Any]:
         """Validate and enhance itinerary data for quality assurance"""
