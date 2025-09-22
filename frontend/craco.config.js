@@ -3,7 +3,7 @@ const path = require('path');
 
 // Environment variable overrides
 const config = {
-  disableHotReload: process.env.DISABLE_HOT_RELOAD === 'true',
+  disableHotReload: true, // Force disable hot reload for stability
 };
 
 module.exports = {
@@ -12,6 +12,8 @@ module.exports = {
     port: 3000,
     allowedHosts: "all",
     historyApiFallback: true,
+    hot: false, // Disable hot reloading
+    liveReload: false, // Disable live reloading
     headers: {
       "Access-Control-Allow-Origin": "*",
     }
@@ -22,31 +24,26 @@ module.exports = {
     },
     configure: (webpackConfig) => {
       
-      // Disable hot reload completely if environment variable is set
-      if (config.disableHotReload) {
-        // Remove hot reload related plugins
-        webpackConfig.plugins = webpackConfig.plugins.filter(plugin => {
-          return !(plugin.constructor.name === 'HotModuleReplacementPlugin');
-        });
-        
-        // Disable watch mode
-        webpackConfig.watch = false;
-        webpackConfig.watchOptions = {
-          ignored: /.*/, // Ignore all files
-        };
-      } else {
-        // Add ignored patterns to reduce watched directories
-        webpackConfig.watchOptions = {
-          ...webpackConfig.watchOptions,
-          ignored: [
-            '**/node_modules/**',
-            '**/.git/**',
-            '**/build/**',
-            '**/dist/**',
-            '**/coverage/**',
-            '**/public/**',
-          ],
-        };
+      // Always disable hot reload for stability
+      // Remove hot reload related plugins
+      webpackConfig.plugins = webpackConfig.plugins.filter(plugin => {
+        return !(plugin.constructor.name === 'HotModuleReplacementPlugin');
+      });
+      
+      // Disable watch mode completely for stability
+      webpackConfig.watch = false;
+      webpackConfig.watchOptions = {
+        ignored: /.*/, // Ignore all files to prevent auto-refresh
+        poll: false,
+        aggregateTimeout: 5000,
+      };
+      
+      // Disable hot module replacement
+      if (webpackConfig.entry && Array.isArray(webpackConfig.entry)) {
+        webpackConfig.entry = webpackConfig.entry.filter(entry => 
+          !entry.includes('webpack-hot-middleware') && 
+          !entry.includes('webpack/hot/dev-server')
+        );
       }
       
       return webpackConfig;
