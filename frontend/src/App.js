@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './App.css';
+import './styles/App.css';
 import axios from 'axios';
+
+// Component imports
+import CheckoutModal from './components/ui/CheckoutModal';
+import RequestCallbackModal from './components/ui/RequestCallbackModal';
+import TripHistoryModal from './components/ui/TripHistoryModal';
+import PricingBreakdown from './components/ui/PricingBreakdownModal';
+import ServiceSelectionDropdown from './components/ui/ServiceSelectionDropdown';
+import ConflictWarnings from './components/ui/ConflictWarnings';
+import SafeImage from './components/ui/SafeImage';
+
+// Utility imports
+import { getProxiedImageUrl, getFallbackImageUrl } from './utils/imageUtils';
 import { 
   Send, 
   MapPin, 
