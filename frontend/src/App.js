@@ -3927,6 +3927,8 @@ function App() {
         )
       ]);
 
+      const responseTime = performance.now() - startTime;
+      console.log(`✅ Response received in ${responseTime.toFixed(0)}ms`);
       console.log('✅ Response status:', response.status);
       console.log('✅ Response headers:', response.headers);
       
