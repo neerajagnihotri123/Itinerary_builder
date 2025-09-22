@@ -454,7 +454,7 @@ No alternatives needed. Fast response required."""
         return True
 
     async def generate_itinerary(self, session_id: str, trip_details: Dict[str, Any], persona_tags: List[str], profile_data: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Generate optimized itinerary with ultra-fast fallback for demo"""
+        """Generate real LLM-based itinerary with proper error handling"""
         try:
             logger.info(f"🏗️ Generating {self.variant_type.value} itinerary for {trip_details.get('destination')}")
             
@@ -463,13 +463,57 @@ No alternatives needed. Fast response required."""
             end_date = datetime.fromisoformat(trip_details.get('end_date', '2024-12-28'))
             days = (end_date - start_date).days + 1
             
-            # For demo - use fast fallback immediately to avoid timeout issues
-            logger.info(f"🚀 Using optimized fallback for demo speed")
-            return await self._get_cached_fallback(trip_details, days)
+            # Create focused context for reliable LLM generation
+            destination = trip_details.get('destination', 'India')
+            context = f"""Create a {days}-day {self.variant_type.value} travel itinerary for {destination}.
+
+Response format (valid JSON only):
+{{
+  "variant_title": "{self.variant_type.value.title()} {destination}",
+  "total_days": {days},
+  "total_cost": 15000,
+  "daily_itinerary": [
+    {{
+      "day": 1,
+      "date": "{start_date.strftime('%Y-%m-%d')}",
+      "activities": [
+        {{
+          "time": "10:00 AM",
+          "title": "Activity Name",
+          "category": "sightseeing",
+          "location": "{destination}",
+          "description": "Brief description",
+          "duration": "2 hours",
+          "cost": 2000,
+          "rating": 4.5,
+          "selected_reason": "Why this fits {self.variant_type.value} style"
+        }}
+      ]
+    }}
+  ]
+}}
+
+Generate {self.variant_type.value}-focused activities for {destination}. Return only valid JSON."""
             
+            # LLM call with reasonable timeout for demo
+            llm_client = self._get_llm_client(session_id)
+            response = await asyncio.wait_for(
+                llm_client.send_message(UserMessage(text=context)),
+                timeout=8.0  # 8 second timeout for demo reliability
+            )
+            
+            # Parse response with better error handling
+            itinerary_data = await self._parse_llm_response(response, days, trip_details)
+            
+            logger.info(f"✅ Generated {self.variant_type.value} variant with {len(itinerary_data.get('daily_itinerary', []))} days")
+            return itinerary_data
+            
+        except asyncio.TimeoutError:
+            logger.warning(f"⏰ LLM timeout for {self.variant_type.value}, using enhanced fallback")
+            return await self._get_enhanced_fallback(trip_details, days)
         except Exception as e:
-            logger.error(f"❌ Fast generation error: {e}")
-            return await self._get_cached_fallback(trip_details, days)
+            logger.error(f"❌ LLM generation error: {e}")
+            return await self._get_enhanced_fallback(trip_details, days)
 
     def _create_profile_from_persona_tags(self, persona_tags: List[str]) -> Dict[str, Any]:
         """Create a basic profile from persona tags"""
