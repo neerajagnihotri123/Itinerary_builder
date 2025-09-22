@@ -390,9 +390,8 @@ class EnhancedMasterPlannerTester:
             print("Step 3: Generating enhanced itinerary...")
             itinerary_payload = {
                 "session_id": "test_chat_flow",
-                "persona_type": persona_data.get("persona_type", "adventurer"),
                 "trip_details": persona_payload["trip_details"],
-                "profile_data": persona_payload["profile_data"]
+                "persona_tags": persona_data.get("persona_tags", ["adventurer"])
             }
             
             itinerary_response = requests.post(f"{API_BASE}/generate-itinerary", json=itinerary_payload, timeout=120)
