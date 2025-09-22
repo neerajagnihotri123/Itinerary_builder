@@ -4072,11 +4072,20 @@ function App() {
       console.error('❌ API Error:', error);
       console.error('❌ Error details:', error.message);
       
-      const errorMessage = {
-        id: `error_${Date.now()}`,
-        role: 'assistant',
-        content: `Sorry, I'm having trouble connecting. Error: ${error.message}`
-      };
+      let errorMessage;
+      if (error.message.includes('timeout')) {
+        errorMessage = {
+          id: `error_${Date.now()}`,
+          role: 'assistant',
+          content: `I'm optimizing my response time for you! The request is taking longer than expected. Let me try a different approach. Could you please rephrase your request or try asking something simpler?`
+        };
+      } else {
+        errorMessage = {
+          id: `error_${Date.now()}`,
+          role: 'assistant',
+          content: `I'm having a brief connection issue. Please try again - I'm ready to help plan your perfect trip! 🚀`
+        };
+      }
       
       setMessages(prev => [...prev, errorMessage]);
     } finally {
