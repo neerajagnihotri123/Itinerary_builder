@@ -4137,18 +4137,23 @@ function App() {
     try {
       console.log('🎯 Starting real backend itinerary generation flow');
       
-      // Step 1: Send profile responses to profile intake endpoint
+      // Step 1: Send profile responses to profile intake endpoint (optimized 4s timeout)
       console.log('📋 Step 1: Profile intake...');
-      const profileResponse = await fetch(`${BACKEND_URL}/api/profile-intake`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          responses: responses
-        })
-      });
+      const profileResponse = await Promise.race([
+        fetch(`${BACKEND_URL}/api/profile-intake`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            responses: responses
+          })
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Profile intake timeout - Retrying')), 6000)
+        )
+      ]);
       
       if (!profileResponse.ok) {
         throw new Error(`Profile intake failed: ${profileResponse.status}`);
