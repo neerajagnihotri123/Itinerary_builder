@@ -16,13 +16,20 @@ from utils.context_store import ContextStore
 logger = logging.getLogger(__name__)
 
 class BaseItineraryAgent:
-    """Base class for itinerary generation agents"""
+    """Base agent for sophisticated travel planning with real-time inventory access"""
     
     def __init__(self, context_store: ContextStore, event_bus: EventBus, variant_type: ItineraryVariantType):
         self.context_store = context_store
         self.event_bus = event_bus
         self.variant_type = variant_type
         self.api_key = os.environ.get('EMERGENT_LLM_KEY')
+        
+        # Service categories for top 10 recommendations
+        self.service_categories = {
+            'accommodation': ['luxury_hotels', 'boutique_hotels', 'business_hotels', 'budget_hotels', 'resorts', 'bnb', 'hostels', 'guesthouses', 'apartments', 'villas'],
+            'activities': ['adventure_sports', 'cultural_tours', 'nature_excursions', 'food_experiences', 'nightlife', 'shopping', 'wellness', 'historical_sites', 'local_experiences', 'entertainment'],
+            'transportation': ['premium_cabs', 'standard_cabs', 'ride_sharing', 'car_rental', 'motorbike_rental', 'public_transport', 'private_transfers', 'helicopters', 'boats', 'cycles']
+        }
         
         # Subscribe to itinerary generation requests
         self.event_bus.subscribe(EventTypes.ITINERARY_GENERATION_REQUESTED, self._handle_generation_request)
