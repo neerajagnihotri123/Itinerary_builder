@@ -5,6 +5,7 @@ Real-time access to global flight, hotel, cab and activity inventories with inte
 
 import os
 import logging
+import asyncio
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 import uuid
