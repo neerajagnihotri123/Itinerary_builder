@@ -5082,14 +5082,15 @@ function App() {
 
             {/* Loading indicator */}
             {isLoading && loadingMessage && (
-              <div className="mb-4 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+              <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                  <div>
-                    <p className="text-orange-800 font-medium">{loadingMessage}</p>
-                    <div className="w-full bg-orange-200 h-1 rounded-full mt-2">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="flex-1">
+                    <p className="text-blue-800 font-medium">{loadingMessage}</p>
+                    <p className="text-xs text-blue-600 mt-1">⚡ Optimized for faster response</p>
+                    <div className="w-full bg-blue-200 h-1 rounded-full mt-2">
                       <div 
-                        className="bg-orange-500 h-1 rounded-full transition-all duration-500"
+                        className="bg-gradient-to-r from-blue-500 to-indigo-500 h-1 rounded-full transition-all duration-500"
                         style={{ width: `${((loadingStage + 1) / 4) * 100}%` }}
                       ></div>
                     </div>
