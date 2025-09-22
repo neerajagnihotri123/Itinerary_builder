@@ -375,7 +375,7 @@ No alternatives needed. Fast response required."""
         return True
 
     async def generate_itinerary(self, session_id: str, trip_details: Dict[str, Any], persona_tags: List[str], profile_data: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Generate comprehensive itinerary with top 10 service recommendations and explainability"""
+        """Generate optimized itinerary with aggressive timeout"""
         try:
             logger.info(f"🏗️ Generating {self.variant_type.value} itinerary for {trip_details.get('destination')}")
             
@@ -384,135 +384,35 @@ No alternatives needed. Fast response required."""
             end_date = datetime.fromisoformat(trip_details.get('end_date', '2024-12-28'))
             days = (end_date - start_date).days + 1
             
-            # Use profile_data if provided, otherwise create default from persona_tags
-            if profile_data is None:
-                profile_data = self._create_profile_from_persona_tags(persona_tags)
+            # Create minimal context for fast generation
+            context = f"""Generate {self.variant_type.value} itinerary:
             
-            # Enhanced context for master travel planner
-            planner_context = f"""
-            🎯 MASTER TRAVEL PLANNER REQUEST - GENERATE {self.variant_type.value.upper()} VARIANT
+Destination: {trip_details.get('destination', 'India')}
+Days: {days}
+Adults: {trip_details.get('adults', 2)}
+Budget/night: {trip_details.get('budget_per_night', 3000)} INR
+
+Create {days}-day {self.variant_type.value} experience with 4-5 activities per day."""
             
-            TRAVELER PROFILE ANALYSIS:
-            • Persona Tags: {', '.join(persona_tags)}
-            • Vacation Style: {profile_data.get('vacation_style', ['balanced'])}
-            • Experience Preference: {profile_data.get('experience_type', ['mixed'])}
-            • Budget Level: {profile_data.get('budget_level', 'moderate')}
-            • Physical Activity: {profile_data.get('activity_level', 'moderate')}
-            • Interests: {', '.join(profile_data.get('interests', []))}
-            • Age Group: {profile_data.get('age_group', 'adult')}
-            • Travel Style: {profile_data.get('travel_style', 'explorer')}
-            
-            TRIP SPECIFICATIONS:
-            • Destination: {trip_details.get('destination', 'India')}
-            • Duration: {days} days ({start_date.strftime('%B %d')} to {end_date.strftime('%B %d, %Y')})
-            • Group Size: {trip_details.get('adults', 2)} adults, {trip_details.get('children', 0)} children
-            • Budget per night: {trip_details.get('budget_per_night', 3000)} INR
-            • Total estimated budget: {trip_details.get('budget_per_night', 3000) * days} INR
-            
-            REAL-TIME REQUIREMENTS:
-            ✅ Auto-select TOP recommendation for each service slot
-            ✅ Provide 9 alternatives with clear ranking reasons
-            ✅ No repeated activities/venues across {days} days
-            ✅ Optimize travel times and detect conflicts
-            ✅ Include live pricing and availability status
-            ✅ 4.0+ rating preference for all recommendations
-            
-            GENERATE DETAILED DAY-WISE ITINERARY:
-            
-            For each day, create 4-6 activity slots with:
-            1. TIME SLOT (e.g., 9:00 AM - 11:00 AM)
-            2. SELECTED SERVICE with complete details
-            3. REASONING: Why this is perfect for the traveler's profile
-            4. TOP 9 ALTERNATIVES with brief reasons
-            5. TRAVEL LOGISTICS: Distance, time, transport mode
-            6. PRICING: Live cost estimates
-            7. CONFLICT WARNINGS: If any scheduling issues
-            
-            MANDATORY JSON STRUCTURE:
-            {{
-                "variant_title": "{self.variant_type.value.title()} {trip_details.get('destination', 'Adventure')}",
-                "total_days": {days},
-                "total_cost": 0,
-                "optimization_score": 0.95,
-                "conflict_warnings": [],
-                "daily_itinerary": [
-                    {{
-                        "day": 1,
-                        "date": "{start_date.strftime('%Y-%m-%d')}",
-                        "theme": "Arrival & Local Exploration",
-                        "activities": [
-                            {{
-                                "time_slot": "10:00 AM - 12:00 PM",
-                                "title": "Activity Name",
-                                "category": "sightseeing|adventure|culture|dining|accommodation|transport",
-                                "location": "Specific Location",
-                                "description": "Detailed activity description",
-                                "duration": "2 hours",
-                                "cost": 1500,
-                                "rating": 4.5,
-                                "image": "https://images.unsplash.com/400x300/?activity",
-                                "selected_reason": "🎯 Perfect for your adventure-seeking preference. Highest rated (4.8★) adventure activity in the area with live availability. Distance: 2.5km from hotel, Travel time: 15 minutes by taxi.",
-                                "alternatives": [
-                                    {{
-                                        "name": "Alternative 1",
-                                        "cost": 1200,
-                                        "rating": 4.3,
-                                        "reason": "Budget-friendly option with good reviews",
-                                        "distance_km": 3.2,
-                                        "travel_time": "20 minutes"
-                                    }}
-                                ],
-                                "travel_logistics": {{
-                                    "from_previous": "Hotel/Previous Location",
-                                    "distance_km": 2.5,
-                                    "travel_time": "15 minutes",
-                                    "transport_mode": "Taxi",
-                                    "transport_cost": 200
-                                }},
-                                "booking_info": {{
-                                    "advance_booking": "Required",
-                                    "availability": "Live slots available",
-                                    "cancellation": "Free cancellation up to 24h"
-                                }}
-                            }}
-                        ],
-                        "daily_budget": 8500,
-                        "daily_travel_time": "45 minutes total"
-                    }}
-                ]
-            }}
-            
-            CRITICAL SUCCESS FACTORS:
-            • Every activity MUST have clear explainable reasoning
-            • All 9 alternatives MUST be provided for each slot
-            • Travel optimization MUST minimize transit time
-            • NO activity repetition across {days} days
-            • Pricing MUST be realistic for {trip_details.get('destination')}
-            • Schedule MUST be conflict-free and realistic
-            """
-            
-            # Generate itinerary using enhanced LLM
+            # Fast LLM call with aggressive timeout
             llm_client = self._get_llm_client(session_id)
             response = await asyncio.wait_for(
-                llm_client.send_message(UserMessage(text=planner_context)),
-                timeout=25.0  # Increased timeout for comprehensive generation
+                llm_client.send_message(UserMessage(text=context)),
+                timeout=5.0  # Aggressive 5-second timeout
             )
             
-            # Parse and validate comprehensive response
-            itinerary_data = await self._parse_comprehensive_response(response, days, trip_details)
+            # Fast parsing without extensive validation
+            itinerary_data = await self._fast_parse_response(response, days, trip_details)
             
-            # Post-process for quality assurance
-            final_itinerary = await self._quality_assurance_check(itinerary_data, trip_details, profile_data)
-            
-            logger.info(f"✅ Generated {self.variant_type.value} variant with {len(final_itinerary.get('daily_itinerary', []))} days")
-            return final_itinerary
+            logger.info(f"✅ Generated {self.variant_type.value} variant with {len(itinerary_data.get('daily_itinerary', []))} days")
+            return itinerary_data
             
         except asyncio.TimeoutError:
-            logger.warning(f"⏰ Itinerary generation timeout, using fallback for {self.variant_type.value}")
-            return self._generate_fallback_itinerary(trip_details, days)
+            logger.warning(f"⏰ Fast timeout, using cached fallback for {self.variant_type.value}")
+            return await self._get_cached_fallback(trip_details, days)
         except Exception as e:
-            logger.error(f"❌ Itinerary generation error: {e}")
-            return self._generate_fallback_itinerary(trip_details, days)
+            logger.error(f"❌ Fast generation error: {e}")
+            return await self._get_cached_fallback(trip_details, days)
 
     def _create_profile_from_persona_tags(self, persona_tags: List[str]) -> Dict[str, Any]:
         """Create a basic profile from persona tags"""
