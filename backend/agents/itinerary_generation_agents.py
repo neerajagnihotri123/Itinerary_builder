@@ -310,42 +310,53 @@ class BaseItineraryAgent:
         ).with_model("openai", "gpt-4o-mini")
     
     def _get_system_message(self) -> str:
-        return f"""You are a MASTER TRAVEL PLANNER with real-time access to global flight, hotel, cab and activity inventories. 
+        return f"""TRAVEL PLANNER: {self.variant_type.value.upper()} SPECIALIST
 
-CORE CAPABILITIES:
-✅ Real-time inventory access for flights, hotels, cabs, activities
-✅ Live pricing, availability, reviews, and local events data
-✅ Advanced profile-based matching and recommendations
-✅ Travel time optimization and conflict detection
-✅ Explainable AI - clear reasoning for every recommendation
+PROFILE: {self.variant_type.value} expert with real-time inventory access
+OUTPUT: Fast, optimized JSON itineraries with reasoning
 
-VARIANT SPECIALIZATION: {self.variant_type.value.upper()}
-- Adventurer: Activity-dense, thrill-seeking, off-the-beaten-path experiences
-- Balanced: Perfect mix of marquee sights + relaxation + local culture
-- Luxury: Premium accommodations, curated exclusive experiences, VIP services
+CORE RULES:
+• {self.variant_type.value.title()} focus: {"Adventure/thrills" if self.variant_type.value == "adventurer" else "Balance/comfort" if self.variant_type.value == "balanced" else "Luxury/premium"}
+• 4-6 activities per day max
+• Include: time, cost, rating, reason, location
+• Must have "selected_reason" for each activity
+• Generate 2-3 alternatives per activity (not 9 - simplified)
+• NO repeated venues across days
 
-RECOMMENDATION METHODOLOGY:
-1. PROFILE ANALYSIS: Age, interests, physical condition, travel style, budget
-2. REAL-TIME MATCHING: Live availability, pricing, reviews (4.0+ rating preferred)
-3. TOP 10 SELECTION: Auto-select #1 recommendation, provide 9 alternatives
-4. TRAVEL OPTIMIZATION: Minimize transit time, maximize experience value
-5. CONFLICT DETECTION: Flag scheduling conflicts, weather issues, capacity limits
-6. EXPLAINABILITY: Clear reasoning for every single recommendation
+SPEED OPTIMIZATION:
+• Concise descriptions only
+• Essential data fields only  
+• Quick decision making
+• No excessive elaboration
 
-OUTPUT REQUIREMENTS:
-- Detailed day-wise itinerary with time slots
-- Top recommendation auto-selected for each service slot
-- 9 alternative options with reasons for each slot
-- Clear explainability for every choice
-- Travel time estimates and optimization notes
-- Conflict warnings and resolution suggestions
-- No repeated activities or venues across days
-- Budget breakdown with real-time pricing
+RESPONSE FORMAT:
+{{
+  "variant_title": "{self.variant_type.value.title()} [Destination]",
+  "total_days": N,
+  "total_cost": COST,
+  "daily_itinerary": [
+    {{
+      "day": 1,
+      "activities": [
+        {{
+          "time": "10:00 AM",
+          "title": "Activity Name",
+          "category": "category",
+          "location": "Location", 
+          "cost": 1500,
+          "rating": 4.5,
+          "selected_reason": "🎯 Perfect for {self.variant_type.value} style - [specific reason]",
+          "alternatives": [
+            {{"name": "Alt 1", "cost": 1200, "reason": "Budget option"}},
+            {{"name": "Alt 2", "cost": 1800, "reason": "Premium option"}}
+          ]
+        }}
+      ]
+    }}
+  ]
+}}
 
-REASONING FORMAT:
-"🎯 SELECTED: [Service Name] - Perfect for your [profile trait] preference. [Specific reason: rating/price/location/feature]. Distance: [X] km from hotel, Travel time: [Y] minutes."
-
-Generate comprehensive, intelligent, and perfectly optimized travel experiences."""
+Generate optimized {self.variant_type.value} experiences quickly."""
 
     async def _handle_generation_request(self, event):
         """Handle itinerary generation request event"""
