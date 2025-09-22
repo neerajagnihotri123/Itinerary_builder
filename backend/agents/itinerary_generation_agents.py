@@ -35,6 +35,233 @@ class BaseItineraryAgent:
         # Subscribe to itinerary generation requests
         self.event_bus.subscribe(EventTypes.ITINERARY_GENERATION_REQUESTED, self._handle_generation_request)
     
+    def _create_profile_from_persona_tags(self, persona_tags: List[str]) -> Dict[str, Any]:
+        """Create profile data from persona tags when profile_data is not provided"""
+        profile_mapping = {
+            'adventurer': {
+                'vacation_style': ['adventurous'],
+                'experience_type': ['adventure', 'outdoor'],
+                'budget_level': 'moderate',
+                'activity_level': 'high',
+                'interests': ['hiking', 'extreme_sports', 'nature', 'adventure'],
+                'travel_style': 'explorer'
+            },
+            'balanced_traveler': {
+                'vacation_style': ['balanced'],
+                'experience_type': ['mixed', 'cultural'],
+                'budget_level': 'moderate',
+                'activity_level': 'moderate',
+                'interests': ['culture', 'food', 'sightseeing', 'local_experiences'],
+                'travel_style': 'balanced'
+            },
+            'luxury_connoisseur': {
+                'vacation_style': ['luxury'],
+                'experience_type': ['premium', 'exclusive'],
+                'budget_level': 'luxury',
+                'activity_level': 'low',
+                'interests': ['fine_dining', 'exclusive_experiences', 'spa', 'luxury_shopping'],
+                'travel_style': 'luxury'
+            }
+        }
+        
+        # Get primary persona
+        primary_persona = persona_tags[0] if persona_tags else 'balanced_traveler'
+        return profile_mapping.get(primary_persona, profile_mapping['balanced_traveler'])
+
+    async def _parse_comprehensive_response(self, response: str, days: int, trip_details: Dict) -> Dict[str, Any]:
+        """Parse comprehensive LLM response with enhanced structure"""
+        try:
+            # Parse JSON from response
+            import json
+            import re
+            
+            # Remove markdown code blocks if present
+            if '```json' in response:
+                json_match = re.search(r'```json\s*(.*?)\s*```', response, re.DOTALL)
+                if json_match:
+                    response = json_match.group(1)
+            elif '```' in response:
+                json_match = re.search(r'```\s*(.*?)\s*```', response, re.DOTALL)
+                if json_match:
+                    response = json_match.group(1)
+            
+            # Parse JSON
+            data = json.loads(response.strip())
+            
+            # Validate and enhance structure
+            if 'daily_itinerary' in data:
+                total_cost = 0
+                for day_data in data['daily_itinerary']:
+                    for activity in day_data.get('activities', []):
+                        # Ensure image URL
+                        if not activity.get('image'):
+                            activity['image'] = self._get_image_url_for_activity(
+                                activity.get('title', 'Activity'),
+                                activity.get('location', trip_details.get('destination', 'India')),
+                                activity.get('category', 'sightseeing')
+                            )
+                        
+                        # Add cost to total
+                        total_cost += activity.get('cost', 0)
+                        
+                        # Ensure alternatives exist
+                        if not activity.get('alternatives'):
+                            activity['alternatives'] = self._generate_default_alternatives(activity)
+                
+                # Update total cost
+                data['total_cost'] = total_cost
+            
+            return data
+            
+        except Exception as e:
+            logger.error(f"Error parsing comprehensive response: {e}")
+            return self._generate_fallback_itinerary_data(trip_details, days)
+
+    async def _quality_assurance_check(self, itinerary_data: Dict, trip_details: Dict, profile_data: Dict) -> Dict[str, Any]:
+        """Validate and enhance itinerary data for quality assurance"""
+        try:
+            # Ensure all required fields are present
+            required_fields = ['variant_title', 'total_days', 'daily_itinerary']
+            for field in required_fields:
+                if field not in itinerary_data:
+                    logger.warning(f"Missing required field: {field}")
+                    
+            # Validate daily itinerary structure
+            if 'daily_itinerary' in itinerary_data:
+                for day_data in itinerary_data['daily_itinerary']:
+                    # Ensure each day has activities
+                    if not day_data.get('activities'):
+                        day_data['activities'] = self._generate_default_activities(day_data.get('day', 1), trip_details)
+                    
+                    # Ensure each activity has required fields
+                    for activity in day_data['activities']:
+                        if not activity.get('selected_reason'):
+                            activity['selected_reason'] = f"🎯 Great choice for your {profile_data.get('travel_style', 'balanced')} travel style."
+                        
+                        if not activity.get('alternatives'):
+                            activity['alternatives'] = self._generate_default_alternatives(activity)
+            
+            # Add optimization score if missing
+            if 'optimization_score' not in itinerary_data:
+                itinerary_data['optimization_score'] = 0.85
+            
+            # Add conflict warnings if missing
+            if 'conflict_warnings' not in itinerary_data:
+                itinerary_data['conflict_warnings'] = []
+            
+            return itinerary_data
+            
+        except Exception as e:
+            logger.error(f"Quality assurance check failed: {e}")
+            return itinerary_data
+
+    def _generate_fallback_itinerary_data(self, trip_details: Dict, days: int) -> Dict[str, Any]:
+        """Generate fallback itinerary data in the new comprehensive format"""
+        destination = trip_details.get('destination', 'India')
+        
+        fallback_data = {
+            "variant_title": f"{self.variant_type.value.title()} {destination}",
+            "total_days": days,
+            "total_cost": days * 4000,
+            "optimization_score": 0.75,
+            "conflict_warnings": [],
+            "daily_itinerary": []
+        }
+        
+        # Generate basic daily itineraries
+        for day in range(1, days + 1):
+            day_data = {
+                "day": day,
+                "date": (datetime.now() + timedelta(days=day-1)).strftime('%Y-%m-%d'),
+                "theme": f"Day {day} Exploration",
+                "activities": self._generate_default_activities(day, trip_details),
+                "daily_budget": 4000,
+                "daily_travel_time": "60 minutes total"
+            }
+            fallback_data["daily_itinerary"].append(day_data)
+        
+        return fallback_data
+
+    def _generate_default_activities(self, day: int, trip_details: Dict) -> List[Dict]:
+        """Generate default activities for fallback scenarios"""
+        destination = trip_details.get('destination', 'India')
+        activities = [
+            {
+                "time_slot": "9:00 AM - 11:00 AM",
+                "title": f"Morning Exploration in {destination}",
+                "category": "sightseeing",
+                "location": destination,
+                "description": f"Explore the local attractions and culture of {destination}",
+                "duration": "2 hours",
+                "cost": 1200,
+                "rating": 4.2,
+                "image": self._get_image_url_for_activity(f"Morning in {destination}", destination, "sightseeing"),
+                "selected_reason": "🎯 Perfect morning activity to start your day with local exploration.",
+                "alternatives": self._generate_default_alternatives({"title": f"Morning in {destination}", "cost": 1200}),
+                "travel_logistics": {
+                    "from_previous": "Hotel",
+                    "distance_km": 2.0,
+                    "travel_time": "15 minutes",
+                    "transport_mode": "Taxi",
+                    "transport_cost": 150
+                },
+                "booking_info": {
+                    "advance_booking": "Not required",
+                    "availability": "Open access",
+                    "cancellation": "N/A"
+                }
+            },
+            {
+                "time_slot": "2:00 PM - 4:00 PM",
+                "title": f"Afternoon Experience in {destination}",
+                "category": "culture",
+                "location": destination,
+                "description": f"Cultural experience showcasing the heritage of {destination}",
+                "duration": "2 hours",
+                "cost": 1500,
+                "rating": 4.5,
+                "image": self._get_image_url_for_activity(f"Culture in {destination}", destination, "culture"),
+                "selected_reason": "🎯 Immersive cultural experience perfect for understanding local traditions.",
+                "alternatives": self._generate_default_alternatives({"title": f"Culture in {destination}", "cost": 1500}),
+                "travel_logistics": {
+                    "from_previous": "Previous location",
+                    "distance_km": 3.5,
+                    "travel_time": "20 minutes",
+                    "transport_mode": "Auto-rickshaw",
+                    "transport_cost": 100
+                },
+                "booking_info": {
+                    "advance_booking": "Recommended",
+                    "availability": "Limited slots",
+                    "cancellation": "24h free cancellation"
+                }
+            }
+        ]
+        
+        return activities
+
+    def _generate_default_alternatives(self, activity: Dict) -> List[Dict]:
+        """Generate 9 default alternatives for any activity"""
+        base_cost = activity.get('cost', 1000)
+        base_name = activity.get('title', 'Activity')
+        
+        alternatives = []
+        for i in range(1, 10):  # Generate 9 alternatives
+            alt_cost = int(base_cost * (0.7 + i * 0.1))  # Vary cost from 70% to 160%
+            alt_rating = round(3.8 + i * 0.15, 1)  # Vary rating from 3.8 to 5.15
+            
+            alternative = {
+                "name": f"Alternative {base_name} Option {i}",
+                "cost": alt_cost,
+                "rating": min(alt_rating, 5.0),  # Cap at 5.0
+                "reason": f"{'Budget-friendly' if alt_cost < base_cost else 'Premium'} option with {'excellent' if alt_rating >= 4.5 else 'good'} reviews",
+                "distance_km": round(1.0 + i * 0.5, 1),
+                "travel_time": f"{10 + i * 5} minutes"
+            }
+            alternatives.append(alternative)
+        
+        return alternatives
+
     def _get_image_url_for_activity(self, activity_title: str, location: str, category: str) -> str:
         """Generate appropriate image URL for activity"""
         # Category-based image mapping
