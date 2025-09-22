@@ -220,15 +220,20 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
         # Use enhanced agents to generate comprehensive itinerary variants
         import asyncio
         
-        # Generate all variants using enhanced agents
-        adventurer_task = adventurer_agent.generate_itinerary(session_id, trip_details, persona_tags)
-        balanced_task = balanced_agent.generate_itinerary(session_id, trip_details, persona_tags)
-        luxury_task = luxury_agent.generate_itinerary(session_id, trip_details, persona_tags)
-        
-        # Wait for all enhanced variants
-        adventurer_result, balanced_result, luxury_result = await asyncio.gather(
-            adventurer_task, balanced_task, luxury_task
-        )
+        try:
+            # Generate all variants using enhanced agents with timeout
+            adventurer_task = adventurer_agent.generate_itinerary(session_id, trip_details, persona_tags)
+            balanced_task = balanced_agent.generate_itinerary(session_id, trip_details, persona_tags)
+            luxury_task = luxury_agent.generate_itinerary(session_id, trip_details, persona_tags)
+            
+            # Wait for all enhanced variants with shorter timeout
+            adventurer_result, balanced_result, luxury_result = await asyncio.wait_for(
+                asyncio.gather(adventurer_task, balanced_task, luxury_task),
+                timeout=20.0  # 20 second timeout for all agents
+            )
+        except (asyncio.TimeoutError, Exception) as e:
+            logger.warning(f"Enhanced agents failed or timed out: {e}, using fallback")
+            return await generate_simple_itinerary_fallback(request)
         
         # Convert enhanced agent results to frontend-compatible format
         variants = []
