@@ -580,37 +580,13 @@ No alternatives needed. Fast response required."""
             end_date = datetime.fromisoformat(trip_details.get('end_date', '2024-12-28'))
             days = (end_date - start_date).days + 1
             
-            # Create focused context for reliable LLM generation
+            # Create ultra-concise context for fastest LLM generation
             destination = trip_details.get('destination', 'India')
-            context = f"""Create a {days}-day {self.variant_type.value} travel itinerary for {destination}.
+            context = f"""Create {days}-day {self.variant_type.value} itinerary for {destination}. JSON only:
 
-Response format (valid JSON only):
-{{
-  "variant_title": "{self.variant_type.value.title()} {destination}",
-  "total_days": {days},
-  "total_cost": 15000,
-  "daily_itinerary": [
-    {{
-      "day": 1,
-      "date": "{start_date.strftime('%Y-%m-%d')}",
-      "activities": [
-        {{
-          "time": "10:00 AM",
-          "title": "Activity Name",
-          "category": "sightseeing",
-          "location": "{destination}",
-          "description": "Brief description",
-          "duration": "2 hours",
-          "cost": 2000,
-          "rating": 4.5,
-          "selected_reason": "Why this fits {self.variant_type.value} style"
-        }}
-      ]
-    }}
-  ]
-}}
+{{"variant_title":"{self.variant_type.value.title()} {destination}","total_days":{days},"total_cost":15000,"daily_itinerary":[{{"day":1,"date":"{start_date.strftime('%Y-%m-%d')}","activities":[{{"time":"10:00 AM","title":"Beach Adventure","category":"adventure","location":"{destination}","description":"Exciting activity","duration":"2 hours","cost":2000,"rating":4.5,"selected_reason":"Perfect for {self.variant_type.value}"}}]}}]}}
 
-Generate {self.variant_type.value}-focused activities for {destination}. Return only valid JSON."""
+{self.variant_type.value} focus. 3 activities per day max."""
             
             # LLM call with very aggressive timeout for demo reliability
             llm_client = self._get_llm_client(session_id)
