@@ -235,7 +235,7 @@ async def generate_itinerary_endpoint(request: ItineraryGenerationRequest):
                     generate_optimized_variant(luxury_agent, session_id, trip_details, persona_tags, "luxury"),
                     return_exceptions=True
                 ),
-                timeout=6.0  # Ultra-aggressive 6-second total timeout
+                timeout=4.0  # Ultra-aggressive 4-second total timeout for demo
             )
             
             parallel_time = time.time() - start_time
