@@ -149,60 +149,144 @@ Generate comprehensive, intelligent, and perfectly optimized travel experiences.
         return True
 
     async def generate_itinerary(self, session_id: str, trip_details: Dict[str, Any], persona_tags: List[str], profile_data: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Generate itinerary variant"""
+        """Generate comprehensive itinerary with top 10 service recommendations and explainability"""
         try:
+            logger.info(f"🏗️ Generating {self.variant_type.value} itinerary for {trip_details.get('destination')}")
+            
             # Calculate trip duration
-            start_date = datetime.fromisoformat(trip_details.get("start_date", "2024-12-15"))
-            end_date = datetime.fromisoformat(trip_details.get("end_date", "2024-12-20"))
-            duration = (end_date - start_date).days
+            start_date = datetime.fromisoformat(trip_details.get('start_date', '2024-12-25'))
+            end_date = datetime.fromisoformat(trip_details.get('end_date', '2024-12-28'))
+            days = (end_date - start_date).days + 1
             
-            # Generate daily itineraries
-            daily_itineraries = []
-            current_date = start_date
+            # Use profile_data if provided, otherwise create default from persona_tags
+            if profile_data is None:
+                profile_data = self._create_profile_from_persona_tags(persona_tags)
             
-            for day in range(1, duration + 1):
-                day_itinerary = await self._generate_day_itinerary(
-                    day, current_date, trip_details, profile_data
-                )
-                daily_itineraries.append(day_itinerary)
-                current_date += timedelta(days=1)
+            # Enhanced context for master travel planner
+            planner_context = f"""
+            🎯 MASTER TRAVEL PLANNER REQUEST - GENERATE {self.variant_type.value.upper()} VARIANT
             
-            # Calculate totals
-            total_cost = sum(day.total_cost for day in daily_itineraries)
-            total_activities = sum(len(day.activities) for day in daily_itineraries)
-            activity_types = list(set([
-                activity.type.value for day in daily_itineraries 
-                for activity in day.activities
-            ]))
+            TRAVELER PROFILE ANALYSIS:
+            • Persona Tags: {', '.join(persona_tags)}
+            • Vacation Style: {profile_data.get('vacation_style', ['balanced'])}
+            • Experience Preference: {profile_data.get('experience_type', ['mixed'])}
+            • Budget Level: {profile_data.get('budget_level', 'moderate')}
+            • Physical Activity: {profile_data.get('activity_level', 'moderate')}
+            • Interests: {', '.join(profile_data.get('interests', []))}
+            • Age Group: {profile_data.get('age_group', 'adult')}
+            • Travel Style: {profile_data.get('travel_style', 'explorer')}
             
-            # Generate highlights
-            highlights = self._generate_highlights(trip_details, profile_data)
+            TRIP SPECIFICATIONS:
+            • Destination: {trip_details.get('destination', 'India')}
+            • Duration: {days} days ({start_date.strftime('%B %d')} to {end_date.strftime('%B %d, %Y')})
+            • Group Size: {trip_details.get('adults', 2)} adults, {trip_details.get('children', 0)} children
+            • Budget per night: {trip_details.get('budget_per_night', 3000)} INR
+            • Total estimated budget: {trip_details.get('budget_per_night', 3000) * days} INR
             
-            # Create itinerary variant
-            itinerary = ItineraryVariant(
-                id=str(uuid.uuid4()),
-                type=self.variant_type,
-                title=self._get_variant_title(),
-                description=self._get_variant_description(),
-                days=duration,
-                total_cost=total_cost,
-                daily_itinerary=daily_itineraries,
-                highlights=highlights,
-                persona_match=self._calculate_persona_match(profile_data),
-                sustainability_score=self._calculate_sustainability_score(daily_itineraries),
-                recommended=self._is_recommended(profile_data),
-                total_activities=total_activities,
-                activity_types=activity_types
+            REAL-TIME REQUIREMENTS:
+            ✅ Auto-select TOP recommendation for each service slot
+            ✅ Provide 9 alternatives with clear ranking reasons
+            ✅ No repeated activities/venues across {days} days
+            ✅ Optimize travel times and detect conflicts
+            ✅ Include live pricing and availability status
+            ✅ 4.0+ rating preference for all recommendations
+            
+            GENERATE DETAILED DAY-WISE ITINERARY:
+            
+            For each day, create 4-6 activity slots with:
+            1. TIME SLOT (e.g., 9:00 AM - 11:00 AM)
+            2. SELECTED SERVICE with complete details
+            3. REASONING: Why this is perfect for the traveler's profile
+            4. TOP 9 ALTERNATIVES with brief reasons
+            5. TRAVEL LOGISTICS: Distance, time, transport mode
+            6. PRICING: Live cost estimates
+            7. CONFLICT WARNINGS: If any scheduling issues
+            
+            MANDATORY JSON STRUCTURE:
+            {{
+                "variant_title": "{self.variant_type.value.title()} {trip_details.get('destination', 'Adventure')}",
+                "total_days": {days},
+                "total_cost": 0,
+                "optimization_score": 0.95,
+                "conflict_warnings": [],
+                "daily_itinerary": [
+                    {{
+                        "day": 1,
+                        "date": "{start_date.strftime('%Y-%m-%d')}",
+                        "theme": "Arrival & Local Exploration",
+                        "activities": [
+                            {{
+                                "time_slot": "10:00 AM - 12:00 PM",
+                                "title": "Activity Name",
+                                "category": "sightseeing|adventure|culture|dining|accommodation|transport",
+                                "location": "Specific Location",
+                                "description": "Detailed activity description",
+                                "duration": "2 hours",
+                                "cost": 1500,
+                                "rating": 4.5,
+                                "image": "https://images.unsplash.com/400x300/?activity",
+                                "selected_reason": "🎯 Perfect for your adventure-seeking preference. Highest rated (4.8★) adventure activity in the area with live availability. Distance: 2.5km from hotel, Travel time: 15 minutes by taxi.",
+                                "alternatives": [
+                                    {{
+                                        "name": "Alternative 1",
+                                        "cost": 1200,
+                                        "rating": 4.3,
+                                        "reason": "Budget-friendly option with good reviews",
+                                        "distance_km": 3.2,
+                                        "travel_time": "20 minutes"
+                                    }}
+                                ],
+                                "travel_logistics": {{
+                                    "from_previous": "Hotel/Previous Location",
+                                    "distance_km": 2.5,
+                                    "travel_time": "15 minutes",
+                                    "transport_mode": "Taxi",
+                                    "transport_cost": 200
+                                }},
+                                "booking_info": {{
+                                    "advance_booking": "Required",
+                                    "availability": "Live slots available",
+                                    "cancellation": "Free cancellation up to 24h"
+                                }}
+                            }}
+                        ],
+                        "daily_budget": 8500,
+                        "daily_travel_time": "45 minutes total"
+                    }}
+                ]
+            }}
+            
+            CRITICAL SUCCESS FACTORS:
+            • Every activity MUST have clear explainable reasoning
+            • All 9 alternatives MUST be provided for each slot
+            • Travel optimization MUST minimize transit time
+            • NO activity repetition across {days} days
+            • Pricing MUST be realistic for {trip_details.get('destination')}
+            • Schedule MUST be conflict-free and realistic
+            """
+            
+            # Generate itinerary using enhanced LLM
+            llm_client = self._get_llm_client(session_id)
+            response = await asyncio.wait_for(
+                llm_client.send_message(UserMessage(text=planner_context)),
+                timeout=25.0  # Increased timeout for comprehensive generation
             )
             
-            # Store in context
-            self.context_store.add_itinerary(session_id, itinerary.id, itinerary.dict())
+            # Parse and validate comprehensive response
+            itinerary_data = await self._parse_comprehensive_response(response, days, trip_details)
             
-            return itinerary
+            # Post-process for quality assurance
+            final_itinerary = await self._quality_assurance_check(itinerary_data, trip_details, profile_data)
             
+            logger.info(f"✅ Generated {self.variant_type.value} variant with {len(final_itinerary.get('daily_itinerary', []))} days")
+            return final_itinerary
+            
+        except asyncio.TimeoutError:
+            logger.warning(f"⏰ Itinerary generation timeout, using fallback for {self.variant_type.value}")
+            return self._generate_fallback_itinerary(trip_details, days)
         except Exception as e:
-            logger.error(f"Itinerary generation error: {e}")
-            return self._get_fallback_itinerary(trip_details)
+            logger.error(f"❌ Itinerary generation error: {e}")
+            return self._generate_fallback_itinerary(trip_details, days)
 
     async def _generate_day_itinerary(self, day: int, date: datetime, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> DayItinerary:
         """Generate itinerary for a specific day"""
