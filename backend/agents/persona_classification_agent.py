@@ -5,6 +5,7 @@ Feeds persona tags to downstream agents for personalized itinerary generation
 
 import os
 import logging
+import asyncio
 from typing import Dict, List, Any, Optional
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from models.schemas import PersonaClassificationResponse, PersonaType, UIAction
