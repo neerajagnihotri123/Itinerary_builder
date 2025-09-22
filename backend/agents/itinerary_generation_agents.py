@@ -612,11 +612,11 @@ Response format (valid JSON only):
 
 Generate {self.variant_type.value}-focused activities for {destination}. Return only valid JSON."""
             
-            # LLM call with reasonable timeout for demo
+            # LLM call with very aggressive timeout for demo reliability
             llm_client = self._get_llm_client(session_id)
             response = await asyncio.wait_for(
                 llm_client.send_message(UserMessage(text=context)),
-                timeout=8.0  # 8 second timeout for demo reliability
+                timeout=4.0  # Very aggressive 4 second timeout
             )
             
             # Parse response with better error handling
