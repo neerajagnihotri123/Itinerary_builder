@@ -288,6 +288,166 @@ Generate comprehensive, intelligent, and perfectly optimized travel experiences.
             logger.error(f"❌ Itinerary generation error: {e}")
             return self._generate_fallback_itinerary(trip_details, days)
 
+    def _create_profile_from_persona_tags(self, persona_tags: List[str]) -> Dict[str, Any]:
+        """Create a basic profile from persona tags"""
+        return {
+            'vacation_style': ['balanced'],
+            'experience_type': ['mixed'],
+            'budget_level': 'moderate',
+            'activity_level': 'moderate',
+            'interests': persona_tags,
+            'age_group': 'adult',
+            'travel_style': 'explorer'
+        }
+
+    async def _parse_comprehensive_response(self, response: str, days: int, trip_details: Dict[str, Any]) -> Dict[str, Any]:
+        """Parse comprehensive LLM response into structured data"""
+        try:
+            import json
+            import re
+            
+            # Remove markdown code blocks if present
+            json_text = response
+            if '```json' in json_text:
+                json_match = re.search(r'```json\s*(.*?)\s*```', json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            elif '```' in json_text:
+                json_match = re.search(r'```\s*(.*?)\s*```', json_text, re.DOTALL)
+                if json_match:
+                    json_text = json_match.group(1)
+            
+            # Parse JSON
+            itinerary_data = json.loads(json_text.strip())
+            
+            # Validate and ensure required fields
+            if 'daily_itinerary' not in itinerary_data:
+                itinerary_data['daily_itinerary'] = []
+            
+            # Calculate total cost if not provided
+            if 'total_cost' not in itinerary_data or itinerary_data['total_cost'] == 0:
+                total_cost = 0
+                for day in itinerary_data.get('daily_itinerary', []):
+                    for activity in day.get('activities', []):
+                        total_cost += activity.get('cost', 0)
+                        # Add travel costs
+                        travel_logistics = activity.get('travel_logistics', {})
+                        total_cost += travel_logistics.get('transport_cost', 0)
+                itinerary_data['total_cost'] = total_cost
+            
+            return itinerary_data
+            
+        except (json.JSONDecodeError, Exception) as e:
+            logger.error(f"Failed to parse comprehensive response: {e}")
+            return self._generate_fallback_itinerary_data(trip_details, days)
+
+    async def _quality_assurance_check(self, itinerary_data: Dict[str, Any], trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Perform quality assurance checks on generated itinerary"""
+        try:
+            # Check for required fields
+            required_fields = ['variant_title', 'total_days', 'daily_itinerary']
+            for field in required_fields:
+                if field not in itinerary_data:
+                    logger.warning(f"Missing required field: {field}")
+                    return self._generate_fallback_itinerary_data(trip_details, itinerary_data.get('total_days', 3))
+            
+            # Validate daily itinerary structure
+            for day_data in itinerary_data.get('daily_itinerary', []):
+                if 'activities' not in day_data:
+                    day_data['activities'] = []
+                
+                # Ensure each activity has required fields
+                for activity in day_data['activities']:
+                    if 'image' not in activity:
+                        activity['image'] = self._get_image_url_for_activity(
+                            activity.get('title', 'Activity'),
+                            activity.get('location', trip_details.get('destination', 'India')),
+                            activity.get('category', 'sightseeing')
+                        )
+                    
+                    # Ensure alternatives exist
+                    if 'alternatives' not in activity:
+                        activity['alternatives'] = self._generate_default_alternatives(activity)
+            
+            return itinerary_data
+            
+        except Exception as e:
+            logger.error(f"Quality assurance check failed: {e}")
+            return self._generate_fallback_itinerary_data(trip_details, itinerary_data.get('total_days', 3))
+
+    def _generate_fallback_itinerary_data(self, trip_details: Dict[str, Any], days: int) -> Dict[str, Any]:
+        """Generate fallback itinerary data in the new format"""
+        destination = trip_details.get('destination', 'India')
+        start_date = datetime.fromisoformat(trip_details.get('start_date', '2024-12-25'))
+        
+        daily_itinerary = []
+        for day in range(1, days + 1):
+            current_date = start_date + timedelta(days=day-1)
+            daily_itinerary.append({
+                "day": day,
+                "date": current_date.strftime('%Y-%m-%d'),
+                "theme": f"Day {day} in {destination}",
+                "activities": [
+                    {
+                        "time_slot": "10:00 AM - 1:00 PM",
+                        "title": f"Explore {destination}",
+                        "category": "sightseeing",
+                        "location": f"Central {destination}",
+                        "description": f"Discover the highlights of {destination}",
+                        "duration": "3 hours",
+                        "cost": 2500,
+                        "rating": 4.2,
+                        "image": self._get_image_url_for_activity(f"Explore {destination}", destination, "sightseeing"),
+                        "selected_reason": f"🎯 Perfect introduction to {destination} with highly rated local guides",
+                        "alternatives": self._generate_default_alternatives({"title": f"Explore {destination}", "cost": 2500}),
+                        "travel_logistics": {
+                            "from_previous": "Hotel",
+                            "distance_km": 2.0,
+                            "travel_time": "10 minutes",
+                            "transport_mode": "Taxi",
+                            "transport_cost": 150
+                        },
+                        "booking_info": {
+                            "advance_booking": "Recommended",
+                            "availability": "Available",
+                            "cancellation": "Free cancellation up to 24h"
+                        }
+                    }
+                ],
+                "daily_budget": 3000,
+                "daily_travel_time": "30 minutes total"
+            })
+        
+        return {
+            "variant_title": f"{self.variant_type.value.title()} {destination}",
+            "total_days": days,
+            "total_cost": days * 3000,
+            "optimization_score": 0.8,
+            "conflict_warnings": [],
+            "daily_itinerary": daily_itinerary
+        }
+
+    def _generate_default_alternatives(self, activity: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate default alternatives for an activity"""
+        base_cost = activity.get('cost', 2000)
+        alternatives = []
+        
+        for i in range(9):  # Generate 9 alternatives as required
+            alternatives.append({
+                "name": f"Alternative {i+1}",
+                "cost": base_cost + (i * 200) - 400,  # Vary costs around base
+                "rating": 4.0 + (i * 0.1),
+                "reason": f"Alternative option with {'budget-friendly' if i < 3 else 'premium' if i > 6 else 'balanced'} pricing",
+                "distance_km": 1.5 + (i * 0.3),
+                "travel_time": f"{10 + (i * 2)} minutes"
+            })
+        
+        return alternatives
+
+    def _generate_fallback_itinerary(self, trip_details: Dict[str, Any], days: int) -> Dict[str, Any]:
+        """Generate fallback itinerary when LLM fails"""
+        return self._generate_fallback_itinerary_data(trip_details, days)
+
     async def _generate_day_itinerary(self, day: int, date: datetime, trip_details: Dict[str, Any], profile_data: Dict[str, Any]) -> DayItinerary:
         """Generate itinerary for a specific day"""
         destination = trip_details.get("destination", "India")
