@@ -464,20 +464,13 @@ No alternatives needed. Fast response required."""
             days = (end_date - start_date).days + 1
             
             # Create minimal context for fast generation
-            context = f"""Generate {self.variant_type.value} itinerary:
+            context = f"Generate {self.variant_type.value} {days}-day Goa itinerary JSON with 3 activities per day. Include time, title, category, location, cost, rating."
             
-Destination: {trip_details.get('destination', 'India')}
-Days: {days}
-Adults: {trip_details.get('adults', 2)}
-Budget/night: {trip_details.get('budget_per_night', 3000)} INR
-
-Create {days}-day {self.variant_type.value} experience with 4-5 activities per day."""
-            
-            # Fast LLM call with aggressive timeout
+            # Ultra-fast LLM call with very aggressive timeout
             llm_client = self._get_llm_client(session_id)
             response = await asyncio.wait_for(
                 llm_client.send_message(UserMessage(text=context)),
-                timeout=5.0  # Aggressive 5-second timeout
+                timeout=3.0  # Ultra-aggressive 3-second timeout
             )
             
             # Fast parsing without extensive validation
