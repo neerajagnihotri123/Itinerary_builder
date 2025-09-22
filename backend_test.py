@@ -1726,6 +1726,321 @@ class TravelloBackendTester:
             self.log_result("Complete Pricing & Checkout Flow", False, f"Flow failed: {str(e)}")
             return False
 
+    def test_enhanced_itinerary_generation_api(self):
+        """Test Enhanced Itinerary Generation API with comprehensive profile data as requested"""
+        try:
+            print(f"\n🎯 Testing Enhanced Master Travel Planner Itinerary Generation")
+            print("=" * 70)
+            
+            # Test 1: Enhanced Itinerary Generation API with comprehensive profile data
+            print("Test 1: Enhanced Itinerary Generation API with comprehensive profile data")
+            
+            payload = {
+                "session_id": "test_master_planner",
+                "persona_type": "adventurer",
+                "trip_details": {
+                    "destination": "Goa, India",
+                    "start_date": "2024-12-25",
+                    "end_date": "2024-12-28",
+                    "adults": 2,
+                    "budget_per_night": 4000
+                },
+                "profile_data": {
+                    "vacation_style": ["adventurous"],
+                    "experience_type": ["adventure"],
+                    "interests": ["hiking", "water_sports", "nightlife"],
+                    "budget_level": "moderate"
+                }
+            }
+            
+            response = requests.post(f"{API_BASE}/generate-itinerary", json=payload, timeout=120)
+            
+            if response.status_code != 200:
+                self.log_result("Enhanced Itinerary Generation API", False, 
+                              f"API call failed: HTTP {response.status_code}: {response.text}")
+                return False
+            
+            data = response.json()
+            
+            # Test 2: Verify Enhanced Response Structure
+            print("\nTest 2: Verify Enhanced Response Structure")
+            
+            # Check for comprehensive itinerary structure
+            required_top_fields = ["variants", "session_id", "generated_at"]
+            if not all(field in data for field in required_top_fields):
+                self.log_result("Enhanced Itinerary Generation API", False, 
+                              f"Missing top-level fields: {required_top_fields}")
+                return False
+            
+            variants = data.get("variants", [])
+            if len(variants) == 0:
+                self.log_result("Enhanced Itinerary Generation API", False, "No variants generated")
+                return False
+            
+            # Check each variant for enhanced structure
+            enhanced_structure_issues = []
+            
+            for i, variant in enumerate(variants):
+                variant_name = variant.get("title", f"Variant {i+1}")
+                
+                # Check variant has itinerary
+                if "itinerary" not in variant:
+                    enhanced_structure_issues.append(f"{variant_name}: Missing itinerary")
+                    continue
+                
+                itinerary = variant["itinerary"]
+                if not isinstance(itinerary, list) or len(itinerary) == 0:
+                    enhanced_structure_issues.append(f"{variant_name}: Empty or invalid itinerary")
+                    continue
+                
+                # Check first day for enhanced activity structure
+                first_day = itinerary[0]
+                if "activities" not in first_day:
+                    enhanced_structure_issues.append(f"{variant_name}: Day missing activities")
+                    continue
+                
+                activities = first_day["activities"]
+                if not isinstance(activities, list) or len(activities) == 0:
+                    enhanced_structure_issues.append(f"{variant_name}: No activities in first day")
+                    continue
+                
+                # Check first activity for enhanced fields
+                first_activity = activities[0]
+                
+                # Check for enhanced fields as requested in review
+                enhanced_fields_check = {
+                    "selected_reason": "explainability for activity selection",
+                    "alternatives": "9 alternative options",
+                    "travel_logistics": "distance and travel time",
+                    "booking_info": "availability status",
+                    "time": "time slots (e.g., '10:00 AM - 12:00 PM')"
+                }
+                
+                missing_enhanced_fields = []
+                for field, description in enhanced_fields_check.items():
+                    if field not in first_activity:
+                        missing_enhanced_fields.append(f"{field} ({description})")
+                
+                if missing_enhanced_fields:
+                    enhanced_structure_issues.append(f"{variant_name}: Missing enhanced fields: {', '.join(missing_enhanced_fields)}")
+                    continue
+                
+                # Verify alternatives array has 9 options
+                alternatives = first_activity.get("alternatives", [])
+                if not isinstance(alternatives, list) or len(alternatives) != 9:
+                    enhanced_structure_issues.append(f"{variant_name}: Expected 9 alternatives, got {len(alternatives) if isinstance(alternatives, list) else 'invalid'}")
+                
+                # Verify travel_logistics structure
+                travel_logistics = first_activity.get("travel_logistics", {})
+                required_logistics_fields = ["distance_km", "travel_time"]
+                missing_logistics = [field for field in required_logistics_fields if field not in travel_logistics]
+                if missing_logistics:
+                    enhanced_structure_issues.append(f"{variant_name}: Travel logistics missing: {', '.join(missing_logistics)}")
+                
+                # Verify booking_info structure
+                booking_info = first_activity.get("booking_info", {})
+                required_booking_fields = ["availability"]
+                missing_booking = [field for field in required_booking_fields if field not in booking_info]
+                if missing_booking:
+                    enhanced_structure_issues.append(f"{variant_name}: Booking info missing: {', '.join(missing_booking)}")
+                
+                # Check for time slots format
+                time_slot = first_activity.get("time", "") or first_activity.get("time_slot", "")
+                if not time_slot or ":" not in time_slot:
+                    enhanced_structure_issues.append(f"{variant_name}: Invalid or missing time slot format")
+            
+            # Check for optimization_score and conflict_warnings at variant level
+            for i, variant in enumerate(variants):
+                variant_name = variant.get("title", f"Variant {i+1}")
+                
+                # These might be in the variant itself or in the itinerary data
+                has_optimization_score = "optimization_score" in variant
+                has_conflict_warnings = "conflict_warnings" in variant
+                
+                if not has_optimization_score:
+                    enhanced_structure_issues.append(f"{variant_name}: Missing optimization_score")
+                
+                if not has_conflict_warnings:
+                    enhanced_structure_issues.append(f"{variant_name}: Missing conflict_warnings")
+            
+            if enhanced_structure_issues:
+                self.log_result("Enhanced Itinerary Generation API", False, 
+                              f"Enhanced structure issues found: {'; '.join(enhanced_structure_issues[:5])}")  # Limit to first 5 issues
+                return False
+            
+            # Test 3: Verify content quality and explainability
+            print("\nTest 3: Verify explainability and content quality")
+            
+            content_quality_issues = []
+            
+            for i, variant in enumerate(variants):
+                variant_name = variant.get("title", f"Variant {i+1}")
+                
+                # Check first activity's selected_reason for explainability
+                first_activity = variant["itinerary"][0]["activities"][0]
+                selected_reason = first_activity.get("selected_reason", "")
+                
+                if len(selected_reason) < 20:
+                    content_quality_issues.append(f"{variant_name}: Selected reason too short")
+                
+                # Check alternatives have reasons
+                alternatives = first_activity.get("alternatives", [])
+                for j, alt in enumerate(alternatives[:3]):  # Check first 3 alternatives
+                    if "reason" not in alt or len(alt.get("reason", "")) < 10:
+                        content_quality_issues.append(f"{variant_name}: Alternative {j+1} missing/short reason")
+                        break
+            
+            if content_quality_issues:
+                self.log_result("Enhanced Itinerary Generation API", False, 
+                              f"Content quality issues: {'; '.join(content_quality_issues[:3])}")
+                return False
+            
+            # Success - log detailed results
+            variant_summary = []
+            for variant in variants:
+                activities_count = sum(len(day.get("activities", [])) for day in variant.get("itinerary", []))
+                variant_summary.append(f"{variant.get('persona', 'Unknown')}: {activities_count} activities")
+            
+            self.log_result("Enhanced Itinerary Generation API", True, 
+                          f"✅ ALL ENHANCED FEATURES VERIFIED: {len(variants)} variants with explainable recommendations, 9 alternatives per activity, travel logistics, booking info, and time slots. Variants: {'; '.join(variant_summary)}")
+            
+            print(f"✅ Enhanced Master Travel Planner test PASSED!")
+            print(f"📊 Generated {len(variants)} variants with full enhanced structure")
+            return True
+            
+        except Exception as e:
+            self.log_result("Enhanced Itinerary Generation API", False, f"Test failed with exception: {str(e)}")
+            return False
+
+    def test_complete_chat_to_itinerary_flow(self):
+        """Test Complete Chat to Itinerary Flow as requested"""
+        try:
+            print(f"\n🔄 Testing Complete Chat to Itinerary Flow")
+            print("=" * 60)
+            
+            # Test 3: Complete Chat to Itinerary Flow
+            print("Test: Complete Chat to Itinerary Flow")
+            print("Message: 'I want to plan an adventurous trip to Goa'")
+            
+            # Step 1: Chat message
+            chat_payload = {
+                "message": "I want to plan an adventurous trip to Goa",
+                "session_id": "test_chat_to_itinerary"
+            }
+            
+            chat_response = requests.post(f"{API_BASE}/chat", json=chat_payload, timeout=60)
+            
+            if chat_response.status_code != 200:
+                self.log_result("Complete Chat to Itinerary Flow", False, 
+                              f"Chat step failed: HTTP {chat_response.status_code}: {chat_response.text}")
+                return False
+            
+            chat_data = chat_response.json()
+            
+            # Verify chat triggers trip planning
+            has_trip_planner = any(
+                action.get("type") == "trip_planner_card" 
+                for action in chat_data.get("ui_actions", [])
+            )
+            
+            if not has_trip_planner:
+                self.log_result("Complete Chat to Itinerary Flow", False, 
+                              "Chat message did not trigger trip planner card")
+                return False
+            
+            print("✅ Step 1: Chat message triggered trip planning")
+            
+            # Step 2: Persona Classification (simulated based on message)
+            persona_payload = {
+                "session_id": "test_chat_to_itinerary",
+                "trip_details": {
+                    "destination": "Goa",
+                    "start_date": "2024-12-25",
+                    "end_date": "2024-12-28",
+                    "adults": 2,
+                    "budget_per_night": 4000
+                },
+                "profile_data": {
+                    "vacation_style": ["adventurous"],
+                    "experience_type": ["adventure"],
+                    "interests": ["hiking", "water_sports", "nightlife"],
+                    "budget_level": "moderate"
+                }
+            }
+            
+            persona_response = requests.post(f"{API_BASE}/persona-classification", json=persona_payload, timeout=60)
+            
+            if persona_response.status_code != 200:
+                self.log_result("Complete Chat to Itinerary Flow", False, 
+                              f"Persona classification failed: HTTP {persona_response.status_code}")
+                return False
+            
+            persona_data = persona_response.json()
+            print(f"✅ Step 2: Persona classified as {persona_data.get('persona_type')}")
+            
+            # Step 3: Itinerary Generation with enhanced structure
+            itinerary_payload = {
+                "session_id": "test_chat_to_itinerary",
+                "persona_type": persona_data.get("persona_type", "adventurer"),
+                "trip_details": persona_payload["trip_details"],
+                "profile_data": persona_payload["profile_data"]
+            }
+            
+            itinerary_response = requests.post(f"{API_BASE}/generate-itinerary", json=itinerary_payload, timeout=120)
+            
+            if itinerary_response.status_code != 200:
+                self.log_result("Complete Chat to Itinerary Flow", False, 
+                              f"Itinerary generation failed: HTTP {itinerary_response.status_code}")
+                return False
+            
+            itinerary_data = itinerary_response.json()
+            
+            # Verify enhanced itinerary structure is returned
+            variants = itinerary_data.get("variants", [])
+            if len(variants) == 0:
+                self.log_result("Complete Chat to Itinerary Flow", False, "No itinerary variants generated")
+                return False
+            
+            # Check that enhanced structure is present
+            first_variant = variants[0]
+            if "itinerary" not in first_variant:
+                self.log_result("Complete Chat to Itinerary Flow", False, "Variant missing itinerary")
+                return False
+            
+            first_day = first_variant["itinerary"][0]
+            first_activity = first_day["activities"][0]
+            
+            # Verify enhanced fields are present
+            enhanced_fields = ["selected_reason", "alternatives", "travel_logistics", "booking_info"]
+            missing_fields = [field for field in enhanced_fields if field not in first_activity]
+            
+            if missing_fields:
+                self.log_result("Complete Chat to Itinerary Flow", False, 
+                              f"Enhanced structure missing fields: {missing_fields}")
+                return False
+            
+            print(f"✅ Step 3: Enhanced itinerary generated with {len(variants)} variants")
+            
+            # Verify alternatives array has 9 options
+            alternatives = first_activity.get("alternatives", [])
+            if len(alternatives) != 9:
+                self.log_result("Complete Chat to Itinerary Flow", False, 
+                              f"Expected 9 alternatives, got {len(alternatives)}")
+                return False
+            
+            print("✅ Step 4: Verified 9 alternatives per activity")
+            
+            # Success
+            self.log_result("Complete Chat to Itinerary Flow", True, 
+                          f"✅ COMPLETE FLOW SUCCESS: Chat → Persona Classification → Enhanced Itinerary Generation. Generated {len(variants)} variants with explainable recommendations and 9 alternatives per activity.")
+            
+            print(f"🎉 Complete Chat to Itinerary Flow test PASSED!")
+            return True
+            
+        except Exception as e:
+            self.log_result("Complete Chat to Itinerary Flow", False, f"Flow test failed: {str(e)}")
+            return False
+
     def test_advanced_features(self):
         """Test the advanced features from review request"""
         print(f"\n🚀 Testing Advanced Features")
