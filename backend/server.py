@@ -763,6 +763,152 @@ async def mock_checkout_process(request: dict):
         logger.error(f"External booking error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ===== PARALLEL PROCESSING HELPER FUNCTIONS =====
+
+async def get_cached_itinerary(cache_key: str):
+    """Get cached itinerary result"""
+    # Simple in-memory cache for demo - in production use Redis
+    if not hasattr(get_cached_itinerary, 'cache'):
+        get_cached_itinerary.cache = {}
+    return get_cached_itinerary.cache.get(cache_key)
+
+async def cache_itinerary(cache_key: str, result: dict, ttl: int = 3600):
+    """Cache itinerary result"""
+    if not hasattr(get_cached_itinerary, 'cache'):
+        get_cached_itinerary.cache = {}
+    get_cached_itinerary.cache[cache_key] = result
+
+async def generate_optimized_variant(agent, session_id: str, trip_details: dict, persona_tags: list, variant_type: str):
+    """Generate optimized variant with timeout handling"""
+    try:
+        result = await asyncio.wait_for(
+            agent.generate_itinerary(session_id, trip_details, persona_tags),
+            timeout=7.0
+        )
+        return result
+    except asyncio.TimeoutError:
+        logger.warning(f"⏰ {variant_type} agent timed out")
+        return None
+    except Exception as e:
+        logger.error(f"❌ {variant_type} agent failed: {e}")
+        return None
+
+async def process_parallel_results(successful_results: list, trip_details: dict):
+    """Process successful parallel results into frontend format"""
+    variants = []
+    
+    for agent_result, variant_type in successful_results:
+        if agent_result and "daily_itinerary" in agent_result:
+            # Convert enhanced agent format to frontend format
+            variant = {
+                "id": f"{variant_type}_{trip_details.get('destination', 'destination').lower().replace(' ', '_')}",
+                "title": agent_result.get("variant_title", f"{variant_type.title()} Experience"),
+                "description": f"Enhanced {variant_type} experience with explainable recommendations",
+                "persona": variant_type,
+                "days": agent_result.get("total_days", 3),
+                "price": agent_result.get("total_cost", 15000),
+                "price_per_day": int(agent_result.get("total_cost", 15000) / agent_result.get("total_days", 3)),
+                "total_activities": sum(len(day.get("activities", [])) for day in agent_result.get("daily_itinerary", [])),
+                "activity_types": [],
+                "highlights": [],
+                "recommended": variant_type == "adventurer",
+                "optimization_score": agent_result.get("optimization_score", 0.85),
+                "conflict_warnings": agent_result.get("conflict_warnings", []),
+                "itinerary": []
+            }
+            
+            # Convert daily itinerary to frontend format
+            for day_data in agent_result.get("daily_itinerary", []):
+                day_activities = []
+                
+                for activity in day_data.get("activities", []):
+                    # Ensure enhanced fields are present
+                    enhanced_activity = {
+                        "time": activity.get("time_slot", activity.get("time", "10:00 AM")),
+                        "title": activity.get("title", "Activity"),
+                        "description": activity.get("description", "Activity description"),
+                        "location": activity.get("location", trip_details.get("destination", "Location")),
+                        "category": activity.get("category", "sightseeing"),
+                        "duration": activity.get("duration", "2 hours"),
+                        "cost": activity.get("cost", 2000),
+                        "rating": activity.get("rating", 4.2),
+                        "image": activity.get("image", "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop"),
+                        # Enhanced fields as requested
+                        "selected_reason": activity.get("selected_reason", f"🎯 Perfect for your {variant_type} travel style with excellent reviews and optimal location."),
+                        "alternatives": activity.get("alternatives", []),
+                        "travel_logistics": activity.get("travel_logistics", {
+                            "from_previous": "Previous location",
+                            "distance_km": 2.5,
+                            "travel_time": "15 minutes",
+                            "transport_mode": "Taxi",
+                            "transport_cost": 200
+                        }),
+                        "booking_info": activity.get("booking_info", {
+                            "advance_booking": "Recommended",
+                            "availability": "Available",
+                            "cancellation": "Free cancellation up to 24h"
+                        })
+                    }
+                    
+                    # Ensure alternatives has exactly 9 options
+                    if len(enhanced_activity["alternatives"]) != 9:
+                        enhanced_activity["alternatives"] = [
+                            {
+                                "name": f"Alternative Option {i+1}",
+                                "cost": enhanced_activity["cost"] + (i * 200) - 400,
+                                "rating": 4.0 + (i * 0.1),
+                                "reason": f"{'Budget-friendly' if i < 3 else 'Premium' if i > 6 else 'Balanced'} option with good reviews",
+                                "distance_km": 1.5 + (i * 0.3),
+                                "travel_time": f"{10 + (i * 2)} minutes"
+                            }
+                            for i in range(9)
+                        ]
+                    
+                    day_activities.append(enhanced_activity)
+                
+                variant["itinerary"].append({
+                    "day": day_data.get("day", 1),
+                    "date": day_data.get("date", "2024-12-25"),
+                    "title": day_data.get("theme", f"Day {day_data.get('day', 1)} Experience"),
+                    "activities": day_activities
+                })
+            
+            variants.append(variant)
+    
+    return variants
+
+async def generate_progressive_fallback(request, start_time: float):
+    """Progressive fallback when parallel processing fails"""
+    try:
+        elapsed = time.time() - start_time
+        logger.info(f"🔄 PROGRESSIVE FALLBACK: Starting after {elapsed:.2f}s")
+        
+        # Try one agent at a time with shorter timeouts
+        session_id = request.session_id
+        trip_details = request.trip_details
+        persona_tags = request.persona_tags
+        
+        # Try balanced agent first (most reliable)
+        try:
+            balanced_result = await asyncio.wait_for(
+                balanced_agent.generate_itinerary(session_id, trip_details, persona_tags),
+                timeout=5.0
+            )
+            if balanced_result:
+                variants = await process_parallel_results([(balanced_result, "balanced")], trip_details)
+                logger.info(f"✅ FALLBACK SUCCESS: Generated {len(variants)} variant(s)")
+                return {"variants": variants}
+        except:
+            pass
+        
+        # If that fails, use simple fallback
+        logger.warning("🚨 All agents failed, using simple fallback")
+        return await generate_simple_itinerary_fallback(request)
+        
+    except Exception as e:
+        logger.error(f"❌ PROGRESSIVE FALLBACK ERROR: {e}")
+        return await generate_simple_itinerary_fallback(request)
+
 async def _generate_all_variants(session_id: str, trip_details: Dict, persona_tags: List[str]):
     """Generate all itinerary variants in parallel"""
     import asyncio
