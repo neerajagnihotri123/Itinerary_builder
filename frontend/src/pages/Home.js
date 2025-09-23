@@ -2523,7 +2523,7 @@ const TripPlanningBar = ({ tripDetails, onUpdateTrip, isVisible, onApplyFilters,
   );
 };
 
-function App() {
+function Home() {
   // Advanced features state
   const [conflicts, setConflicts] = useState([]);
   const [warnings, setWarnings] = useState([]);
