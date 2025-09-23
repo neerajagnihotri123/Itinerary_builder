@@ -11,6 +11,13 @@ import PricingBreakdown from './components/ui/PricingBreakdownModal';
 import ServiceSelectionDropdown from './components/ui/ServiceSelectionDropdown';
 import ConflictWarnings from './components/ui/ConflictWarnings';
 import SafeImage from './components/ui/SafeImage';
+import PersonalizationModal from './components/ui/PersonalizationModal';
+import DestinationModal from './components/ui/DestinationModal';
+import WhereModal from './components/ui/WhereModal';
+import WhenModal from './components/ui/WhenModal';
+import TravelersModal from './components/ui/TravelersModal';
+import BudgetModal from './components/ui/BudgetModal';
+import Sidebar from './components/layout/Sidebar';
 
 // Utility imports
 import { getProxiedImageUrl, getFallbackImageUrl } from './utils/imageUtils';
