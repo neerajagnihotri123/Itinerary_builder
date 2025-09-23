@@ -306,28 +306,7 @@ const modalVariants = {
 };
 
 // Components with updated color palette
-const Avatar = () => (
-  <motion.div 
-    className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg"
-    style={{
-      background: 'linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%)'
-    }}
-    animate={{ 
-      boxShadow: [
-        '0 4px 20px rgba(230, 149, 67, 0.3)', 
-        '0 4px 30px rgba(230, 149, 67, 0.5)', 
-        '0 4px 20px rgba(230, 149, 67, 0.3)'
-      ]
-    }}
-    transition={{ 
-      duration: 2, 
-      repeat: Infinity, 
-      repeatType: 'reverse' 
-    }}
-  >
-    <Plane className="w-6 h-6" style={{ color: 'var(--light-50)' }} />
-  </motion.div>
-);
+// Avatar component moved to components/ui/Avatar.js
 
 // Enhanced Professional Horizontal Carousel Component
 const ProfessionalCarousel = ({ items, onAction, title = "Recommendations", itemsPerView = 2 }) => {
