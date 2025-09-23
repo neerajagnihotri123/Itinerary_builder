@@ -1215,67 +1215,7 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
 // Sidebar component moved to components/layout/Sidebar.js
 
 // PersonalizationModal component moved to components/ui/PersonalizationModal.js
-const WhereModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
-        <motion.div
-          variants={modalVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="card-premium max-w-md w-full p-6"
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800">Choose Destination</h3>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-              <X className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            {[
-              { name: 'Manali, Himachal Pradesh', value: 'Manali, Himachal Pradesh' },
-              { name: 'Rishikesh, Uttarakhand', value: 'Rishikesh, Uttarakhand' },
-              { name: 'Andaman Islands', value: 'Andaman Islands' },
-              { name: 'Pondicherry, Tamil Nadu', value: 'Pondicherry, Tamil Nadu' },
-              { name: 'Kerala Backwaters', value: 'Kerala Backwaters' },
-              { name: 'Rajasthan Desert', value: 'Rajasthan Desert' },
-              { name: 'Custom Destination', value: 'Custom Destination' }
-            ].map((destination) => (
-              <button
-                key={destination.value}
-                onClick={() => {
-                  onSelect(destination.value);
-                  onClose();
-                }}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-200 hover:shadow-md ${
-                  currentDestination === destination.value
-                    ? 'border-green-600 bg-green-50 text-green-700'
-                    : 'border-gray-200 hover:border-green-300 bg-white hover:bg-green-50'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <MapPin className={`w-5 h-5 ${
-                    currentDestination === destination.value ? 'text-green-600' : 'text-gray-400'
-                  }`} />
-                  <span className="font-medium">{destination.name}</span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
+// WhereModal component moved to components/ui/WhereModal.js
 
 const WhenModal = ({ isOpen, onClose, onSelect, currentDates }) => {
   const [checkIn, setCheckIn] = useState('');
