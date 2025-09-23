@@ -4,25 +4,25 @@ import '../styles/App.css';
 import axios from 'axios';
 
 // Component imports
-import CheckoutModal from './components/ui/CheckoutModal';
-import RequestCallbackModal from './components/ui/RequestCallbackModal';
-import TripHistoryModal from './components/ui/TripHistoryModal';
-import PricingBreakdown from './components/ui/PricingBreakdownModal';
-import ServiceSelectionDropdown from './components/ui/ServiceSelectionDropdown';
-import ConflictWarnings from './components/ui/ConflictWarnings';
-import SafeImage from './components/ui/SafeImage';
-import PersonalizationModal from './components/ui/PersonalizationModal';
-import DestinationModal from './components/ui/DestinationModal';
-import WhereModal from './components/ui/WhereModal';
-import WhenModal from './components/ui/WhenModal';
-import TravelersModal from './components/ui/TravelersModal';
-import BudgetModal from './components/ui/BudgetModal';
-import Avatar from './components/ui/Avatar';
-import Chip from './components/ui/Chip';
-import Sidebar from './components/layout/Sidebar';
+import CheckoutModal from '../components/ui/CheckoutModal';
+import RequestCallbackModal from '../components/ui/RequestCallbackModal';
+import TripHistoryModal from '../components/ui/TripHistoryModal';
+import PricingBreakdown from '../components/ui/PricingBreakdownModal';
+import ServiceSelectionDropdown from '../components/ui/ServiceSelectionDropdown';
+import ConflictWarnings from '../components/ui/ConflictWarnings';
+import SafeImage from '../components/ui/SafeImage';
+import PersonalizationModal from '../components/ui/PersonalizationModal';
+import DestinationModal from '../components/ui/DestinationModal';
+import WhereModal from '../components/ui/WhereModal';
+import WhenModal from '../components/ui/WhenModal';
+import TravelersModal from '../components/ui/TravelersModal';
+import BudgetModal from '../components/ui/BudgetModal';
+import Avatar from '../components/ui/Avatar';
+import Chip from '../components/ui/Chip';
+import Sidebar from '../components/layout/Sidebar';
 
 // Utility imports
-import { getProxiedImageUrl, getFallbackImageUrl } from './utils/imageUtils';
+import { getProxiedImageUrl, getFallbackImageUrl } from '../utils/imageUtils';
 import { 
   Send, 
   MapPin, 
