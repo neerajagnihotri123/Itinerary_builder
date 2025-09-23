@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './styles/App.css';
+import '../styles/App.css';
 import axios from 'axios';
 
 // Component imports
