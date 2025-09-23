@@ -1221,68 +1221,7 @@ const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDest
 
 // TravelersModal component moved to components/ui/TravelersModal.js
 
-const BudgetModal = ({ isOpen, onClose, onSelect, currentDestination }) => (
-  <AnimatePresence>
-    {isOpen && (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
-        onClick={onClose}
-      >
-        <motion.div
-          variants={modalVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="card-premium max-w-md w-full p-6"
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800">Set Budget</h3>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-              <X className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Total Budget (USD)</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input 
-                  type="number" 
-                  placeholder="5000"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {['$1,000', '$2,500', '$5,000', '$10,000'].map((amount) => (
-                <button
-                  key={amount}
-                  onClick={() => onSelect(amount)}
-                  className="p-3 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors duration-200 text-center font-medium"
-                >
-                  {amount}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          <button 
-            onClick={() => onSelect('Budget set')}
-            className="w-full mt-6 bg-gradient-to-r from-green-600 to-orange-600 text-white font-semibold py-3 rounded-xl hover:from-green-700 hover:to-orange-700"
-          >
-            Set Budget
-          </button>
-        </motion.div>
-      </motion.div>
-    )}
-  </AnimatePresence>
-);
+// BudgetModal component moved to components/ui/BudgetModal.js
 
 // Upload Options Popup
 const UploadPopup = ({ isOpen, onClose, onFileUpload, onLinkSubmit }) => (
