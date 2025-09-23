@@ -1004,19 +1004,7 @@ const MessageBubble = ({ message, isUser, onSelectVariant }) => {
   );
 };
 
-const Chip = ({ chip, onClick }) => (
-  <motion.button
-    variants={chipVariants}
-    initial="hidden"
-    animate="visible"
-    onClick={() => onClick(chip)}
-    className="bg-white/90 backdrop-blur-sm border border-white/30 text-gray-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-white hover:border-gray-200 transition-all duration-200 whitespace-nowrap shadow-sm"
-    whileHover={{ scale: 1.05, y: -2 }}
-    whileTap={{ scale: 0.95 }}
-  >
-    {chip.label}
-  </motion.button>
-);
+// Chip component moved to components/ui/Chip.js
 
 // Professional Interactive Map Component using Leaflet
 const InteractiveWorldMap = ({ destinations, onDestinationClick, highlightedDestinations = [] }) => {
