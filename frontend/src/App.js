@@ -17,6 +17,8 @@ import WhereModal from './components/ui/WhereModal';
 import WhenModal from './components/ui/WhenModal';
 import TravelersModal from './components/ui/TravelersModal';
 import BudgetModal from './components/ui/BudgetModal';
+import Avatar from './components/ui/Avatar';
+import Chip from './components/ui/Chip';
 import Sidebar from './components/layout/Sidebar';
 
 // Utility imports
